@@ -251,24 +251,23 @@ export default function Analysis() {
                 </div>
               </div>
 
-              {/* Simulation Tools */}
-              <div className="space-y-2">
-                <div className="text-sm font-medium text-gray-400 mb-3">
-                  {language === 'es' ? 'Herramientas de Simulación' : 'Simulation Tools'}
-                </div>
+                {/* Simulation Tools - Restored as per user screenshots */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
                 <Button 
-                  onClick={() => setShowLogisticsSimulator(true)}
-                  className="w-full bg-cyan-600 hover:bg-cyan-700 text-white justify-start"
+                    variant="outline" 
+                    className="h-20 border-cyan-500/30 bg-[#0D2137] hover:bg-cyan-500/10 text-cyan-400 flex flex-col items-center justify-center gap-2"
+                    onClick={() => setShowLogisticsSimulator(true)}
                 >
-                  <Ship className="w-4 h-4 mr-2" />
-                  {language === 'es' ? 'Simulador de Logística (Incoterm)' : 'Logistics Simulator (Incoterm)'}
+                    <Ship className="w-6 h-6" />
+                    <span>{language === 'es' ? 'Simulador de Logística (Incoterm)' : 'Logistics Simulator (Incoterm)'}</span>
                 </Button>
                 <Button 
-                  onClick={() => setShowCostCalculator(true)}
-                  className="w-full bg-cyan-600 hover:bg-cyan-700 text-white justify-start"
+                    variant="outline" 
+                    className="h-20 border-cyan-500/30 bg-[#0D2137] hover:bg-cyan-500/10 text-cyan-400 flex flex-col items-center justify-center gap-2"
+                    onClick={() => setShowCostCalculator(true)}
                 >
-                  <TrendingUp className="w-4 h-4 mr-2" />
-                  {language === 'es' ? 'Calculadora de Costos' : 'Cost Calculator'}
+                    <TrendingUp className="w-6 h-6" />
+                    <span>{language === 'es' ? 'Calculadora de Costos' : 'Cost Calculator'}</span>
                 </Button>
               </div>
 

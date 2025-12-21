@@ -1,4 +1,4 @@
-import { Globe, User, Shield, Home, Package, MessageCircle } from "lucide-react";
+import { User, Home, Package, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/hooks/use-language";
 import { useUser } from "@/context/user-context";
@@ -6,7 +6,7 @@ import { useLocation } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function Header() {
-  const { language, setLanguage, t } = useLanguage();
+  const { language, setLanguage } = useLanguage();
   const { user } = useUser();
   const [, navigate] = useLocation();
 
@@ -17,15 +17,17 @@ export default function Header() {
           {/* Logo */}
           <div className="flex items-center gap-3">
             <div 
-              className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity"
+              className="w-12 h-12 bg-white rounded-lg flex items-center justify-center p-1 overflow-hidden shadow-lg border border-cyan-400/30 cursor-pointer hover:opacity-90 transition-opacity"
               onClick={() => navigate('/')}
             >
-              <Globe className="w-6 h-6 text-white" />
+              <img src="/logo.png" alt="Che.Comex Logo" className="w-full h-full object-contain" />
             </div>
             <div className="cursor-pointer" onClick={() => navigate('/')}>
-              <h1 className="text-xl font-bold text-white">Che.Comex</h1>
-              <p className="text-xs text-cyan-400">
-                {language === 'es' ? 'El Futuro del Comercio Global' : 'Future of Global Commerce'}
+              <h1 className="text-2xl font-black text-white tracking-tighter">
+                CHE.<span className="text-cyan-400">COMEX</span>
+              </h1>
+              <p className="text-[10px] uppercase tracking-widest text-cyan-500 font-bold opacity-80">
+                {language === 'es' ? 'Inteligencia de Comercio Global' : 'Global Trade Intelligence'}
               </p>
             </div>
           </div>

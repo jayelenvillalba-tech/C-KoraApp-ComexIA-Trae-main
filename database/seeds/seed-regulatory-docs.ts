@@ -1,4 +1,5 @@
 import { initDatabase, saveDatabase, sqliteDb } from '../db-sqlite';
+import crypto from 'crypto';
 
 console.log('=== SEED: DOCUMENTACIÓN REGLAMENTARIA (10 Flujos Comerciales) ===');
 
@@ -435,34 +436,36 @@ async function main() {
     console.log('   10. PY → BR / Soja');
     
     const insertStmt = sqliteDb.prepare(`
-      INSERT OR REPLACE INTO country_requirements 
-      (id, country_code, hs_code, required_documents, technical_standards, phytosanitary_reqs, labeling_reqs, packaging_reqs, estimated_processing_time, additional_fees)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT OR REPLACE INTO regulatory_rules 
+      (id, country_code, hs_chapter, origin_country_code, document_name, issuer, description, requirements)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `);
     
     let inserted = 0;
     for (const doc of REGULATORY_DOCS) {
-      try {
-        console.log(`\nDEBUG: Processing doc:`, { countryCode: doc.countryCode, hsCode: doc.hsCode });
-        const id = crypto.randomUUID();
-        insertStmt.run(
-          id,
-          doc.countryCode,
-          doc.hsCode,
-          doc.requiredDocuments,
-          doc.technicalStandards,
-          doc.phytosanitaryReqs,
-          doc.labelingReqs,
-          doc.packagingReqs,
-          doc.estimatedProcessingTime,
-          doc.additionalFees
-        );
-        inserted++;
-        process.stdout.write('.');
-      } catch (error: any) {
-        console.error(`\nError insertando ${doc.countryCode}/${doc.hsCode}:`, error.message);
-        console.error('Full error:', error);
+      const requiredDocs = JSON.parse(doc.requiredDocuments);
+      const hsChapter = doc.hsCode.substring(0, 2);
+
+      for (const rDoc of requiredDocs) {
+        try {
+          const id = crypto.randomUUID();
+          const docName = rDoc.name || rDoc.documentName || 'Documentación Requerida';
+          insertStmt.run(
+            id,
+            doc.countryCode,
+            hsChapter,
+            null, // origin_country_code
+            docName,
+            rDoc.issuer || 'Autoridad Competente',
+            rDoc.description || '',
+            rDoc.requirements || ''
+          );
+          inserted++;
+        } catch (error: any) {
+          console.error(`\nError insertando ${doc.countryCode}/${doc.hsCode}:`, error.message);
+        }
       }
+      process.stdout.write('.');
     }
     
     console.log('');
