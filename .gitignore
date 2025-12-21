@@ -31,11 +31,11 @@ lerna-debug.log*
 *.swo
 *~
 
-# Database
-*.db
-*.sqlite
-*.sqlite3
-comexia.db
+# Database (Inclusion forced for initial deployment)
+# *.db
+# *.sqlite
+# *.sqlite3
+# comexia.db
 
 # OS
 Thumbs.db
