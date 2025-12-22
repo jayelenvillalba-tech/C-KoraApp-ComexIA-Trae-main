@@ -590,8 +590,7 @@ export default function TradeFlow() {
     }
   };
 
-    return flags[countryCode] || '🌍';
-  };
+
 
   // Helper for drawing arcs between coordinates
   const getArcPoints = useCallback((start: [number, number], end: [number, number], segments = 12) => {
