@@ -14,9 +14,10 @@ const __dirname = path.dirname(__filename);
 config();
 
 // Ruta al archivo de base de datos SQLite
-const dbPath = process.env.SQLITE_DB_PATH || path.join(__dirname, '../comexia_v2.db');
+const dbPath = process.env.SQLITE_DB_PATH || path.resolve(process.cwd(), 'comexia_v2.db');
 
-console.log(`📁 Using SQLite database at: ${dbPath}`);
+console.log(`📁 Project Root (process.cwd): ${process.cwd()}`);
+console.log(`📁 Resolved DB Path: ${dbPath}`);
 
 let db: any;
 let sqliteDb: any;
@@ -34,8 +35,13 @@ async function initDatabase() {
     console.log('✅ Loaded existing database');
   } else {
     console.log('File does NOT exist on disk.');
+    if (process.env.NODE_ENV === 'production') {
+       // List files to help debug
+       console.log('Files in root:', fs.readdirSync(process.cwd()));
+       throw new Error(`CRITICAL: Database file not found at ${dbPath}`);
+    }
     sqliteDb = new SQL.Database();
-    console.log('✅ Created new database');
+    console.log('⚠️ Created new EMPTY database (Development only)');
   }
   
   db = drizzle(sqliteDb, { schema });
