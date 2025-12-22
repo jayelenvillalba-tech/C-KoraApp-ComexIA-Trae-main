@@ -1839,8 +1839,14 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(frontendDist, 'index.html'));
 });
 
-app.listen(PORT, async () => {
-  await initializeTables();
-  console.log(`Server running on port ${PORT}`);
-  console.log(`📁 SQLite Database connected`);
-});
+// Export app for Vercel/Serverless
+export default app;
+
+// Only listen if running directly (not imported)
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, async () => {
+    await initializeTables();
+    console.log(`Server running on port ${PORT}`);
+    console.log(`📁 SQLite Database connected`);
+  });
+}
