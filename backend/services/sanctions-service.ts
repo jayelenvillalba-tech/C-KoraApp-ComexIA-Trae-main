@@ -1,6 +1,6 @@
 
 import { db } from '../../database/db-sqlite.js';
-import { sanctionsList } from '../../shared/shared/schema-sqlite.js';
+import { sanctionsList } from '../../shared/schema-sqlite.js';
 import { eq, or, and, isNull, inArray } from 'drizzle-orm';
 
 export class SanctionsService {

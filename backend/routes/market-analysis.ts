@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import { db } from '../../database/db-sqlite.js';
-import { hsSubpartidas, companies } from '../../shared/shared/schema-sqlite.js';
+import { hsSubpartidas, companies } from '../../shared/schema-sqlite.js';
 import { eq, like, and, sql } from 'drizzle-orm';
-import { countries, getCountryTreaties } from '../../shared/shared/countries-data.js';
+import { countries, getCountryTreaties } from '../../shared/countries-data.js';
 import { ComtradeService } from '../services/comtrade-service.js';
 
 interface MarketAnalysisRequest {

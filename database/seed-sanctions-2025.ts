@@ -1,6 +1,6 @@
 
 import { db as exportedDb, initDatabase, saveDatabase } from './db-sqlite.js';
-import { sanctionsList } from '../shared/shared/schema-sqlite.js';
+import { sanctionsList } from '../shared/schema-sqlite.js';
 import crypto from 'crypto';
 
 const SANCTIONS_2025 = [

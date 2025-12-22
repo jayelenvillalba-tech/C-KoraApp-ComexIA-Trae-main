@@ -1,10 +1,9 @@
 
 import { db as exportedDb, initDatabase } from '../../database/db-sqlite.js';
-import { regulatoryRules } from '../../shared/shared/schema-sqlite.js';
-import { countries } from '../../shared/shared/countries-data.js';
+import { regulatoryRules } from '../../shared/schema-sqlite.js';
+import { countries } from '../../shared/countries-data.js';
 import { eq, or, and, isNull, inArray } from 'drizzle-orm';
 import { SanctionsService } from './sanctions-service.js';
-
 
 export class RegulatoryEngine {
 
@@ -12,6 +11,7 @@ export class RegulatoryEngine {
     // Ensure database is initialized
     const db = await initDatabase();
     
+    // 1. BASE DOCUMENTS (Universal)
     const commonDocs: any[] = [
       {
         name: 'Factura Comercial',
@@ -26,12 +26,6 @@ export class RegulatoryEngine {
         requirements: 'Debe coincidir exactamente con la factura comercial.'
       },
       {
-        name: 'Certificado de Origen',
-        issuer: 'Cámara de Comercio / Entidad Autorizada',
-        description: 'Acredita el origen de la mercancía para preferencias arancelarias.',
-        requirements: 'Formato específico según el acuerdo comercial aplicable.'
-      },
-      {
         name: 'Documento de Transporte',
         issuer: 'Transportista / Agente de Carga',
         description: 'Bill of Lading (marítimo), Air Waybill (aéreo) o CRT (terrestre).',
@@ -40,85 +34,169 @@ export class RegulatoryEngine {
     ];
 
     const chapter = hsCode ? hsCode.substring(0, 2) : null;
-    const euCountries = ['DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'SE', 'PL', 'AT', 'DK', 'FI', 'IE', 'PT', 'GR', 'CZ', 'HU', 'RO', 'BG', 'SK', 'HR', 'LT', 'SI', 'LV', 'EE', 'CY', 'LU', 'MT'];
-    const mercosurCountries = ['AR', 'BR', 'PY', 'UY', 'BO'];
-    const alianzaPacifico = ['MX', 'CL', 'CO', 'PE'];
-    const comunidadAndina = ['BO', 'CO', 'EC', 'PE'];
-    const caftaCountries = ['CR', 'SV', 'GT', 'HN', 'NI', 'DO'];
-    const usmcaCountries = ['US', 'CA', 'MX'];
-    const eftaCountries = ['CH', 'IS', 'LI', 'NO'];
-    const aseanCountries = ['ID', 'MY', 'TH', 'VN', 'PH', 'SG', 'BN', 'KH', 'LA', 'MM'];
-    const rcepCountries = [...aseanCountries, 'CN', 'JP', 'KR', 'AU', 'NZ'];
-    const cptppCountries = ['JP', 'MX', 'CA', 'AU', 'NZ', 'CL', 'PE', 'VN', 'MY', 'BN', 'GB'];
-    const ecowasCountries = ['NG', 'GH', 'SN', 'CI', 'LR', 'SL', 'GM', 'CV', 'GW', 'ML', 'BF', 'NE', 'BJ', 'TG'];
-    const sadcCountries = ['ZA', 'AO', 'BW', 'KM', 'CD', 'SZ', 'LS', 'MG', 'MW', 'MU', 'MZ', 'NA', 'SC', 'TZ', 'ZM', 'ZW'];
-    const eacCountries = ['KE', 'UG', 'TZ', 'RW', 'BI', 'SS', 'CD'];
-    const comesaCountries = ['EG', 'ET', 'LY', 'SD', 'DJ', 'ER'];
-    const africaCountries = [...ecowasCountries, ...sadcCountries, ...eacCountries, ...comesaCountries, 'MA', 'DZ', 'TN', 'LY', 'EG', 'SD', 'ER', 'DJ', 'SO', 'ET', 'SS', 'CF', 'TD', 'GA', 'GQ', 'ST', 'CG'];
-    const gccCountries = ['SA', 'AE', 'QA', 'KW', 'OM', 'BH'];
-    const pacificIslands = ['FJ', 'PG', 'SB', 'VU', 'WS', 'TO', 'KI', 'MH', 'PW', 'FM', 'NR', 'TV'];
+    const countryUpper = country ? country.toUpperCase() : '';
 
-    // Helper to get relevant regions for a country
+    // 2. REGIONAL & COUNTRY-SPECIFIC LOGIC (Smart Base Docs)
+    const euCountries = ['DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'SE', 'PL', 'AT', 'DK', 'FI', 'IE', 'PT', 'GR', 'CZ', 'HU', 'RO', 'BG', 'SK', 'HR', 'LT', 'SI', 'LV', 'EE', 'CY', 'LU', 'MT'];
+    
+    // European Union Logic
+    if (euCountries.includes(countryUpper)) {
+      commonDocs.push({
+        name: 'Documento Único Administrativo (DUA/SAD)',
+        issuer: 'Aduana de Destino / Importador',
+        description: 'Declaración aduanera estándar para toda la Unión Europea.',
+        requirements: 'Debe presentarse electrónicamente antes de la llegada.'
+      });
+      commonDocs.push({
+        name: 'Declaración de Conformidad CE',
+        issuer: 'Fabricante',
+        description: 'Certifica que el producto cumple con las normas de seguridad de la UE.',
+        requirements: 'Obligatorio para electrónica, maquinaria y juguetes.'
+      });
+    }
+
+    // MERCOSUR Logic
+    if (['AR', 'BR', 'PY', 'UY', 'BO'].includes(countryUpper)) {
+      commonDocs.push({
+        name: 'Certificado de Origen MERCOSUR',
+        issuer: 'Cámara de Comercio',
+        description: 'Permite la exoneración del Arancel Externo Común.',
+        requirements: 'Formato oficial MERCOSUR, sin enmiendas.'
+      });
+    }
+
+    // ASEAN Logic (Vietnam, Thailand, Indonesia, etc.)
+    if (['VN', 'TH', 'ID', 'MY', 'PH', 'SG'].includes(countryUpper)) {
+      commonDocs.push({
+        name: 'Formulario D (ATIGA)',
+        issuer: 'Autoridad Comercial',
+        description: 'Certificado de origen para preferencias arancelarias en ASEAN.',
+        requirements: 'Original firmado, emitido antes del embarque.'
+      });
+    }
+
+    // China Specific
+    if (countryUpper === 'CN') {
+      if (chapter && ['02', '03', '04', '08', '09', '10', '12', '16', '19', '20', '21', '22'].includes(chapter)) {
+        commonDocs.push({
+          name: 'Registro GACC (CIFER)',
+          issuer: 'GACC (Aduana China)',
+          description: 'Registro obligatorio para exportadores de alimentos.',
+          requirements: 'El número de registro debe figurar en el etiquetado.'
+        });
+      }
+    }
+
+    // USA Specific (ISF + FDA)
+    if (['US', 'USA'].includes(countryUpper)) {
+      commonDocs.push({
+        name: 'ISF (10+2) Filing',
+        issuer: 'Importador / Agente',
+        description: 'Información de seguridad del importador (Importer Security Filing).',
+        requirements: 'Debe presentarse 24 horas antes de la carga en origen (marítimo).'
+      });
+      if (chapter && ['02', '03', '04', '07', '08', '09', '10', '11', '12', '17', '18', '19', '20', '21', '22'].includes(chapter)) {
+        commonDocs.push({
+          name: 'FDA Prior Notice',
+          issuer: 'FDA / Agente',
+          description: 'Notificación previa de alimentos importados.',
+          requirements: 'El número de confirmación debe estar en la factura comercial.'
+        });
+      }
+    }
+
+    // 3. PRODUCT-SPECIFIC LOGIC (HS Chapters)
+    if (chapter) {
+      // Animal Products (Chapters 01-05)
+      if (['01', '02', '03', '04', '05'].includes(chapter)) {
+        commonDocs.push({
+          name: 'Certificado Sanitario / Veterinario',
+          issuer: 'Autoridad Sanitaria Oficial (ej. SENASA)',
+          description: 'Acredita que los productos son aptos para consumo humano/animal.',
+          requirements: 'Debe ser emitido por la autoridad oficial del país exportador.'
+        });
+      }
+
+      // Textiles (Chapters 61-62)
+      if (['61', '62'].includes(chapter)) {
+        commonDocs.push({
+          name: 'Certificado de Composición',
+          issuer: 'Fabricante / Laboratorio',
+          description: 'Detalla la composición de las fibras (ej. 100% algodón).',
+          requirements: 'Obligatorio para etiquetado en destino.'
+        });
+      }
+
+      // Chemicals (Chapters 28, 29, 38)
+      if (['28', '29', '38'].includes(chapter)) {
+        commonDocs.push({
+          name: 'MSDS (Hoja de Seguridad)',
+          issuer: 'Fabricante',
+          description: 'Detalla el manejo seguro de sustancias químicas.',
+          requirements: 'Debe cumplir norma GHS y estar en idiomas oficiales.'
+        });
+        if (euCountries.includes(countryUpper)) {
+          commonDocs.push({
+            name: 'Registro REACH',
+            issuer: 'ECHA (UE)',
+            description: 'Registro de sustancias químicas en la Unión Europea.',
+            requirements: 'Número de registro REACH obligatorio en la factura.'
+          });
+        }
+      }
+
+      // Pharma (Chapter 30)
+      if (chapter === '30') {
+        commonDocs.push({
+          name: 'Certificado GMP / BPF',
+          issuer: 'Autoridad Sanitaria (ANMAT/FDA/EMA)',
+          description: 'Buenas Prácticas de Manufactura (Good Manufacturing Practices).',
+          requirements: 'Certificado vigente y legalizado.'
+        });
+        commonDocs.push({
+          name: 'Certificado de Registro de Producto',
+          issuer: 'Ministerio de Salud (País Destino)',
+          description: 'Autorización oficial de venta en el país de destino.',
+          requirements: 'Trámite previo a la exportación obligatorio.'
+        });
+      }
+
+      // Fertilizers (Chapter 31)
+      if (chapter === '31') {
+        commonDocs.push({
+          name: 'Certificado de Análisis',
+          issuer: 'Laboratorio Acreditado',
+          description: 'Detalle de composición N-P-K y metales pesados.',
+          requirements: 'Debe coincidir con las especificaciones de la etiqueta.'
+        });
+      }
+    }
+
+    // 4. SMART REGIONS & DB RULES
     const getRelevantRegions = (c: string | undefined) => {
       if (!c) return [];
-      const regions = [c];
-      
-      // Regions mapping
-      if (euCountries.includes(c)) {
-        regions.push('EU', 'EEA');
-      }
-      if (eftaCountries.includes(c)) {
-        regions.push('EFTA');
-        if (c !== 'CH') regions.push('EEA');
-      }
-      if (aseanCountries.includes(c)) regions.push('ASEAN');
-      if (rcepCountries.includes(c)) regions.push('RCEP');
-      if (cptppCountries.includes(c)) regions.push('CPTPP');
-      if (ecowasCountries.includes(c)) regions.push('ECOWAS');
-      if (sadcCountries.includes(c)) regions.push('SADC');
-      if (eacCountries.includes(c)) regions.push('EAC');
-      if (comesaCountries.includes(c)) regions.push('COMESA');
-      if (africaCountries.includes(c)) regions.push('AfCFTA');
-      if (gccCountries.includes(c)) regions.push('GCC');
-      if (pacificIslands.includes(c)) regions.push('PACIFIC_ISLANDS');
-      
-      if (['IL', 'JO', 'LB', 'IQ', 'YE'].includes(c) || gccCountries.includes(c)) regions.push('MIDDLE_EAST');
-
-      if (c === 'IN') regions.push('INDIA_CEPA');
-      if (c === 'GB') regions.push('UK', 'UK_EU_TCA');
-      if (c === 'TR') regions.push('TURKEY_CU');
-      if (mercosurCountries.includes(c)) regions.push('MERCOSUR');
-      if (alianzaPacifico.includes(c)) regions.push('ALIANZA_PACIFICO');
-      if (comunidadAndina.includes(c)) regions.push('CAN', 'ALADI');
-      if (caftaCountries.includes(c)) regions.push('CAFTA_DR');
-      if (usmcaCountries.includes(c)) regions.push('USMCA');
-      if (['AR', 'BR', 'MX', 'CL', 'CO', 'PE', 'UY', 'PY', 'BO', 'EC'].includes(c)) regions.push('ALADI');
-      if (c === 'PA') regions.push('PANAMA_US_FTA');
+      const cu = c.toUpperCase();
+      const regions = [cu];
+      if (euCountries.includes(cu)) regions.push('EU', 'EEA');
+      if (['AR', 'BR', 'PY', 'UY', 'BO'].includes(cu)) regions.push('MERCOSUR');
+      if (['US', 'USA', 'CA', 'CAN', 'MX', 'MEX'].includes(cu)) regions.push('USMCA');
       return regions;
     };
 
-    const destRegions = getRelevantRegions(country);
+    const destRegions = getRelevantRegions(countryUpper);
     const originRegions = getRelevantRegions(originCountry);
 
     try {
       // Fetch rules from database
       const dbRules = await db.select().from(regulatoryRules).where(
         or(
-          // 1. Global Rules (no country/origin required)
           and(isNull(regulatoryRules.countryCode), isNull(regulatoryRules.originCountryCode), or(isNull(regulatoryRules.hsChapter), eq(regulatoryRules.hsChapter, chapter))),
-          
-          // 2. Destination Specific (matches dest country/region)
           and(inArray(regulatoryRules.countryCode, destRegions), isNull(regulatoryRules.originCountryCode), or(isNull(regulatoryRules.hsChapter), eq(regulatoryRules.hsChapter, chapter))),
-          
-          // 3. Origin Specific (matches origin country/region)
           and(isNull(regulatoryRules.countryCode), inArray(regulatoryRules.originCountryCode, originRegions), or(isNull(regulatoryRules.hsChapter), eq(regulatoryRules.hsChapter, chapter))),
-          
-          // 4. Bilateral Specific (both match)
           and(inArray(regulatoryRules.countryCode, destRegions), inArray(regulatoryRules.originCountryCode, originRegions), or(isNull(regulatoryRules.hsChapter), eq(regulatoryRules.hsChapter, chapter)))
         )
       );
 
-      // Map DB rules to the document format
       const mappedRules = dbRules.map(rule => ({
         name: rule.documentName,
         issuer: rule.issuer,
@@ -126,9 +204,8 @@ export class RegulatoryEngine {
         requirements: rule.requirements
       }));
 
-      // Fetch sanctions (The Danger Layer)
-      const sanctionHits = await SanctionsService.checkSanctions(country, hsCode);
-      
+      // 5. SANCTIONS (The High Alert Layer)
+      const sanctionHits = await SanctionsService.checkSanctions(countryUpper, hsCode);
       const sanctions = sanctionHits.map(s => ({
         name: `⚠️ ALERTA DE SANCIÓN: ${s.authority}`,
         issuer: s.authority,
@@ -138,11 +215,11 @@ export class RegulatoryEngine {
         severity: s.severity
       }));
 
-      // Combine and return
+      // 6. COMBINE EVERYTHING
       return [...sanctions, ...commonDocs, ...mappedRules];
     } catch (error) {
       console.error('Error fetching regulatory rules:', error);
-      return commonDocs; // Fallback to base docs on error
+      return commonDocs;
     }
   }
 }

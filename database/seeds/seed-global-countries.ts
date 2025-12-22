@@ -1,6 +1,6 @@
 import { db, initDatabase, saveDatabase } from '../../database/db-sqlite.js';
-import { countryBaseRequirements } from '../../shared/shared/schema-sqlite.js';
-import { getIsoCode } from '../../shared/shared/iso-m49-map.js';
+import { countryBaseRequirements } from '../../shared/schema-sqlite.js';
+import { getIsoCode } from '../../shared/iso-m49-map.js';
 
 // Full list of 190+ countries with minimal data for seed
 // Using ISO Alpha-2 as key

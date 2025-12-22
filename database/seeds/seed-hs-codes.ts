@@ -1,206 +1,100 @@
-import { initDatabase, saveDatabase, sqliteDb } from '../db-sqlite';
-import { HS_CODES_DATABASE } from '../../shared/shared/hs-codes-database';
+
+import { initDatabase, saveDatabase, getSqliteDb } from '../db-sqlite.js';
+import { HS_CODES_DATABASE } from '../../shared/hs-codes-database.js';
+import crypto from 'crypto';
 
 console.log('=== INICIO DEL SCRIPT DE SEMILLAS DE CÓDIGOS HS ===');
 
 async function main() {
   try {
     await initDatabase();
+    const sqliteDb = getSqliteDb();
     console.log(`📊 Total de códigos HS en base de datos estática: ${HS_CODES_DATABASE.length}`);
 
-    // 0. Crear tablas usando SQL directo
-    console.log('0. Creando tablas...');
-    
-    sqliteDb.run(`
-      CREATE TABLE IF NOT EXISTS hs_sections (
-        id TEXT PRIMARY KEY,
-        code TEXT NOT NULL UNIQUE,
-        number INTEGER NOT NULL,
-        description TEXT NOT NULL,
-        description_en TEXT NOT NULL,
-        chapter_range TEXT NOT NULL
-      )
-    `);
+    // Tables are now initialized centrally by database/init-db.ts
+    console.log('📦 Seeding HS Sections, Chapters, Partidas and Subpartidas...');
 
-    sqliteDb.run(`
-      CREATE TABLE IF NOT EXISTS hs_chapters (
-        id TEXT PRIMARY KEY,
-        code TEXT NOT NULL UNIQUE,
-        description TEXT NOT NULL,
-        description_en TEXT NOT NULL,
-        section_code TEXT NOT NULL,
-        notes TEXT,
-        notes_en TEXT
-      )
-    `);
+    // 1. Insertar Secciones si no existen
+    console.log('1. Insertando secciones...');
+    const sections = [
+      { id: '1', code: 'I', number: 1, description: 'Animales vivos y productos del reino animal', descriptionEn: 'Live animals; animal products', chapterRange: '01-05' },
+      { id: '2', code: 'II', number: 2, description: 'Productos del reino vegetal', descriptionEn: 'Vegetable products', chapterRange: '06-14' },
+      { id: '5', code: 'V', number: 5, description: 'Productos minerales', descriptionEn: 'Mineral products', chapterRange: '25-27' },
+      { id: '6', code: 'VI', number: 6, description: 'Productos de las industrias químicas', descriptionEn: 'Chemical industries', chapterRange: '28-38' },
+      { id: '15', code: 'XV', number: 15, description: 'Metales comunes y sus manufacturas', descriptionEn: 'Base metals', chapterRange: '72-83' },
+      { id: '16', code: 'XVI', number: 16, description: 'Máquinas y aparatos, material eléctrico', descriptionEn: 'Machinery and electrical equipment', chapterRange: '84-85' },
+      { id: '17', code: 'XVII', number: 17, description: 'Material de transporte', descriptionEn: 'Transport equipment', chapterRange: '86-89' }
+    ];
 
-    sqliteDb.run(`DROP TABLE IF EXISTS hs_partidas`);
-
-    sqliteDb.run(`
-      CREATE TABLE hs_partidas (
-        id TEXT PRIMARY KEY,
-        code TEXT NOT NULL UNIQUE,
-        description TEXT NOT NULL,
-        description_en TEXT NOT NULL,
-        chapter_code TEXT NOT NULL,
-        tariff_rate REAL,
-        units TEXT,
-        keywords TEXT,
-        notes TEXT,
-        notes_en TEXT
-      )
-    `);
-
-    sqliteDb.run(`DROP TABLE IF EXISTS hs_subpartidas`);
-    
-    sqliteDb.run(`
-      CREATE TABLE hs_subpartidas (
-        id TEXT PRIMARY KEY,
-        code TEXT NOT NULL UNIQUE,
-        description TEXT NOT NULL,
-        description_en TEXT NOT NULL,
-        partida_code TEXT NOT NULL,
-        chapter_code TEXT NOT NULL,
-        tariff_rate REAL,
-        special_tariff_rate REAL,
-        units TEXT,
-        restrictions TEXT,
-        keywords TEXT,
-        notes TEXT,
-        notes_en TEXT,
-        is_active INTEGER DEFAULT 1
-      )
-    `);
-
-    sqliteDb.run(`
-      CREATE TABLE IF NOT EXISTS companies (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        country TEXT NOT NULL,
-        type TEXT NOT NULL,
-        products TEXT,
-        verified INTEGER DEFAULT 0,
-        contact_email TEXT,
-        website TEXT,
-        legal_name TEXT,
-        tax_id TEXT,
-        business_type TEXT,
-        established_year INTEGER,
-        employee_count INTEGER,
-        annual_revenue REAL,
-        credit_rating TEXT,
-        risk_score REAL,
-        payment_terms TEXT,
-        total_transactions INTEGER,
-        average_order_value REAL,
-        on_time_delivery_rate REAL,
-        certifications TEXT,
-        sanctions INTEGER DEFAULT 0,
-        contact_person TEXT,
-        phone TEXT,
-        address TEXT,
-        last_updated INTEGER,
-        created_at INTEGER
-      )
-    `);
-
-    console.log('✅ Tablas creadas.');
-
-    // 1. Insertar Secciones
-    const uniqueSections = new Set(HS_CODES_DATABASE.map(hs => hs.section));
-    console.log(`\n1. Insertando ${uniqueSections.size} Secciones...`);
-    
-    for (const sectionCode of uniqueSections) {
-      const sample = HS_CODES_DATABASE.find(hs => hs.section === sectionCode);
-      if (sample) {
-        try {
-          sqliteDb.run(
-            `INSERT OR IGNORE INTO hs_sections (id, code, number, description, description_en, chapter_range) VALUES (?, ?, ?, ?, ?, ?)`,
-            [crypto.randomUUID(), sectionCode, romanToInt(sectionCode), `Sección ${sectionCode}`, `Section ${sectionCode}`, "01-99"]
-          );
-          process.stdout.write('.');
-        } catch (e) {}
-      }
-    }
-    console.log('\n✅ Secciones insertadas.');
-
-    // 2. Insertar Capítulos
-    const uniqueChapters = new Set(HS_CODES_DATABASE.map(hs => hs.chapter));
-    console.log(`\n2. Insertando ${uniqueChapters.size} Capítulos...`);
-
-    for (const chapterCode of uniqueChapters) {
-      const sample = HS_CODES_DATABASE.find(hs => hs.chapter === chapterCode);
-      if (sample) {
-        try {
-          sqliteDb.run(
-            `INSERT OR IGNORE INTO hs_chapters (id, code, description, description_en, section_code) VALUES (?, ?, ?, ?, ?)`,
-            [crypto.randomUUID(), chapterCode, `Capítulo ${chapterCode}`, `Chapter ${chapterCode}`, sample.section]
-          );
-          process.stdout.write('.');
-        } catch (e) {}
-      }
-    }
-    console.log('\n✅ Capítulos insertados.');
-
-    // 3. Insertar Códigos HS
-    console.log(`\n3. Insertando Códigos HS...`);
-    
-    let insertedCount = 0;
-    for (const hs of HS_CODES_DATABASE) {
+    for (const section of sections) {
       try {
-        if (hs.code.length === 4) {
-          // Partida
-          sqliteDb.run(
-            `INSERT OR IGNORE INTO hs_partidas (id, code, description, description_en, chapter_code, tariff_rate, units, keywords) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [crypto.randomUUID(), hs.code, hs.description, hs.descriptionEn, hs.chapter, hs.baseTariff, JSON.stringify(['kg', 'u']), JSON.stringify(hs.keywords || [])]
-          );
-        } else {
-          // Subpartida
-          const partidaCode = hs.code.substring(0, 4);
-          
-          // Insertar partida padre si no existe
-          try {
-            sqliteDb.run(
-              `INSERT OR IGNORE INTO hs_partidas (id, code, description, description_en, chapter_code) VALUES (?, ?, ?, ?, ?)`,
-              [crypto.randomUUID(), partidaCode, `Partida ${partidaCode}`, `Heading ${partidaCode}`, hs.chapter]
-            );
-          } catch (e) {}
+        sqliteDb.run(
+          'INSERT OR IGNORE INTO hs_sections (id, code, number, description, description_en, chapter_range) VALUES (?, ?, ?, ?, ?, ?)',
+          [section.id, section.code, section.number, section.description, section.descriptionEn, section.chapterRange]
+        );
+      } catch (e) {}
+    }
 
-          // Insertar subpartida con keywords
-          sqliteDb.run(
-            `INSERT OR IGNORE INTO hs_subpartidas (id, code, description, description_en, partida_code, chapter_code, tariff_rate, keywords, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [crypto.randomUUID(), hs.code, hs.description, hs.descriptionEn, partidaCode, hs.chapter, hs.baseTariff, JSON.stringify(hs.keywords || []), 1]
-          );
-        }
-        insertedCount++;
-        if (insertedCount % 10 === 0) process.stdout.write('.');
-      } catch (error: any) {
-        console.error(`Error insertando ${hs.code}:`, error.message);
+    // 2. Insertar Capítulos si no existen
+    console.log('2. Insertando capítulos...');
+    const chapters = [
+      { id: '1', code: '01', description: 'Animales vivos', sectionCode: 'I' },
+      { id: '2', code: '02', description: 'Carne y despojos comestibles', sectionCode: 'I' },
+      { id: '3', code: '03', description: 'Pescados y crustáceos', sectionCode: 'I' },
+      { id: '4', code: '04', description: 'Leche y productos lácteos; huevos', sectionCode: 'I' },
+      { id: '10', code: '10', description: 'Cereales', sectionCode: 'II' },
+      { id: '12', code: '12', description: 'Semillas y frutos oleaginosos', sectionCode: 'II' },
+      { id: '26', code: '26', description: 'Minerales, escorias y cenizas', sectionCode: 'V' },
+      { id: '27', code: '27', description: 'Combustibles minerales, aceites', sectionCode: 'V' },
+      { id: '30', code: '30', description: 'Productos farmacéuticos', sectionCode: 'VI' },
+      { id: '84', code: '84', description: 'Reactores nucleares, calderas, máquinas', sectionCode: 'XVI' },
+      { id: '85', code: '85', description: 'Máquinas, aparatos y material eléctrico', sectionCode: 'XVI' },
+      { id: '87', code: '87', description: 'Vehículos automóviles, tractores', sectionCode: 'XVII' }
+    ];
+
+    for (const chapter of chapters) {
+      try {
+        sqliteDb.run(
+          'INSERT OR IGNORE INTO hs_chapters (id, code, description, description_en, section_code) VALUES (?, ?, ?, ?, ?)',
+          [chapter.id, chapter.code, chapter.description, chapter.description || '', chapter.sectionCode]
+        );
+      } catch (e) {}
+    }
+
+    // 3. Procesar DATABASE de HSCode (Partidas y Subpartidas)
+    console.log('3. Insertando partidas y subpartidas desde HS_CODES_DATABASE...');
+    let partidaCount = 0;
+    let subpartidaCount = 0;
+
+    for (const hs of HS_CODES_DATABASE) {
+      const chapterCode = hs.code.substring(0, 2);
+      
+      // Si el código tiene 4 dígitos, es una Partida
+      if (hs.code.length === 4) {
+        sqliteDb.run(
+          'INSERT OR IGNORE INTO hs_partidas (id, code, description, description_en, chapter_code, tariff_rate, keywords) VALUES (?, ?, ?, ?, ?, ?, ?)',
+          [crypto.randomUUID(), hs.code, hs.description, hs.descriptionEn, chapterCode, hs.baseTariff, JSON.stringify(hs.keywords || [])]
+        );
+        partidaCount++;
+      } 
+      // Si el código tiene más de 4 dígitos, es una Subpartida
+      else if (hs.code.length > 4) {
+        const partidaCode = hs.code.substring(0, 4);
+        sqliteDb.run(
+          'INSERT OR IGNORE INTO hs_subpartidas (id, code, description, description_en, partida_code, chapter_code, tariff_rate, keywords, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          [crypto.randomUUID(), hs.code, hs.description, hs.descriptionEn, partidaCode, chapterCode, hs.baseTariff, JSON.stringify(hs.keywords || []), 1]
+        );
+        subpartidaCount++;
       }
     }
 
-    console.log(`\n\n✅ Proceso completado. ${insertedCount} códigos procesados.`);
+    console.log(`✅ Proceso completado: ${partidaCount} partidas and ${subpartidaCount} subpartidas insertadas (OR IGNORE).`);
     saveDatabase();
+    console.log('💾 Database saved');
 
   } catch (error: any) {
-    console.error('❌ Error general:', error.message);
-    console.error(error.stack);
-    saveDatabase();
-  } finally {
-    process.exit(0);
+    console.error('❌ Error general en el script de semillas:', error);
   }
-}
-
-function romanToInt(s: string): number {
-  const map: {[key: string]: number} = {I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000};
-  let res = 0;
-  s.split('').forEach((char, i) => {
-    const curr = map[char];
-    const next = map[s[i + 1]];
-    if (next > curr) res -= curr;
-    else res += curr;
-  });
-  return res || 0;
 }
 
 main();

@@ -1,5 +1,5 @@
 import { db, initDatabase } from './database/db-sqlite';
-import { users, companies, marketplacePosts, conversations } from './shared/shared/schema-sqlite';
+import { users, companies, marketplacePosts, conversations } from './shared/schema-sqlite';
 import { eq } from 'drizzle-orm';
 
 async function diagnose() {

@@ -1,4 +1,4 @@
-import { countryBaseRequirements, countryRequirements } from '../../shared/shared/schema-sqlite.js';
+import { countryBaseRequirements, countryRequirements } from '../../shared/schema-sqlite.js';
 import { eq, and } from 'drizzle-orm';
 
 // Interfaces for our layers

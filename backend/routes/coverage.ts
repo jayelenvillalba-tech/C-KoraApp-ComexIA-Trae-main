@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { db } from '../../database/db-sqlite.js';
-import { countryBaseRequirements, hsSubpartidas, marketData } from '../../shared/shared/schema-sqlite.js';
+import { countryBaseRequirements, hsSubpartidas, marketData } from '../../shared/schema-sqlite.js';
 import { sql } from 'drizzle-orm';
 
 export async function getCoverageStats(req: Request, res: Response) {

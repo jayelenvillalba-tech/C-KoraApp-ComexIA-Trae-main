@@ -1,5 +1,5 @@
 import { db, initDatabase } from '../db-sqlite';
-import { users, marketplacePosts, companies } from '../../shared/shared/schema-sqlite';
+import { users, marketplacePosts, companies } from '../../shared/schema-sqlite';
 import { eq } from 'drizzle-orm';
 
 async function seedMockDataFix() {

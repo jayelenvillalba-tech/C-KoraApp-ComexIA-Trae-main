@@ -1,7 +1,7 @@
 
 import { drizzle } from 'drizzle-orm/sql-js';
 import initSqlJs from 'sql.js';
-import * as schema from '../shared/shared/schema-sqlite.js';
+import * as schema from '../shared/schema-sqlite.js';
 import { config } from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -77,4 +77,6 @@ async function testConnection() {
 };
 
 // Exportaciones
+export function getDb() { return db; }
+export function getSqliteDb() { return sqliteDb; }
 export { db, sqliteDb, initDatabase, saveDatabase, closeConnection, testConnection };

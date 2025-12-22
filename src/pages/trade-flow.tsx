@@ -9,8 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import Header from "@/components/header";
 import { Map, Marker, Overlay } from "pigeon-maps";
-import { countries } from "@shared/shared/countries-data";
-import { getCountryCoordinates as getCoordinatesFromContinental } from "@shared/shared/continental-coordinates";
+import { ComplianceAlertBanner } from "@/components/compliance-alert-banner";
+import { countries } from "@shared/countries-data";
+import { getCountryCoordinates as getCoordinatesFromContinental } from "@shared/continental-coordinates";
 
 // Modern satellite map providers for high-quality visualization
 const mapProviders = {
@@ -589,20 +590,24 @@ export default function TradeFlow() {
     }
   };
 
-  const getCountryFlag = (countryCode: string) => {
-    const flags: Record<string, string> = {
-      'AR': '🇦🇷', 'BR': '🇧🇷', 'CL': '🇨🇱', 'CO': '🇨🇴', 'UY': '🇺🇾',
-      'PY': '🇵🇾', 'PE': '🇵🇪', 'EC': '🇪🇨', 'BO': '🇧🇴', 'VE': '🇻🇪',
-      'US': '🇺🇸', 'CA': '🇨🇦', 'MX': '🇲🇽', 'DE': '🇩🇪', 'FR': '🇫🇷',
-      'IT': '🇮🇹', 'ES': '🇪🇸', 'UK': '🇬🇧', 'NL': '🇳🇱', 'BE': '🇧🇪',
-      'CH': '🇨🇭', 'CN': '🇨🇳', 'JP': '🇯🇵', 'KR': '🇰🇷', 'IN': '🇮🇳',
-      'SG': '🇸🇬', 'MY': '🇲🇾', 'TH': '🇹🇭', 'VN': '🇻🇳', 'ID': '🇮🇩',
-      'PH': '🇵🇭', 'AU': '🇦🇺', 'NZ': '🇳🇿', 'ZA': '🇿🇦', 'EG': '🇪🇬',
-      'NG': '🇳🇬', 'KE': '🇰🇪', 'SA': '🇸🇦', 'AE': '🇦🇪', 'IL': '🇮🇱',
-      'TR': '🇹🇷'
-    };
     return flags[countryCode] || '🌍';
   };
+
+  // Helper for drawing arcs between coordinates
+  const getArcPoints = useCallback((start: [number, number], end: [number, number], segments = 12) => {
+    const points: [number, number][] = [];
+    for (let i = 0; i <= segments; i++) {
+        const t = i / segments;
+        // Simple linear interpolation with a "jump" (arc) in the middle
+        const lat = start[0] + (end[0] - start[0]) * t;
+        const lng = start[1] + (end[1] - start[1]) * t;
+        
+        // Add "arc" effect by boosting lat in the middle
+        const arcHeight = Math.sin(t * Math.PI) * 10; // 10 degrees of arc height
+        points.push([lat + arcHeight, lng]);
+    }
+    return points;
+  }, []);
 
   // Show loading state
   if (isLoading || isLoadingCompanies) {
@@ -714,6 +719,25 @@ export default function TradeFlow() {
               </CardContent>
             </Card>
           </div>
+        )}
+
+        {/* Compliance Alerts Section */}
+        {recommendations.length > 0 && (
+          <ComplianceAlertBanner 
+            warnings={[
+              {
+                message: language === 'es' ? 'Análisis de cumplimiento completado para 2025.' : 'Compliance analysis completed for 2025.',
+                messageEn: 'Compliance analysis completed for 2025.',
+                severity: 'info'
+              },
+              ...recommendations.filter(r => r.opportunity === 'low').map(r => ({
+                message: language === 'es' ? `Restricciones detectadas para ${r.countryName}` : `Restrictions detected for ${r.countryName}`,
+                messageEn: `Restrictions detected for ${r.countryNameEn}`,
+                severity: 'warning' as const,
+                authority: 'ComexIA Engine'
+              }))
+            ]}
+          />
         )}
 
         {/* User Selections Display */}
@@ -1186,6 +1210,33 @@ export default function TradeFlow() {
                       dprs={[1, 2]}
                     >
                     {mapMarkers}
+
+                      {/* TRADE FLOW ARCS - High Impact Visualization */}
+                      {originCountryData && recommendations.map((dest, dIdx) => {
+                        const start = getCountryCoordinates(originCountry);
+                        const end = dest.coordinates || getCountryCoordinates(dest.countryCode);
+                        const points = getArcPoints(start, end);
+                        const treatyStyle = getTreatyArrowStyle(categorizeCountryByTreaty(dest));
+
+                        return points.map((pt, pIdx) => (
+                          <Overlay 
+                            key={`arc-${dIdx}-${pIdx}`} 
+                            anchor={pt} 
+                            offset={[0,0]}
+                          >
+                            <motion.div 
+                              initial={{ opacity: 0, scale: 0 }}
+                              animate={{ opacity: 1 - (pIdx / points.length) * 0.5, scale: 0.5 + (pIdx / points.length) * 0.5 }}
+                              className="w-1.5 h-1.5 rounded-full shadow-lg"
+                              style={{ 
+                                backgroundColor: treatyStyle.color,
+                                boxShadow: `0 0 10px ${treatyStyle.pulseColor}`
+                              }}
+                            />
+                          </Overlay>
+                        ));
+                      })}
+
                       {/* PERFECTLY COORDINATED GPS Markers - Optimized for Performance */}
                       {(recommendations || []).map((country, index) => {
                         const treatyType = categorizeCountryByTreaty(country);

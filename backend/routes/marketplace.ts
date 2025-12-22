@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { db } from '../../database/db-sqlite.js';
-import { marketplacePosts, companies, users } from '../../shared/shared/schema-sqlite.js';
+import { marketplacePosts, companies, users } from '../../shared/schema-sqlite.js';
 import { eq, desc, and } from 'drizzle-orm';
 
 export async function getPosts(req: Request, res: Response) {

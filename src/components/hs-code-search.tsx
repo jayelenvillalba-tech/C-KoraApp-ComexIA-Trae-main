@@ -23,8 +23,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import type { HsSubpartida, HsPartida } from "@shared/schema";
-import { countries, getCountryTreaties, getTariffReduction, type CountryData } from "@shared/shared/countries-data";
+import { countries, getCountryTreaties, getTariffReduction, type CountryData } from "@shared/countries-data";
 
 interface HsCodeSearchProps {
   onProductSelected?: (product: HsSubpartida, country: string, operation: string, productName: string) => void;
@@ -37,6 +50,15 @@ export default function HsCodeSearch({ onProductSelected, onPartidaSelected }: H
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [originCountry, setOriginCountry] = useState<string>("");
   const [operationType, setOperationType] = useState<string>("");
+  const [open, setOpen] = useState(false);
+
+  const aiSuggestions = [
+    { code: '1201', label: language === 'es' ? 'Soja / Soya' : 'Soybeans', icon: '🌱' },
+    { code: '0201', label: language === 'es' ? 'Carne Bovina' : 'Beef Meat', icon: '🥩' },
+    { code: '1006', label: language === 'es' ? 'Arroz' : 'Rice', icon: '🌾' },
+    { code: '8517', label: language === 'es' ? 'Smartphones / Celulares' : 'Smartphones', icon: '📱' },
+    { code: '0901', label: language === 'es' ? 'Café' : 'Coffee', icon: '☕' }
+  ];
 
   // Agrupar países por región para mejor organización
   const regionOrder = ['South America', 'North America', 'Europe', 'Asia', 'Oceania', 'Africa', 'Middle East'];
@@ -231,62 +253,122 @@ export default function HsCodeSearch({ onProductSelected, onPartidaSelected }: H
           </div>
         </div>
 
-        {/* Buscador de productos */}
+        {/* Buscador de productos con Autocomplete Inteligente */}
         <div className="space-y-2">
-          <Label className="text-sm font-medium text-blue-100">
-            <Search className="w-4 h-4 inline mr-2 text-blue-400" />
-            {language === 'es' ? 'Búsqueda de Producto' : 'Product Search'}
+          <Label className="text-sm font-medium text-blue-100 flex items-center justify-between">
+            <span className="flex items-center">
+              <Sparkles className="w-4 h-4 inline mr-2 text-yellow-400" />
+              {language === 'es' ? 'Búsqueda Inteligente (HS Code o Producto)' : 'Smart Search (HS Code or Product)'}
+            </span>
+            <div className="flex gap-2">
+              {aiSuggestions.map((suggestion) => (
+                <Badge
+                  key={suggestion.code}
+                  variant="outline"
+                  className="cursor-pointer hover:bg-blue-500/20 border-blue-500/30 text-[10px] py-0"
+                  onClick={() => {
+                    setSearchQuery(suggestion.label);
+                    setOpen(true);
+                  }}
+                >
+                  {suggestion.icon} {suggestion.label}
+                </Badge>
+              ))}
+            </div>
           </Label>
+          
           <div className="relative group">
             <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg blur opacity-30 group-hover:opacity-75 transition duration-500"></div>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input
-                placeholder={language === 'es' ? "Ej: Smartphones, Algodón, Café..." : "Ex: Smartphones, Cotton, Coffee..."}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && allResults.length > 0) {
-                    handleProductSelect(allResults[0]);
-                  }
-                }}
-                className="pl-10 pr-24 bg-slate-900/90 border-white/10 text-white placeholder:text-gray-500 focus:ring-2 focus:ring-blue-500/50 focus:border-transparent h-12"
-              />
-              <div className="absolute right-1 top-1 bottom-1">
-                  <Button 
-                    size="sm"
-                    className={`h-full px-4 ${
-                      (!originCountry || !operationType) 
-                        ? 'bg-gray-600 cursor-not-allowed' 
-                        : 'bg-blue-600 hover:bg-blue-500'
-                    } text-white`}
-                    onClick={() => {
-                      if (!originCountry || !operationType) {
-                        toast({
-                          title: language === 'es' ? 'Filtros requeridos' : 'Filters required',
-                          description: language === 'es' 
-                            ? 'Por favor selecciona un país y tipo de operación para buscar.' 
-                            : 'Please select a country and operation type to search.',
-                          variant: "default",
-                        });
-                        return;
-                      }
-
-                      if (allResults.length > 0) {
-                        handleProductSelect(allResults[0]);
-                      } else if (searchQuery.length >= 3) {
-                        toast({
-                          title: language === 'es' ? 'Buscando...' : 'Searching...',
-                          description: language === 'es' ? 'No se encontraron resultados exactos. Intenta con otro término.' : 'No exact results found. Try another term.',
-                          variant: "default",
-                        });
-                      }
+            
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger asChild>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 z-10" />
+                  <Input
+                    placeholder={language === 'es' ? "Busca por nombre o código HS..." : "Search by name or HS code..."}
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      if (e.target.value.length >= 2) setOpen(true);
                     }}
-                  >
-                    {language === 'es' ? 'BUSCAR' : 'SEARCH'}
-                  </Button>
-              </div>
-            </div>
+                    onFocus={() => {
+                      if (searchQuery.length >= 2) setOpen(true);
+                    }}
+                    className="pl-10 pr-24 bg-slate-900/90 border-white/10 text-white placeholder:text-gray-500 focus:ring-2 focus:ring-blue-500/50 focus:border-transparent h-12 w-full"
+                  />
+                  <div className="absolute right-1 top-1 bottom-1 z-10">
+                    <Button 
+                      size="sm"
+                      className={`h-full px-4 ${
+                        (!originCountry || !operationType) 
+                          ? 'bg-gray-600 cursor-not-allowed' 
+                          : 'bg-blue-600 hover:bg-blue-500'
+                      } text-white`}
+                      onClick={() => {
+                        if (allResults.length > 0) {
+                          handleProductSelect(allResults[0]);
+                        }
+                      }}
+                    >
+                      {language === 'es' ? 'ANALIZAR' : 'ANALYZE'}
+                    </Button>
+                  </div>
+                </div>
+              </PopoverTrigger>
+              
+              <PopoverContent 
+                className="p-0 w-[var(--radix-popover-trigger-width)] bg-slate-900 border-white/10 shadow-2xl z-50" 
+                align="start"
+                onOpenAutoFocus={(e) => e.preventDefault()}
+              >
+                <Command className="bg-transparent text-white">
+                  <CommandList className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                    {isLoading && (
+                      <div className="p-4 text-center">
+                        <div className="animate-spin w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                        <p className="text-xs text-blue-300">{language === 'es' ? 'Buscando en la base global...' : 'Searching global database...'}</p>
+                      </div>
+                    )}
+                    
+                    {!isLoading && allResults.length === 0 && searchQuery.length >= 3 && (
+                      <CommandEmpty className="p-4 text-sm text-center text-gray-400">
+                        {language === 'es' ? 'No se encontraron resultados' : 'No results found'}
+                      </CommandEmpty>
+                    )}
+
+                    <CommandGroup heading={language === 'es' ? 'Resultados HS' : 'HS Results'}>
+                      {allResults.map((item) => (
+                        <CommandItem
+                          key={item.code}
+                          value={item.code + " " + item.description}
+                          onSelect={() => {
+                            handleProductSelect(item);
+                            setOpen(false);
+                          }}
+                          className="flex flex-col items-start p-3 aria-selected:bg-white/10 cursor-pointer border-b border-white/5 last:border-0"
+                        >
+                          <div className="flex items-center gap-2 mb-1 w-full">
+                            <Badge variant="outline" className="font-mono text-[10px] bg-blue-500/10 text-blue-400 border-blue-500/30">
+                              {item.code}
+                            </Badge>
+                            <span className="text-[10px] text-gray-500">
+                              {'partidaCode' in item ? 'Subpartida' : 'Partida'}
+                            </span>
+                            <div className="ml-auto text-green-400 text-[10px] font-bold">
+                              {item.tariffRate}%
+                            </div>
+                          </div>
+                          <span className="text-sm font-medium text-white line-clamp-1">{item.description}</span>
+                          {item.descriptionEn && language === 'es' && (
+                            <span className="text-[10px] text-gray-400 italic line-clamp-1">{item.descriptionEn}</span>
+                          )}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 

@@ -1,5 +1,5 @@
 import { db, initDatabase, saveDatabase } from '../db-sqlite.js';
-import { companies } from '../../shared/shared/schema-sqlite.js';
+import { companies } from '../../shared/schema-sqlite.js';
 import { sql } from 'drizzle-orm';
 
 // Company name generators by country

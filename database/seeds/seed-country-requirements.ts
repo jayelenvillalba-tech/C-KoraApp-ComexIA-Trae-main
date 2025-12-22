@@ -1,6 +1,6 @@
 
 import { db } from '../db';
-import { countryRequirements } from '../../shared/shared/schema';
+import { countryRequirements } from '../../shared/schema';
 import { sql } from 'drizzle-orm';
 
 const MOCK_REQUIREMENTS = [

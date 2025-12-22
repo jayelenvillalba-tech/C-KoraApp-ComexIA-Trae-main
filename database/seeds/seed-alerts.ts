@@ -1,5 +1,5 @@
 import { db, initDatabase, saveDatabase } from '../db-sqlite.js';
-import { tradeAlerts } from '../../shared/shared/schema-sqlite.js';
+import { tradeAlerts } from '../../shared/schema-sqlite.js';
 
 const mockAlerts = [
   {

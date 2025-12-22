@@ -2,7 +2,7 @@ import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { db, initDatabase, saveDatabase } from '../db-sqlite.js';
-import { companies } from '../../shared/shared/schema-sqlite.js';
+import { companies } from '../../shared/schema-sqlite.js';
 
 // Para obtener __dirname en ES modules
 const __filename = fileURLToPath(import.meta.url);

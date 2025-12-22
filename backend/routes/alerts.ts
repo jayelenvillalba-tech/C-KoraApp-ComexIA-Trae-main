@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { db } from '../../database/db-sqlite.js';
-import { tradeAlerts } from '../../shared/shared/schema-sqlite.js';
+import { tradeAlerts } from '../../shared/schema-sqlite.js';
 import { eq, desc, and, gt } from 'drizzle-orm';
 
 export async function getAlerts(req: Request, res: Response) {

@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Search, Filter, Plus, Briefcase, Globe, ShoppingCart, Truck, Clock } from 'lucide-react';
-import { MarketplacePost } from '@shared/schema';
+import { MarketplacePost } from '@shared/schema-sqlite';
 import { useLanguage } from '@/hooks/use-language';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import HsCodeSearch from "@/components/hs-code-search";
 
 // Simple Card Component for Listing
 function ListingCard({ post }: { post: any }) {
@@ -129,12 +130,8 @@ function CreatePostDialog({ open, onOpenChange, onSuccess }: { open: boolean, on
                          </div>
                          <div className="space-y-2">
                             <label className="text-xs text-gray-400">HS Code</label>
-                            <Input 
-                                placeholder="e.g. 1001" 
-                                className="bg-[#0A1929] border-gray-700" 
-                                value={formData.hsCode}
-                                onChange={e => setFormData({...formData, hsCode: e.target.value})}
-                                required
+                            <HsCodeSearch 
+                                onSelect={(code) => setFormData({...formData, hsCode: code})}
                             />
                          </div>
                     </div>
@@ -252,13 +249,9 @@ export default function Marketplace() {
 
       {/* Filters */}
       <div className="flex flex-col md:flex-row gap-4 mb-8 bg-[#0D2137] p-4 rounded-lg border border-cyan-900/30">
-        <div className="relative flex-1">
-            <Search className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
-            <Input 
-                placeholder={language === 'es' ? "Buscar por producto, HS Code..." : "Search by product, HS Code..."} 
-                className="pl-10 bg-[#0A1929] border-gray-700 text-white"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+        <div className="flex-1">
+            <HsCodeSearch 
+                onSelect={(code) => setSearchTerm(code)}
             />
         </div>
         <div className="flex gap-2">

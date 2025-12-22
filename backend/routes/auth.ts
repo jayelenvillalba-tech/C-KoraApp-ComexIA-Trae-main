@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { db } from '../../database/db-sqlite.js';
-import { users, companies } from '../../shared/shared/schema-sqlite.js';
+import { users, companies } from '../../shared/schema-sqlite.js';
 import { eq, or } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';

@@ -4,16 +4,17 @@ import path from 'path';
 import cors from 'cors';
 import { db, initDatabase } from '../database/db-sqlite.js';
 import { initializeTables } from '../database/init-db.js';
-import { companies, hsSubpartidas, hsPartidas, hsChapters, hsSections, marketplacePosts, users, conversations, conversationParticipants, messages, subscriptions, verifications, chatInvites, countryRequirements, countryBaseRequirements, shipments } from '../shared/shared/schema-sqlite.js';
+import { companies, hsSubpartidas, hsPartidas, hsChapters, hsSections, marketplacePosts, users, conversations, conversationParticipants, messages, subscriptions, verifications, chatInvites, countryRequirements, countryBaseRequirements, shipments } from '../shared/schema-sqlite.js';
 import { eq, like, or, and, sql, desc } from 'drizzle-orm';
-import { countries, getCountryTreaties, getTariffReduction } from '../shared/shared/countries-data.js';
-import { getCountryCoordinates } from '../shared/shared/continental-coordinates.js';
+import { countries, getCountryTreaties, getTariffReduction } from '../shared/countries-data.js';
+import { getCountryCoordinates } from '../shared/continental-coordinates.js';
 import { calculateCosts } from './routes/cost-calculator.js';
 import { analyzeMarket } from './routes/market-analysis.js';
 import verificationRouter from './routes/verifications.js';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import { RegulatoryMerger } from './services/regulatory-merger.js';
+import { RegulatoryEngine } from './services/regulatory-engine.js';
 import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -529,7 +530,7 @@ app.get('/api/country-requirements/:countryCode/:hsCode', async (req, res) => {
     );
 
     // [FIX] Always use Rich Base Documents from helper function (Spanish, detailed)
-    const richDocs = determineRequiredDocuments(hsCode, countryCode);
+    const richDocs = await RegulatoryEngine.determineRequiredDocuments(hsCode, countryCode);
     
     // Get Specific Docs from DB if any (Layer 2)
     let dbSpecificDocs: any[] = [];
@@ -1843,159 +1844,3 @@ app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`📁 SQLite Database connected`);
 });
-
-      description: 'Detalle del contenido de cada bulto.',
-      requirements: 'Debe coincidir exactamente con la factura comercial.'
-    },
-    {
-      name: 'Certificado de Origen',
-      issuer: 'Cámara de Comercio / Entidad Autorizada',
-      description: 'Acredita el origen de la mercancía para preferencias arancelarias.',
-      requirements: 'Formato específico según el acuerdo comercial aplicable.'
-    },
-    {
-      name: 'Documento de Transporte',
-      issuer: 'Transportista / Agente de Carga',
-      description: 'Bill of Lading (marítimo), Air Waybill (aéreo) o CRT (terrestre).',
-      requirements: 'Debe estar consignado según instrucciones del importador.'
-    }
-  ];
-
-  // --- REGIONAL LOGIC (Smart Base Docs) ---
-
-  // 1. European Union (EU)
-  const euCountries = ['DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'SE', 'PL', 'AT', 'DK', 'FI', 'IE', 'PT', 'GR', 'CZ', 'HU', 'RO', 'BG', 'SK', 'HR', 'LT', 'SI', 'LV', 'EE', 'CY', 'LU', 'MT'];
-  if (euCountries.includes(country)) {
-     commonDocs.push({
-        name: 'Documento Único Administrativo (DUA/SAD)',
-        issuer: 'Aduana de Destino / Importador',
-        description: 'Declaración aduanera estándar para toda la Unión Europea.',
-        requirements: 'Debe presentarse electrónicamente antes de la llegada.'
-     });
-     commonDocs.push({
-        name: 'Declaración de Conformidad CE',
-        issuer: 'Fabricante',
-        description: 'Certifica que el producto cumple con las normas de seguridad de la UE.',
-        requirements: 'Obligatorio para electrónica, maquinaria y juguetes.'
-     });
-  }
-
-  // 2. MERCOSUR (AR, BR, PY, UY)
-  if (['AR', 'BR', 'PY', 'UY'].includes(country)) {
-      commonDocs.push({
-        name: 'Certificado de Origen MERCOSUR',
-        issuer: 'Cámara de Comercio',
-        description: 'Permite la exoneración del Arancel Externo Común.',
-        requirements: 'Formato oficial MERCOSUR, sin enmiendas.'
-      });
-  }
-
-  // 3. ASEAN (Vietnam, Thailand, Indonesia, etc.)
-  if (['VN', 'TH', 'ID', 'MY', 'PH', 'SG'].includes(country)) {
-      commonDocs.push({
-        name: 'Formulario D (ATIGA)',
-        issuer: 'Autoridad Comercial',
-        description: 'Certificado de origen para preferencias arancelarias en ASEAN.',
-        requirements: 'Original firmado, emitido antes del embarque.'
-      });
-  }
-
-  // 4. China (GACC for Food)
-  if (country === 'CN') {
-     if (['02', '03', '04', '08', '09', '10', '12', '16', '19', '20', '21', '22'].includes(chapter)) {
-        commonDocs.push({
-           name: 'Registro GACC (CIFER)',
-           issuer: 'GACC (Aduana China)',
-           description: 'Registro obligatorio para exportadores de alimentos.',
-           requirements: 'El número de registro debe figurar en el etiquetado.'
-        });
-     }
-  }
-
-  // 5. USA (ISF + FDA)
-  if (country === 'US') {
-    commonDocs.push({
-      name: 'ISF (10+2) Filing',
-      issuer: 'Importador / Agente',
-      description: 'Información de seguridad del importador.',
-      requirements: 'Debe presentarse 24 horas antes de la carga en origen (marítimo).'
-    });
-    if (['02', '03', '04', '07', '08', '09', '10', '11', '12', '17', '18', '19', '20', '21', '22'].includes(chapter)) {
-       commonDocs.push({
-          name: 'FDA Prior Notice',
-          issuer: 'FDA / Agente',
-          description: 'Notificación previa de alimentos importados.',
-          requirements: 'Número de confirmación debe estar en la factura.'
-       });
-    }
-  }
-
-  // Specific documents based on HS Code chapter
-  const chapter = hsCode.substring(0, 2);
-  
-  if (chapter === '61' || chapter === '62') { // Textiles (Camisetas)
-    commonDocs.push({
-      name: 'Certificado de Composición',
-      issuer: 'Laboratorio Textil / Exportador',
-      description: 'Detalla la composición de las fibras (ej. 100% algodón).',
-      requirements: 'Obligatorio para etiquetado en destino.'
-    });
-  }
-  
-  if (['01', '02', '03', '04', '05'].includes(chapter)) { // Animal products
-    commonDocs.push({
-      name: 'Certificado Sanitario / Veterinario',
-      issuer: 'SENASA (Argentina) / Autoridad Sanitaria',
-      description: 'Acredita que los productos son aptos para consumo humano/animal.',
-      requirements: 'Debe ser emitido por la autoridad oficial del país exportador.'
-    });
-  }
-
-  // --- SPECIALIZED DEEP DIVE LOGIC (User Request) ---
-
-  // 1. Chemicals (Chapters 28, 29, 38)
-  if (['28', '29', '38'].includes(chapter)) {
-      commonDocs.push({
-          name: 'MSDS (Hoja de Seguridad)',
-          issuer: 'Fabricante',
-          description: 'Material Safety Data Sheet (Hoja de Datos de Seguridad de Materiales).',
-          requirements: 'Debe cumplir norma GHS, idiomas origen/destino, 16 secciones.'
-      });
-      if (country === 'EU' || euCountries.includes(country)) {
-          commonDocs.push({
-              name: 'Registro REACH',
-              issuer: 'ECHA (Agencia Europea de Sustancias Químicas)',
-              description: 'Registro, Evaluación, Autorización y Restricción de sustancias químicas.',
-              requirements: 'Número de registro REACH obligatorio en la factura.'
-          });
-      }
-  }
-
-  // 2. Pharmaceuticals (Chapter 30)
-  if (['30'].includes(chapter)) {
-      commonDocs.push({
-          name: 'Certificado GMP / BPF',
-          issuer: 'Autoridad Sanitaria (ANMAT/FDA/EMA)',
-          description: 'Buenas Prácticas de Manufactura.',
-          requirements: 'Vigente y legalizado.'
-      });
-      commonDocs.push({
-          name: 'Certificado de Registro de Producto',
-          issuer: 'Ministerio de Salud (País Destino)',
-          description: 'Autorización de venta en el país de destino.',
-          requirements: 'Trámite previo a la exportación (puede tardar meses).'
-      });
-  }
-
-  // 3. Fertilizers (Chapter 31)
-  if (['31'].includes(chapter)) {
-       commonDocs.push({
-          name: 'Certificado de Análisis',
-          issuer: 'Laboratorio Acreditado',
-          description: 'Detalle de composición N-P-K y metales pesados.',
-          requirements: 'Debe coincidir con las especificaciones de la etiqueta.'
-      });
-  }
-
-  return commonDocs;
-}

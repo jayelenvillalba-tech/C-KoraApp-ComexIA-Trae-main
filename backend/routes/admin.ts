@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { db } from '../../database/db-sqlite.js';
-import { users, companies, subscriptions, verifications, marketplacePosts } from '../../shared/shared/schema-sqlite.js';
+import { users, companies, subscriptions, verifications, marketplacePosts } from '../../shared/schema-sqlite.js';
 import { eq, sql, desc } from 'drizzle-orm';
 
 // Helper to check admin role

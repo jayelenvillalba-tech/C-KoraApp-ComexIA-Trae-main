@@ -1,5 +1,5 @@
 import { db, initDatabase } from './database/db-sqlite';
-import { hsPartidas, hsSubpartidas } from './shared/shared/schema-sqlite';
+import { hsPartidas, hsSubpartidas } from './shared/schema-sqlite';
 import { sql } from 'drizzle-orm';
 
 async function verifyHsData() {

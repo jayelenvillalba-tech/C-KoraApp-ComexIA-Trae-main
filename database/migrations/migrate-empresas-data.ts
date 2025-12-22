@@ -2,7 +2,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
-import { InsertCompany } from '../../shared/shared/schema';
+import { InsertCompany } from '../../shared/schema';
 
 interface EmpresaLegacy {
   id?: string;

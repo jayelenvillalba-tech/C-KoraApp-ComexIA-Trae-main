@@ -1,5 +1,5 @@
 import { db, initDatabase, saveDatabase } from '../db-sqlite.js';
-import { users, companies } from '../../shared/shared/schema-sqlite.js';
+import { users, companies } from '../../shared/schema-sqlite.js';
 import { eq } from 'drizzle-orm';
 
 async function fixMockUser() {

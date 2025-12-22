@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { db } from '../../database/db-sqlite.js';
-import { subscriptions, companies } from '../../shared/shared/schema-sqlite.js';
+import { subscriptions, companies } from '../../shared/schema-sqlite.js';
 import { eq } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 

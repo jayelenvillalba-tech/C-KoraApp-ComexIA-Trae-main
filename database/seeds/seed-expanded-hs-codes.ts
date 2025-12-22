@@ -1,5 +1,5 @@
 import { db, initDatabase, saveDatabase } from '../db-sqlite.js';
-import { hsSubpartidas } from '../../shared/shared/schema-sqlite.js';
+import { hsSubpartidas } from '../../shared/schema-sqlite.js';
 import { sql } from 'drizzle-orm';
 
 const newHsCodes = [

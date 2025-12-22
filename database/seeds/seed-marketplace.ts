@@ -1,5 +1,5 @@
 import { db, initDatabase, saveDatabase } from '../db-sqlite.js';
-import { companies, users, marketplacePosts } from '../../shared/shared/schema-sqlite.js';
+import { companies, users, marketplacePosts } from '../../shared/schema-sqlite.js';
 import { eq } from 'drizzle-orm';
 
 async function seedMarketplace() {

@@ -1,4 +1,5 @@
 import { sql } from "drizzle-orm";
+import crypto from "crypto";
 import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -10,6 +11,17 @@ export const hsSections = sqliteTable("hs_sections", {
   description: text("description").notNull(),
   descriptionEn: text("description_en").notNull(),
   chapterRange: text("chapter_range").notNull(), // "01-05"
+});
+
+export const countries = sqliteTable("countries", {
+  code: text("code").primaryKey(), // ISO 2 code
+  name: text("name").notNull(),
+  nameEn: text("name_en").notNull(),
+  region: text("region"),
+  flagUrl: text("flag_url"),
+  currency: text("currency"),
+  languages: text("languages"),
+  timezone: text("timezone"),
 });
 
 export const hsChapters = sqliteTable("hs_chapters", {
@@ -262,6 +274,8 @@ export const insertHsSubpartidaSchema = createInsertSchema(hsSubpartidas).omit({
   id: true,
 });
 
+export const insertCountrySchema = createInsertSchema(countries);
+
 export const insertCompanySchema = createInsertSchema(companies).omit({
   id: true,
   createdAt: true,
@@ -427,6 +441,9 @@ export type HsSection = typeof hsSections.$inferSelect;
 export type HsChapter = typeof hsChapters.$inferSelect;
 export type HsPartida = typeof hsPartidas.$inferSelect;
 export type HsSubpartida = typeof hsSubpartidas.$inferSelect;
+export type HsPartida = typeof hsPartidas.$inferSelect;
+export type HsSubpartida = typeof hsSubpartidas.$inferSelect;
+export type Country = typeof countries.$inferSelect;
 export type Company = typeof companies.$inferSelect;
 export type MarketData = typeof marketData.$inferSelect;
 export type CountryOpportunity = typeof countryOpportunities.$inferSelect;
@@ -440,7 +457,10 @@ export type MarketIntelligence = typeof marketIntelligence.$inferSelect;
 export type InsertHsSection = z.infer<typeof insertHsSectionSchema>;
 export type InsertHsChapter = z.infer<typeof insertHsChapterSchema>;
 export type InsertHsPartida = z.infer<typeof insertHsPartidaSchema>;
+export type InsertHsPartida = z.infer<typeof insertHsPartidaSchema>;
 export type InsertHsSubpartida = z.infer<typeof insertHsSubpartidaSchema>;
+export type InsertCountry = z.infer<typeof insertCountrySchema>;
+export type InsertCompany = z.infer<typeof insertCompanySchema>;
 export type InsertCompany = z.infer<typeof insertCompanySchema>;
 export type InsertMarketData = z.infer<typeof insertMarketDataSchema>;
 export type InsertCountryOpportunity = z.infer<typeof insertCountryOpportunitySchema>;

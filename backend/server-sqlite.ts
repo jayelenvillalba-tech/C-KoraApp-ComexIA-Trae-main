@@ -3,10 +3,10 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { db, initDatabase } from '../database/db-sqlite';
-import { companies, hsSubpartidas, hsPartidas, hsChapters, hsSections } from '../shared/shared/schema-sqlite';
+import { companies, hsSubpartidas, hsPartidas, hsChapters, hsSections } from '../shared/schema-sqlite';
 import { eq, like, or, and, sql, desc } from 'drizzle-orm';
-import { countries, getCountryTreaties, getTariffReduction } from '../shared/shared/countries-data';
-import { getCountryCoordinates } from '../shared/shared/continental-coordinates';
+import { countries, getCountryTreaties, getTariffReduction } from '../shared/countries-data';
+import { getCountryCoordinates } from '../shared/continental-coordinates';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

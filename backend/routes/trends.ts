@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { db } from '../../database/db-sqlite.js';
-import { marketData } from '../../shared/shared/schema-sqlite.js';
+import { marketData } from '../../shared/schema-sqlite.js';
 import { eq, and, desc } from 'drizzle-orm';
 
 // Simple Linear Regression Calculator
