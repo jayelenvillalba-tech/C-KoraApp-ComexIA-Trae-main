@@ -1,0 +1,3 @@
+Force build trigger at 2025-12-22.
+Latest logic: React 18 compat + SPA routing.
+Build signal: ALPHA-TRIGGER-01
