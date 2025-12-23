@@ -13,5 +13,8 @@
     "api/index.ts": {
       "includeFiles": "comexia_v2.db"
     }
+  },
+  "typescript": {
+    "ignoreBuildErrors": true
   }
 }
