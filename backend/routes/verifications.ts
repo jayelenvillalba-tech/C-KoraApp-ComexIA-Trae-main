@@ -5,7 +5,7 @@ import path from 'path';
 import fs from 'fs';
 import { db } from '../../database/db-sqlite.js';
 import { verifications, companies, users } from '../../shared/schema-sqlite.js';
-import { Eq, eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc } from 'drizzle-orm';
 
 const router = Router();
 

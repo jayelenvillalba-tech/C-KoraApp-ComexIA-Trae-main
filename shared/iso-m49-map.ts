@@ -81,7 +81,6 @@ export const isoToM49: Record<string, string> = {
   'TR': '792', // Turkey
   'UA': '804', // Ukraine
   'AE': '784', // UAE
-  'GB': '826', // UK
   'VE': '862', // Venezuela
 };
 

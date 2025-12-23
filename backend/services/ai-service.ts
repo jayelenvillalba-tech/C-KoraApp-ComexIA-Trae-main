@@ -87,7 +87,7 @@ export class AIService {
       if (q.includes('carne') || q.includes('beef')) hsCode = '0201';
       if (q.includes('pharma') || q.includes('medicamento')) hsCode = '3004';
 
-      const requirements = RegulatoryEngine.determineRequiredDocuments(hsCode, countryCode);
+      const requirements = await RegulatoryEngine.determineRequiredDocuments(hsCode, countryCode);
       const reqList = requirements.map(r => `- ${r.name}: ${r.requirements}`).join('\n');
 
       return `Para exportar a ${countryCode} (HS aprox ${hsCode}), necesitarás:\n\n${reqList}\n\n¿Necesitas ayuda con alguno de estos trámites?`;
