@@ -2,8 +2,7 @@ import express from 'express';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import cors from 'cors';
-import { db, initDatabase } from '../database/db-sqlite.js';
-import { initializeTables } from '../database/init-db.js';
+import { db, testConnection } from '../database/db-turso.js';
 import { companies, hsSubpartidas, hsPartidas, hsChapters, hsSections, marketplacePosts, users, conversations, conversationParticipants, messages, subscriptions, verifications, chatInvites, countryRequirements, countryBaseRequirements, shipments } from '../shared/schema-sqlite.js';
 import { eq, like, or, and, sql, desc } from 'drizzle-orm';
 import { countries, getCountryTreaties, getTariffReduction } from '../shared/countries-data.js';
@@ -1845,8 +1844,8 @@ export default app;
 // Only listen if running directly (not imported)
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, async () => {
-    await initializeTables();
+    await testConnection();
     console.log(`Server running on port ${PORT}`);
-    console.log(`📁 SQLite Database connected`);
+    console.log(`📡 Turso Database connected`);
   });
 }
