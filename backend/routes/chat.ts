@@ -198,6 +198,12 @@ export async function sendMessage(req: Request, res: Response) {
 
         res.json(newMsg[0]);
 
+    } catch (error: any) {
+        console.error('Error sending message:', error);
+        res.status(500).json({ error: error.message });
+    }
+}
+
 // AI Suggestions Endpoint
 export async function getSuggestions(req: Request, res: Response) {
     try {
