@@ -1,0 +1,143 @@
+{
+  "timestamp": "2025-12-24T18:40:44.595Z",
+  "summary": {
+    "total": 23,
+    "passed": 15,
+    "failed": 8,
+    "percentage": "65.2"
+  },
+  "results": [
+    {
+      "category": "Database",
+      "test": "Initialize database",
+      "status": "PASS"
+    },
+    {
+      "category": "Database",
+      "test": "HS Codes count",
+      "status": "PASS",
+      "details": "2500 codes found"
+    },
+    {
+      "category": "Database",
+      "test": "Companies count",
+      "status": "FAIL",
+      "details": "Only 2 companies"
+    },
+    {
+      "category": "Database",
+      "test": "Users/Employees count",
+      "status": "PASS",
+      "details": "202 users found"
+    },
+    {
+      "category": "Database",
+      "test": "Marketplace posts count",
+      "status": "PASS",
+      "details": "201 posts found"
+    },
+    {
+      "category": "Database",
+      "test": "News articles count",
+      "status": "PASS",
+      "details": "100 articles found"
+    },
+    {
+      "category": "Database",
+      "test": "Verifications count",
+      "status": "PASS",
+      "details": "40 verifications found"
+    },
+    {
+      "category": "Database",
+      "test": "Subscriptions count",
+      "status": "PASS",
+      "details": "20 subscriptions found"
+    },
+    {
+      "category": "API",
+      "test": "Health check",
+      "status": "PASS",
+      "details": "Services: {\"hsCodes\":1552,\"companies\":4,\"countries\":262}"
+    },
+    {
+      "category": "Auth",
+      "test": "Register user",
+      "status": "PASS",
+      "details": "User ID: af842b2b-cf81-4eab-97af-d7288818ebd6"
+    },
+    {
+      "category": "Auth",
+      "test": "Login user",
+      "status": "PASS",
+      "details": "Logged in as Test User"
+    },
+    {
+      "category": "HS Codes",
+      "test": "Search functionality",
+      "status": "FAIL",
+      "details": "No results or error"
+    },
+    {
+      "category": "HS Codes",
+      "test": "Get by code",
+      "status": "PASS",
+      "details": "Found code 0201"
+    },
+    {
+      "category": "Companies",
+      "test": "List companies",
+      "status": "FAIL",
+      "details": "No companies found"
+    },
+    {
+      "category": "Marketplace",
+      "test": "List posts",
+      "status": "PASS",
+      "details": "Found 1 posts"
+    },
+    {
+      "category": "Marketplace",
+      "test": "Get post detail",
+      "status": "PASS",
+      "details": "Post: Carne vacuna premium deshuesada fresca"
+    },
+    {
+      "category": "Chat",
+      "test": "List conversations",
+      "status": "FAIL"
+    },
+    {
+      "category": "Chat",
+      "test": "Create conversation",
+      "status": "FAIL"
+    },
+    {
+      "category": "Chat",
+      "test": "AI suggestions",
+      "status": "PASS",
+      "details": "AI suggestions working"
+    },
+    {
+      "category": "Billing",
+      "test": "Checkout endpoint",
+      "status": "FAIL"
+    },
+    {
+      "category": "Verifications",
+      "test": "List verifications",
+      "status": "FAIL"
+    },
+    {
+      "category": "News",
+      "test": "Get news articles",
+      "status": "PASS",
+      "details": "Found 3 articles"
+    },
+    {
+      "category": "Cost Calculator",
+      "test": "Calculate costs",
+      "status": "FAIL"
+    }
+  ]
+}

@@ -2,7 +2,8 @@ import express from 'express';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import cors from 'cors';
-import { db, testConnection } from '../database/db-turso.js';
+// Use SQLite local for development
+import { db } from '../database/db-sqlite.js';
 import { companies, hsSubpartidas, hsPartidas, hsChapters, hsSections, marketplacePosts, users, conversations, conversationParticipants, messages, subscriptions, verifications, chatInvites, countryRequirements, countryBaseRequirements, shipments } from '../shared/schema-sqlite.js';
 import { eq, like, or, and, sql, desc } from 'drizzle-orm';
 import { countries, getCountryTreaties, getTariffReduction } from '../shared/countries-data.js';
