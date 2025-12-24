@@ -193,8 +193,10 @@ async function testHSCodes() {
   
   // Test Search
   const searchResult = await testEndpoint('GET', '/api/hs-codes/search?q=carne&limit=10');
-  if (searchResult.ok && Array.isArray(searchResult.data) && searchResult.data.length > 0) {
-    logTest('HS Codes', 'Search functionality', 'PASS', `Found ${searchResult.data.length} results`);
+  const searchData = Array.isArray(searchResult.data) ? searchResult.data : (searchResult.data.results || []);
+  
+  if (searchResult.ok && searchData.length > 0) {
+    logTest('HS Codes', 'Search functionality', 'PASS', `Found ${searchData.length} results`);
   } else {
     logTest('HS Codes', 'Search functionality', 'FAIL', 'No results or error');
   }
@@ -214,14 +216,19 @@ async function testCompanies() {
   
   // Test List Companies
   const listResult = await testEndpoint('GET', '/api/companies?limit=10');
-  if (listResult.ok && Array.isArray(listResult.data) && listResult.data.length > 0) {
-    logTest('Companies', 'List companies', 'PASS', `Found ${listResult.data.length} companies`);
+  const companiesList = Array.isArray(listResult.data) ? listResult.data : (listResult.data.companies || []);
+  
+  if (listResult.ok && companiesList.length > 0) {
+    logTest('Companies', 'List companies', 'PASS', `Found ${companiesList.length} companies`);
     
     // Test Get Company Profile
-    const companyId = listResult.data[0].id;
+    const companyId = companiesList[0].id;
     const profileResult = await testEndpoint('GET', `/api/companies/${companyId}`);
-    if (profileResult.ok && profileResult.data) {
-      logTest('Companies', 'Get company profile', 'PASS', `Profile for ${profileResult.data.name}`);
+    // Handle wrapped response for profile
+    const profileData = profileResult.data.data || profileResult.data;
+    
+    if (profileResult.ok && profileData) {
+      logTest('Companies', 'Get company profile', 'PASS', `Profile for ${profileData.name}`);
     } else {
       logTest('Companies', 'Get company profile', 'FAIL', 'Profile not found');
     }
@@ -257,7 +264,7 @@ async function testChat() {
   console.log('\n💬 === TESTING CHAT SYSTEM ===\n');
   
   // Test List Conversations
-  const listResult = await testEndpoint('GET', '/api/chat/conversations');
+  const listResult = await testEndpoint('GET', `/api/chat/conversations?userId=${testUserId}`);
   if (listResult.ok) {
     logTest('Chat', 'List conversations', 'PASS', `Found ${Array.isArray(listResult.data) ? listResult.data.length : 0} conversations`);
   } else {
@@ -267,9 +274,10 @@ async function testChat() {
   // Test Create Conversation (if we have test user)
   if (testUserId && testCompanyId) {
     const createResult = await testEndpoint('POST', '/api/chat/conversations', {
-      company1Id: testCompanyId,
-      company2Id: testCompanyId, // Mock - same company for testing
-      postId: testPostId
+      userId: testUserId,
+      otherCompanyId: testCompanyId, // Use auth user's company as target for self-chat test
+      postId: testPostId,
+      initialMessage: 'Test message start'
     });
     
     if (createResult.ok && createResult.data.id) {
@@ -353,11 +361,14 @@ async function testCostCalculator() {
   console.log('\n💰 === TESTING COST CALCULATOR ===\n');
   
   const calcResult = await testEndpoint('POST', '/api/calculate-costs', {
-    hsCode: '0201',
+    hsCode: '010111',
     origin: 'AR',
     destination: 'US',
     weight: 1000,
-    value: 50000
+    fobValue: 50000,
+    transport: 'maritime',
+    incoterm: 'FOB',
+    urgency: 'standard'
   });
   
   if (calcResult.ok && calcResult.data) {

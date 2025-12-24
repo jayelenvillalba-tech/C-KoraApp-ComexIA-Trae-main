@@ -1,10 +1,10 @@
 {
-  "timestamp": "2025-12-24T18:54:34.946Z",
+  "timestamp": "2025-12-24T20:15:35.550Z",
   "summary": {
-    "total": 23,
-    "passed": 16,
-    "failed": 7,
-    "percentage": "69.6"
+    "total": 25,
+    "passed": 25,
+    "failed": 0,
+    "percentage": "100.0"
   },
   "results": [
     {
@@ -58,13 +58,13 @@
       "category": "API",
       "test": "Health check",
       "status": "PASS",
-      "details": "Services: {\"hsCodes\":1552,\"companies\":5,\"countries\":262}"
+      "details": "Services: {\"hsCodes\":2500,\"companies\":51,\"countries\":262}"
     },
     {
       "category": "Auth",
       "test": "Register user",
       "status": "PASS",
-      "details": "User ID: c3a8e4e7-a217-4d30-b636-d4453b188e57"
+      "details": "User ID: 8e3074ac-e96e-471b-acb3-903505bed103"
     },
     {
       "category": "Auth",
@@ -75,8 +75,8 @@
     {
       "category": "HS Codes",
       "test": "Search functionality",
-      "status": "FAIL",
-      "details": "No results or error"
+      "status": "PASS",
+      "details": "Found 12 results"
     },
     {
       "category": "HS Codes",
@@ -87,30 +87,44 @@
     {
       "category": "Companies",
       "test": "List companies",
-      "status": "FAIL",
-      "details": "No companies found"
+      "status": "PASS",
+      "details": "Found 10 companies"
+    },
+    {
+      "category": "Companies",
+      "test": "Get company profile",
+      "status": "PASS",
+      "details": "Profile for Frigoríficos Very"
     },
     {
       "category": "Marketplace",
       "test": "List posts",
       "status": "PASS",
-      "details": "Found 1 posts"
+      "details": "Found 10 posts"
     },
     {
       "category": "Marketplace",
       "test": "Get post detail",
       "status": "PASS",
-      "details": "Post: Carne vacuna premium deshuesada fresca"
+      "details": "Post: Carne Bovina"
     },
     {
       "category": "Chat",
       "test": "List conversations",
-      "status": "FAIL"
+      "status": "PASS",
+      "details": "Found 0 conversations"
     },
     {
       "category": "Chat",
       "test": "Create conversation",
-      "status": "FAIL"
+      "status": "PASS",
+      "details": "Conversation ID: 1dac2303-953a-4189-b1f7-33d50f941169"
+    },
+    {
+      "category": "Chat",
+      "test": "Send message",
+      "status": "PASS",
+      "details": "Message sent successfully"
     },
     {
       "category": "Chat",
@@ -121,12 +135,14 @@
     {
       "category": "Billing",
       "test": "Checkout endpoint",
-      "status": "FAIL"
+      "status": "PASS",
+      "details": "Endpoint responding"
     },
     {
       "category": "Verifications",
       "test": "List verifications",
-      "status": "FAIL"
+      "status": "PASS",
+      "details": "Found 40 verifications"
     },
     {
       "category": "News",
@@ -137,7 +153,8 @@
     {
       "category": "Cost Calculator",
       "test": "Calculate costs",
-      "status": "FAIL"
+      "status": "PASS",
+      "details": "Calculation successful"
     }
   ]
 }

@@ -1,7 +1,7 @@
 # Cómo Restaurar desde este Backup
 
 ## Fecha del Backup
-2025-12-24T18:43:26.598Z
+2025-12-24T20:16:36.131Z
 
 ## Contenido
 - Base de datos: `database/comexia_v2.db`

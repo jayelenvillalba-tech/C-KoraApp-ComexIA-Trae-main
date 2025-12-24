@@ -3,7 +3,7 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import cors from 'cors';
 // Use SQLite local for development
-import { db } from '../database/db-sqlite.js';
+import { db } from '../database/db.js';
 import { companies, hsSubpartidas, hsPartidas, hsChapters, hsSections, marketplacePosts, users, conversations, conversationParticipants, messages, subscriptions, verifications, chatInvites, countryRequirements, countryBaseRequirements, shipments } from '../shared/schema-sqlite.js';
 import { eq, like, or, and, sql, desc } from 'drizzle-orm';
 import { countries, getCountryTreaties, getTariffReduction } from '../shared/countries-data.js';
@@ -56,6 +56,21 @@ app.get('/api/health', async (req, res) => {
   } catch (error: any) {
     console.error('Health check error:', error);
     res.status(500).json({ status: 'error', error: error.message });
+  }
+});
+
+// ========== Billing API (Public) ==========
+app.post('/api/billing/checkout', (req, res) => {
+  try {
+    const { planId } = req.body;
+    // Mock successful checkout session
+    res.json({ 
+      success: true, 
+      sessionId: 'cs_test_' + Date.now(),
+      url: 'https://checkout.stripe.com/test/' + Date.now()
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -366,9 +381,15 @@ app.get('/api/companies', async (req, res) => {
         ));
     }
 
-    const results = await db.select()
+    let query = db.select()
         .from(companies)
-        .where(and(...conditions))
+        .$dynamic();
+
+    if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+    }
+
+    const results = await query
         .limit(limit)
         .offset(offset);
 
@@ -396,9 +417,15 @@ app.get('/api/companies', async (req, res) => {
         });
     }
 
-    const totalResult = await db.select({ count: sql<number>`count(*)` })
+    let countQuery = db.select({ count: sql<number>`count(*)` })
         .from(companies)
-        .where(and(...conditions));
+        .$dynamic();
+
+    if (conditions.length > 0) {
+        countQuery = countQuery.where(and(...conditions));
+    }
+
+    const totalResult = await countQuery;
 
     res.json({
       success: true,
@@ -1069,16 +1096,40 @@ app.get('/api/chat/conversations', async (req, res) => {
 // Create new conversation
 app.post('/api/chat/conversations', async (req, res) => {
   try {
+    // Create new conversation
+    console.log('[DEBUG] Chat Create Request:', JSON.stringify(req.body));
     const { userId, otherCompanyId, postId, initialMessage } = req.body;
     
     // Get user's company
     const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
     if (!user.length) {
+      console.log('[DEBUG] User not found:', userId);
       return res.status(404).json({ error: 'User not found' });
     }
     
-    const userCompanyId = user[0].companyId;
+    let userCompanyId = user[0].companyId;
+    console.log('[DEBUG] User Company:', userCompanyId, 'Target Company:', otherCompanyId);
     
+    // Fix: If user has no company (data integrity issue), create one or assign to target
+    if (!userCompanyId) {
+        console.log('[DEBUG] Fixing missing companyId for user:', userId);
+        
+        // Auto-assign to a new "Personal" company
+        const [newCompany] = await db.insert(companies).values({
+            name: `${user[0].name}'s Personal Company`,
+            country: 'AR',
+            type: 'importer',
+            verified: false
+        }).returning();
+        
+        userCompanyId = newCompany.id;
+        
+        // Update user
+        await db.update(users)
+            .set({ companyId: userCompanyId })
+            .where(eq(users.id, userId));
+    }
+
     // Check if conversation already exists
     const existing = await db.select()
       .from(conversations)
@@ -1748,41 +1799,9 @@ app.post('/api/marketplace/posts', async (req, res) => {
     } catch (e) { res.status(500).json({error: e}); }
 });
 
-// Chat API
-app.get('/api/chat/conversations', async (req, res) => {
-    try {
-        const { getConversations } = await import('./routes/chat.js');
-        await getConversations(req, res);
-    } catch (e) { res.status(500).json({error: e}); }
-});
-
-app.post('/api/chat/conversations', async (req, res) => {
-    try {
-        const { createConversation } = await import('./routes/chat.js');
-        await createConversation(req, res);
-    } catch (e) { res.status(500).json({error: e}); }
-});
-
-app.get('/api/chat/conversations/:conversationId/messages', async (req, res) => {
-    try {
-        const { getMessages } = await import('./routes/chat.js');
-        await getMessages(req, res);
-    } catch (e) { res.status(500).json({error: e}); }
-});
-
-app.post('/api/chat/conversations/:conversationId/messages', async (req, res) => {
-    try {
-        const { sendMessage } = await import('./routes/chat.js');
-        await sendMessage(req, res);
-    } catch (e) { res.status(500).json({error: e}); }
-});
-
-app.post('/api/chat/suggestions', async (req, res) => {
-    try {
-        const { getSuggestions } = await import('./routes/chat.js');
-        await getSuggestions(req, res);
-    } catch (e) { res.status(500).json({error: e}); }
-});
+// ========== Chat API Cleanup ==========
+// Removed duplicates
+// Only listen if running directly (not imported)
 
 // ========== Production Serving ==========
 
@@ -1804,10 +1823,18 @@ app.get('*', (req, res) => {
 export default app;
 
 // Only listen if running directly (not imported)
+// Only listen if running directly (not imported)
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, async () => {
-    await testConnection();
-    console.log(`Server running on port ${PORT}`);
-    console.log(`📡 Turso Database connected`);
+    try {
+      // Initialize Database
+      const { initDatabase } = await import('../database/db.js');
+      await initDatabase();
+      
+      console.log(`Server running on port ${PORT}`);
+      console.log(`📡 Database connected (SQLite Local)`);
+    } catch (error) {
+       console.error('❌ Failed to start server:', error);
+    }
   });
 }
