@@ -20,11 +20,8 @@ import fs from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const logFile = path.join(process.cwd(), 'backend-debug.log');
-const logToFile = (msg: string) => {
-  const timestamp = new Date().toISOString();
-  fs.appendFileSync(logFile, `[${timestamp}] ${msg}\n`);
-};
+// Removed file logging for Vercel compatibility (read-only filesystem)
+// Use console.log instead which Vercel captures in function logs
 
 const app = express();
 const PORT = process.env.PORT || 3000;

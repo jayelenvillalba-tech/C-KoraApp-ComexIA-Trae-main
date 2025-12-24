@@ -1,7 +1,7 @@
 import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { db, initDatabase, saveDatabase } from '../db-sqlite.js';
+import { db, initDatabase } from '../db.js';
 import { companies } from '../../shared/schema-sqlite.js';
 
 // Para obtener __dirname en ES modules
@@ -73,7 +73,7 @@ async function main() {
     console.log(`   Insertados: ${insertedCount}`);
     console.log(`   Errores (posibles duplicados): ${errorCount}`);
     
-    saveDatabase();
+    // saveDatabase() - Not needed for unified adapter (auto-persists)
 
   } catch (error: any) {
     console.error('❌ Error general:', error.message);

@@ -1,18 +1,21 @@
 import { drizzle } from 'drizzle-orm/libsql';
 import { createClient } from '@libsql/client';
 import * as schema from '../shared/schema-sqlite.js';
-import * as dbSqlite from './db-sqlite.js';
+// Remove static import
+// import * as dbSqlite from './db-sqlite.js';
+
 import { config } from 'dotenv';
-import fs from 'fs';
-import path from 'path';
 
 config();
 
-// Exportable db instance (will be populated by initDatabase)
-export let db: any = dbSqlite.db;
-export let sqliteDb: any = dbSqlite.sqliteDb; // For legacy raw access (Local only)
+// Exportable db instance (initially null)
+export let db: any;
+export let sqliteDb: any; 
 
 export async function initDatabase() {
+  // If db is already initialized, return it (Idempotent)
+  if (db) return db;
+
   const isProduction = process.env.NODE_ENV === 'production';
   const useTurso = process.env.USE_TURSO === 'true' || (isProduction && process.env.TURSO_DATABASE_URL);
 
@@ -29,6 +32,22 @@ export async function initDatabase() {
       });
       
       db = drizzle(client, { schema });
+      console.log('✅ Turso Database Connected');
+    } catch (error) {
+      console.error('❌ Failed to connect to Turso:', error);
+      throw error;
+    }
+  } else {
+    // Dynamic import for Local SQLite to avoid Vercel build/runtime errors
+    console.log('💻 Initializing Local SQLite...');
+    const dbSqlite = await import('./db-sqlite.js');
+    await dbSqlite.initDatabase();
+    db = dbSqlite.db;
+    sqliteDb = dbSqlite.sqliteDb;
+    console.log('✅ Local Database Ready');
+  }
+  return db;
+}
       
       // Monkey-patch sqliteDb for minor raw query compatibility if needed (best effort)
       sqliteDb = {
