@@ -160,84 +160,45 @@ app.get('/api/hs-codes/search', async (req, res) => {
     if (query) {
       const searchPattern = `%${query.toLowerCase()}%`;
       
-      logToFile(`🔍 [DEBUG] Search Query: "${query}"`);
-
-      // Use direct SQL to search both tables
-      const { sqliteDb } = await import('../database/db-sqlite.js');
+      // Search in both partidas and subpartidas using Drizzle
+      const partidasResults = await db.select()
+        .from(hsPartidas)
+        .where(
+          or(
+            like(hsPartidas.code, `%${query}%`),
+            like(sql`lower(${hsPartidas.description})`, searchPattern),
+            like(sql`lower(${hsPartidas.descriptionEn})`, searchPattern),
+            like(sql`lower(${hsPartidas.keywords})`, searchPattern)
+          )
+        )
+        .limit(limit)
+        .offset(offset);
       
-      if (!sqliteDb) {
-          logToFile('❌ [DEBUG] sqliteDb is undefined after dynamic import!');
-      } else {
-          logToFile('✅ [DEBUG] sqliteDb imported successfully.');
-      }
+      const subpartidasResults = await db.select()
+        .from(hsSubpartidas)
+        .where(
+          or(
+            like(hsSubpartidas.code, `%${query}%`),
+            like(sql`lower(${hsSubpartidas.description})`, searchPattern),
+            like(sql`lower(${hsSubpartidas.descriptionEn})`, searchPattern),
+            like(sql`lower(${hsSubpartidas.keywords})`, searchPattern)
+          )
+        )
+        .limit(limit)
+        .offset(offset);
       
-      const partidasResults = sqliteDb.exec(`
-        SELECT * FROM hs_partidas 
-        WHERE 
-          code LIKE '${query}' OR
-          lower(description) LIKE '${searchPattern}' OR
-          lower(description_en) LIKE '${searchPattern}' OR
-          lower(keywords) LIKE '${searchPattern}'
-        LIMIT ${limit}
-        OFFSET ${offset}
-      `);
-      logToFile(`🔍 [DEBUG] Partidas found: ${partidasResults.length > 0 ? partidasResults[0].values?.length || 0 : 0}`);
-      
-      const subpartidasResults = sqliteDb.exec(`
-        SELECT * FROM hs_subpartidas 
-        WHERE 
-          code LIKE '${query}' OR
-          lower(description) LIKE '${searchPattern}' OR
-          lower(description_en) LIKE '${searchPattern}' OR
-          lower(keywords) LIKE '${searchPattern}'
-        LIMIT ${limit}
-        OFFSET ${offset}
-      `);
-      logToFile(`🔍 [DEBUG] Subpartidas found: ${subpartidasResults.length > 0 ? subpartidasResults[0].values?.length || 0 : 0}`);
-      
-      // Convert SQL results to objects
-      if (partidasResults.length > 0 && partidasResults[0].values) {
-        const columns = partidasResults[0].columns;
-        partidasResults[0].values.forEach((row: any[]) => {
-          const obj: any = {};
-          columns.forEach((col: any, idx: any) => {
-            obj[col] = row[idx];
-          });
-          results.push(obj);
-        });
-      }
-      
-      if (subpartidasResults.length > 0 && subpartidasResults[0].values) {
-        const columns = subpartidasResults[0].columns;
-        subpartidasResults[0].values.forEach((row: any[]) => {
-          const obj: any = {};
-          columns.forEach((col, idx) => {
-            obj[col] = row[idx];
-          });
-          results.push(obj);
-        });
-      }
-      
-      // Limit combined results
-      results = results.slice(0, limit);
+      // Combine results
+      results = [
+        ...partidasResults.map(p => ({ ...p, type: 'partida' })),
+        ...subpartidasResults.map(s => ({ ...s, type: 'subpartida' }))
+      ];
     } else {
-      // No query, return some results from both tables
-      const { sqliteDb } = await import('../database/db-sqlite.js');
-      
-      const allResults = sqliteDb.exec(`
-        SELECT * FROM hs_partidas LIMIT ${limit} OFFSET ${offset}
-      `);
-      
-      if (allResults.length > 0 && allResults[0].values) {
-        const columns = allResults[0].columns;
-        allResults[0].values.forEach((row: any[]) => {
-          const obj: any = {};
-          columns.forEach((col, idx) => {
-            obj[col] = row[idx];
-          });
-          results.push(obj);
-        });
-      }
+      // If no query, return recent codes
+      const recentCodes = await db.select()
+        .from(hsSubpartidas)
+        .limit(limit)
+        .offset(offset);
+      results = recentCodes;
     }
 
     res.json({

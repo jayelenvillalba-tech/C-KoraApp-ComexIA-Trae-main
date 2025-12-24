@@ -1,10 +1,10 @@
 {
-  "timestamp": "2025-12-24T18:40:44.595Z",
+  "timestamp": "2025-12-24T18:54:34.946Z",
   "summary": {
     "total": 23,
-    "passed": 15,
-    "failed": 8,
-    "percentage": "65.2"
+    "passed": 16,
+    "failed": 7,
+    "percentage": "69.6"
   },
   "results": [
     {
@@ -21,8 +21,8 @@
     {
       "category": "Database",
       "test": "Companies count",
-      "status": "FAIL",
-      "details": "Only 2 companies"
+      "status": "PASS",
+      "details": "50 companies found"
     },
     {
       "category": "Database",
@@ -58,13 +58,13 @@
       "category": "API",
       "test": "Health check",
       "status": "PASS",
-      "details": "Services: {\"hsCodes\":1552,\"companies\":4,\"countries\":262}"
+      "details": "Services: {\"hsCodes\":1552,\"companies\":5,\"countries\":262}"
     },
     {
       "category": "Auth",
       "test": "Register user",
       "status": "PASS",
-      "details": "User ID: af842b2b-cf81-4eab-97af-d7288818ebd6"
+      "details": "User ID: c3a8e4e7-a217-4d30-b636-d4453b188e57"
     },
     {
       "category": "Auth",

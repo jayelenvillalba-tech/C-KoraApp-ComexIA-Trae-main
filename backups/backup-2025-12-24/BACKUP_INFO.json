@@ -1,0 +1,20 @@
+{
+  "timestamp": "2025-12-24T18:43:26.596Z",
+  "version": "1.0.0-stable",
+  "description": "Complete backup of ComexIA project",
+  "contents": {
+    "database": "comexia_v2.db + SQL dump",
+    "code": "Git bundle with all history",
+    "documentation": "All markdown artifacts",
+    "config": ".env files"
+  },
+  "stats": {
+    "hsCodes": 2500,
+    "companies": 50,
+    "employees": 202,
+    "marketplacePosts": 101,
+    "news": 50,
+    "verifications": 20,
+    "subscriptions": 10
+  }
+}

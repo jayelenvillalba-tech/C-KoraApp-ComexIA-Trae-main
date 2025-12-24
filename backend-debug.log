@@ -132,3 +132,5 @@
 [2025-12-24T18:37:01.038Z] ❌ [DEBUG] sqliteDb is undefined after dynamic import!
 [2025-12-24T18:40:39.312Z] 🔍 [DEBUG] Search Query: "carne"
 [2025-12-24T18:40:39.336Z] ❌ [DEBUG] sqliteDb is undefined after dynamic import!
+[2025-12-24T18:54:29.682Z] 🔍 [DEBUG] Search Query: "carne"
+[2025-12-24T18:54:29.741Z] ❌ [DEBUG] sqliteDb is undefined after dynamic import!
