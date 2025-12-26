@@ -8,6 +8,7 @@
     "preview": "vite preview",
     "server": "tsx backend/server.ts",
     "start": "NODE_ENV=production tsx backend/server.ts",
+    "start:backend": "NODE_ENV=production tsx backend/server.ts",
     "test": "npx tsx run-tests.ts",
     "test:watch": "npx tsx --watch run-tests.ts",
     "backup": "npx tsx create-backup.ts",
