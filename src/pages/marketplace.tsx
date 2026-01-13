@@ -1,301 +1,455 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
+import { useLanguage } from '@/hooks/use-language';
+import { useUser } from '@/context/user-context';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Search, Filter, Plus, Briefcase, Globe, ShoppingCart, Truck, Clock } from 'lucide-react';
-import { MarketplacePost } from '@shared/schema-sqlite';
-import { useLanguage } from '@/hooks/use-language';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import HsCodeSearch from "@/components/hs-code-search";
+import { Search, Home, Users, Briefcase, MessageSquare, Bell, Plus } from 'lucide-react';
+import PostCard from '@/components/marketplace/post-card';
+import MarketplaceSidebar from '@/components/marketplace/sidebar';
+import PostForm from '@/components/marketplace/post-form';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
-// Simple Card Component for Listing
-function ListingCard({ post }: { post: any }) {
-    const { language } = useLanguage();
-    const [, navigate] = useLocation();
-    
-    const handleContact = async () => {
-        try {
-            // Mock ID for current user - in real app from auth context
-            const userId = 'mock-user-1'; // Ensure this matches user created in seeds or generic mock
-            
-            const res = await fetch('/api/chat/conversations', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId, postId: post.id })
-            });
-            
-            if (res.ok) {
-                const data = await res.json();
-                navigate(`/chat/${data.id}`);
-            }
-        } catch (error) {
-            console.error('Failed to start conversation', error);
-        }
-    };
-
-    return (
-        <div className="bg-[#0D2137] border border-cyan-900/30 rounded-lg p-5 hover:border-cyan-500/50 transition-all group">
-            <div className="flex justify-between items-start mb-3">
-                <Badge variant={post.type === 'sell' ? 'default' : 'secondary'} className={post.type === 'sell' ? 'bg-green-600/20 text-green-400 hover:bg-green-600/30' : 'bg-blue-600/20 text-blue-400 hover:bg-blue-600/30'}>
-                    {post.type === 'sell' ? (language === 'es' ? 'OFERTA' : 'OFFER') : (language === 'es' ? 'DEMANDA' : 'DEMAND')}
-                </Badge>
-                <span className="text-xs text-gray-500 flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    {new Date(post.createdAt).toLocaleDateString()}
-                </span>
-            </div>
-
-            <h3 className="text-lg font-bold text-white mb-2 group-hover:text-cyan-400 transition-colors line-clamp-1">{post.productName}</h3>
-            
-            <div className="space-y-2 text-sm text-gray-400 mb-4">
-                 <div className="flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-gray-600" />
-                    <span>{post.originCountry} <span className="text-gray-600">→</span> {post.destinationCountry}</span>
-                 </div>
-                 <div className="flex items-center gap-2">
-                    <Briefcase className="w-4 h-4 text-gray-600" />
-                    <span>{post.quantity}</span>
-                 </div>
-                 {post.price && (
-                    <div className="flex items-center gap-2">
-                        <span className="text-green-400 font-semibold">{post.price}</span>
-                    </div>
-                 )}
-            </div>
-
-            <div className="flex items-center justify-between pt-4 border-t border-gray-800">
-                <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center text-xs text-white">
-                        {post.companyName?.substring(0,2).toUpperCase()}
-                    </div>
-                    <span className="text-xs text-gray-400 line-clamp-1">{post.companyName}</span>
-                </div>
-                <Button size="sm" variant="outline" className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 text-xs h-8" onClick={handleContact}>
-                    {language === 'es' ? 'Contactar' : 'Contact'}
-                </Button>
-            </div>
-        </div>
-    );
-}
-
-
-// Create Post Dialog Component
-function CreatePostDialog({ open, onOpenChange, onSuccess }: { open: boolean, onOpenChange: (open: boolean) => void, onSuccess: () => void }) {
-    const { language } = useLanguage();
-    const [formData, setFormData] = useState({
-        type: 'sell',
-        title: '',
-        hsCode: '',
-        quantity: '',
-        origin: '',
-        description: '',
-        price: ''
-    });
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            await fetch('/api/marketplace/posts', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
-            });
-            onSuccess();
-            onOpenChange(false);
-        } catch (error) {
-            console.error('Failed to create post', error);
-        }
-    };
-
-    return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="bg-[#0D2137] border-cyan-900/30 text-white sm:max-w-[500px]">
-                <DialogHeader>
-                    <DialogTitle>{language === 'es' ? 'Publicar Nueva Oportunidad' : 'Post New Opportunity'}</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-                    <div className="grid grid-cols-2 gap-4">
-                         <div className="space-y-2">
-                            <label className="text-xs text-gray-400">Type</label>
-                            <select 
-                                className="w-full bg-[#0A1929] border border-gray-700 rounded p-2 text-sm"
-                                value={formData.type}
-                                onChange={e => setFormData({...formData, type: e.target.value})}
-                            >
-                                <option value="sell">Venta / Oferta</option>
-                                <option value="buy">Compra / Demanda</option>
-                            </select>
-                         </div>
-                         <div className="space-y-2">
-                            <label className="text-xs text-gray-400">HS Code</label>
-                            <HsCodeSearch 
-                                onSelect={(code) => setFormData({...formData, hsCode: code})}
-                            />
-                         </div>
-                    </div>
-                    <div className="space-y-2">
-                        <label className="text-xs text-gray-400">Title / Product Name</label>
-                        <Input 
-                            placeholder="e.g. Exportación Soja 2024" 
-                            className="bg-[#0A1929] border-gray-700" 
-                            value={formData.title}
-                            onChange={e => setFormData({...formData, title: e.target.value})}
-                            required
-                        />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-xs text-gray-400">Quantity</label>
-                            <Input 
-                                placeholder="e.g. 500 Tons" 
-                                className="bg-[#0A1929] border-gray-700" 
-                                value={formData.quantity}
-                                onChange={e => setFormData({...formData, quantity: e.target.value})}
-                            />
-                        </div>
-                         <div className="space-y-2">
-                            <label className="text-xs text-gray-400">Target Price (Optional)</label>
-                            <Input 
-                                placeholder="e.g. USD 400/MT" 
-                                className="bg-[#0A1929] border-gray-700" 
-                                value={formData.price}
-                                onChange={e => setFormData({...formData, price: e.target.value})}
-                            />
-                        </div>
-                    </div>
-                    <div className="space-y-2">
-                        <label className="text-xs text-gray-400">Origin / Destination</label>
-                        <Input 
-                            placeholder="e.g. Argentina / China" 
-                            className="bg-[#0A1929] border-gray-700" 
-                            value={formData.origin}
-                            onChange={e => setFormData({...formData, origin: e.target.value})}
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <label className="text-xs text-gray-400">Description</label>
-                        <textarea 
-                            className="w-full bg-[#0A1929] border border-gray-700 rounded p-2 text-sm min-h-[100px]"
-                            placeholder="Describe quality, terms, incoterms..."
-                            value={formData.description}
-                            onChange={e => setFormData({...formData, description: e.target.value})}
-                        />
-                    </div>
-                    <div className="pt-4 flex justify-end gap-2">
-                        <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-                        <Button type="submit" className="bg-cyan-600 hover:bg-cyan-700">
-                             {language === 'es' ? 'Publicar' : 'Post Now'}
-                        </Button>
-                    </div>
-                </form>
-            </DialogContent>
-        </Dialog>
-    );
-}
+// Mock data for posts - will be replaced with real API
+const mockPosts = [
+  {
+    id: '1',
+    type: 'buy' as const,
+    company: {
+      id: 'c1',
+      name: 'AgroExport S.A.',
+      verified: true,
+      country: 'AR'
+    },
+    user: {
+      id: 'u1',
+      name: 'María González',
+      role: 'Gerente de Exportaciones',
+      verified: true
+    },
+    hsCode: '1201',
+    productName: 'Soya No GMO',
+    quantity: '500 toneladas mensuales',
+    originCountry: 'BR',
+    destinationCountry: 'CN',
+    deadline: 30,
+    requirements: ['Certificado de Origen', 'Análisis Fitosanitario', 'Factura Comercial'],
+    certifications: ['Blockchain Verified', 'ISO 9001'],
+    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+    status: 'active' as const
+  },
+  {
+    id: '2',
+    type: 'sell' as const,
+    company: {
+      id: 'c2',
+      name: 'BeefCorp International',
+      verified: true,
+      country: 'UY'
+    },
+    user: {
+      id: 'u2',
+      name: 'Carlos Rodríguez',
+      role: 'Director Comercial',
+      verified: true
+    },
+    hsCode: '0202',
+    productName: 'Carne Bovina Premium',
+    quantity: '200 toneladas',
+    originCountry: 'UY',
+    destinationCountry: 'EU',
+    deadline: 15,
+    requirements: ['Certificado Sanitario', 'Trazabilidad Completa'],
+    certifications: ['SENASA', 'Halal', 'Blockchain Verified'],
+    createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000),
+    status: 'active' as const
+  }
+];
 
 export default function Marketplace() {
   const { language } = useLanguage();
+  const { user } = useUser();
   const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState<'all' | 'buy' | 'sell'>('all');
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [showPostForm, setShowPostForm] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const { data, isLoading, refetch } = useQuery<{data: any[]}>({
-      queryKey: ['marketplace-posts', typeFilter],
-      queryFn: async () => {
-          let url = '/api/marketplace/posts';
-          if (typeFilter !== 'all') url += `?type=${typeFilter}`;
-          const res = await fetch(url);
-          return res.json();
-      }
+  // Fetch posts from API
+  const { data: posts = [], isLoading } = useQuery({
+    queryKey: ['/api/marketplace/posts'],
+    queryFn: async () => {
+      const response = await fetch('/api/marketplace/posts');
+      if (!response.ok) throw new Error('Failed to fetch posts');
+      const data = await response.json();
+      return data;
+    }
   });
 
-  const posts = data?.data || [];
-  const filteredPosts = posts.filter(post => 
-      post.productName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      post.hsCode.includes(searchTerm)
-  );
+  // Filter posts based on search term
+  const filteredPosts = posts.filter((post: any) => {
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      post.productName?.toLowerCase().includes(term) ||
+      post.hsCode?.includes(term) ||
+      post.requirements?.some((r: string) => r.toLowerCase().includes(term)) ||
+      post.certifications?.some((c: string) => c.toLowerCase().includes(term)) ||
+      post.company?.name?.toLowerCase().includes(term)
+    );
+  });
+
+  const handlePostSubmit = async (postData: any) => {
+    if (!user) {
+      toast({
+        title: language === 'es' ? "Error" : "Error",
+        description: language === 'es' ? "Debes iniciar sesión para publicar" : "You must be logged in to post",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const payload = {
+        ...postData,
+        userId: user.id,
+        companyId: user.companyId
+      };
+
+      const response = await fetch('/api/marketplace/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) throw new Error('Failed to create post');
+
+      toast({
+        title: language === 'es' ? "Publicación creada" : "Post created",
+        description: language === 'es' ? "Tu oportunidad comercial ha sido publicada" : "Your trade opportunity has been posted",
+      });
+
+      setShowPostForm(false);
+      queryClient.invalidateQueries({ queryKey: ['/api/marketplace/posts'] });
+    } catch (error) {
+      console.error('Failed to create post:', error);
+      toast({
+        title: language === 'es' ? "Error" : "Error",
+        description: language === 'es' ? "No se pudo crear la publicación" : "Could not create post",
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-[#0A1929] text-white p-6 md:p-10">
-      
-      {/* Create Dialog */}
-      <CreatePostDialog 
-        open={isCreateOpen} 
-        onOpenChange={setIsCreateOpen} 
-        onSuccess={() => {
-            refetch();
-        }} 
-      />
+    <div className="min-h-screen bg-[#0A1929]">
+      {/* LinkedIn-style Top Navigation Bar */}
+      <nav className="bg-[#0D1117] border-b border-cyan-900/30 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center justify-between h-14">
+            {/* Logo */}
+            <div className="flex items-center gap-6">
+              <a href="/" className="text-cyan-400 font-bold text-xl">
+                CHE.COMEX
+              </a>
+              
+              {/* Global Search */}
+              <div className="hidden md:block">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    type="text"
+                    placeholder={language === 'es' ? 'Buscar empresas, productos, códigos HS...' : 'Search companies, products, HS codes...'}
+                    className="pl-10 w-80 bg-[#0A1929] border-gray-700 text-white placeholder-gray-500"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
 
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
-        <div>
-            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500">
-                Marketplace B2B
-            </h1>
-            <p className="text-gray-400 mt-1">
-                {language === 'es' 
-                 ? 'Conecta directamente con importadores y exportadores verificados.'
-                 : 'Connect directly with verified importers and exporters.'}
-            </p>
+            {/* Navigation Menu */}
+            <div className="flex items-center gap-6">
+              <NavItem icon={<Home className="w-5 h-5" />} label={language === 'es' ? 'Inicio' : 'Home'} active onClick={() => navigate('/')} />
+              <NavItem icon={<Users className="w-5 h-5" />} label={language === 'es' ? 'Mi Red' : 'My Network'} onClick={() => navigate('/marketplace')} />
+              <NavItem icon={<Briefcase className="w-5 h-5" />} label={language === 'es' ? 'Oportunidades' : 'Opportunities'} onClick={() => navigate('/marketplace')} />
+              <NavItem icon={<MessageSquare className="w-5 h-5" />} label={language === 'es' ? 'Mensajes' : 'Messages'} badge={3} onClick={() => navigate('/chat')} />
+              <NavItem icon={<Bell className="w-5 h-5" />} label={language === 'es' ? 'Notificaciones' : 'Notifications'} badge={5} onClick={() => navigate('/alerts-center')} />
+              
+              {/* User Profile */}
+              {/* User Profile or Login Button */}
+              {user ? (
+                <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/profile')}>
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
+                    {user.name?.charAt(0) || 'U'}
+                  </div>
+                  <span className="hidden md:inline text-sm text-gray-300 font-medium">{user.name}</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="ghost" 
+                    className="text-gray-300 hover:text-white hover:bg-white/10"
+                    onClick={() => navigate('/auth')}
+                  >
+                    {language === 'es' ? 'Iniciar Sesión' : 'Login'}
+                  </Button>
+                  <Button 
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
+                    onClick={() => navigate('/auth?tab=register')}
+                  >
+                    {language === 'es' ? 'Registrarse' : 'Sign Up'}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-        <Button className="bg-cyan-600 hover:bg-cyan-700" onClick={() => setIsCreateOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            {language === 'es' ? 'Publicar Oportunidad' : 'Post Opportunity'}
+      </nav>
+
+      {/* 3-Column Layout */}
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left Sidebar - Profile & Connections */}
+          <aside className="lg:col-span-3 space-y-4">
+            <MarketplaceSidebar />
+          </aside>
+
+          {/* Center Feed */}
+          <main className="lg:col-span-6 space-y-4">
+            {/* Post Creation Box */}
+            <div className="bg-[#0D2137] border border-cyan-900/30 rounded-lg p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-xl">
+                  {user?.name?.charAt(0) || 'U'}
+                </div>
+                <button
+                  onClick={() => setShowPostForm(true)}
+                  className="flex-1 text-left px-4 py-3 bg-[#0A1929] border border-gray-700 rounded-full text-gray-400 hover:bg-[#0D2137] transition-colors"
+                >
+                  {language === 'es' ? '¿Qué oportunidad comercial querés compartir?' : 'What trade opportunity do you want to share?'}
+                </button>
+              </div>
+              <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-800">
+                <Button variant="ghost" size="sm" className="text-cyan-400 hover:text-cyan-300" onClick={() => setShowPostForm(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  {language === 'es' ? 'Agregar HS Code' : 'Add HS Code'}
+                </Button>
+                <Button variant="ghost" size="sm" className="text-cyan-400 hover:text-cyan-300" onClick={() => setShowPostForm(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  {language === 'es' ? 'Documentos' : 'Documents'}
+                </Button>
+                <Button variant="ghost" size="sm" className="text-cyan-400 hover:text-cyan-300" onClick={() => setShowPostForm(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  {language === 'es' ? 'Contacto' : 'Contact'}
+                </Button>
+              </div>
+            </div>
+
+            {/* Posts Feed */}
+            <div className="space-y-4">
+              {isLoading ? (
+                <div className="text-center py-12 text-gray-400">
+                  {language === 'es' ? 'Cargando oportunidades...' : 'Loading opportunities...'}
+                </div>
+              ) : filteredPosts.length === 0 ? (
+                <div className="text-center py-12 text-gray-400">
+                  {language === 'es' ? 'No hay publicaciones aún' : 'No posts yet'}
+                </div>
+              ) : (
+                filteredPosts.map((post: any) => (
+                  <PostCard key={post.id} post={post} />
+                ))
+              )}
+            </div>
+          </main>
+
+          {/* Right Sidebar - Widgets */}
+          <aside className="lg:col-span-3 space-y-4">
+            {/* World Trade Pulse Widget */}
+            <WorldTradePulseWidget />
+            
+            {/* Events Widget */}
+            <EventsWidget />
+            
+            {/* Suggested Groups */}
+            <SuggestedGroupsWidget />
+          </aside>
+        </div>
+      </div>
+
+      {/* Post Form Dialog */}
+      <Dialog open={showPostForm} onOpenChange={setShowPostForm}>
+        <DialogContent className="bg-[#0D2137] border-cyan-900/30 text-white sm:max-w-[600px]">
+          <PostForm onClose={() => setShowPostForm(false)} onSubmit={handlePostSubmit} />
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// Navigation Item Component
+function NavItem({ icon, label, active = false, badge, onClick }: { icon: React.ReactNode; label: string; active?: boolean; badge?: number; onClick?: () => void }) {
+  return (
+    <button 
+      onClick={() => {
+        console.log(`Navigating to ${label}`);
+        onClick?.();
+      }}
+      className={`hidden md:flex flex-col items-center gap-1 px-3 py-2 rounded transition-colors relative ${
+        active ? 'text-cyan-400' : 'text-gray-400 hover:text-white'
+      }`}>
+      <div className="relative">
+        {icon}
+        {badge && (
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+            {badge}
+          </span>
+        )}
+      </div>
+      <span className="text-xs">{label}</span>
+    </button>
+  );
+}
+
+// World Trade Pulse Widget
+function WorldTradePulseWidget() {
+  const { language } = useLanguage();
+  const [, navigate] = useLocation();
+  
+  const { data: news = [] } = useQuery({
+    queryKey: ['/api/news', 'all'],
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/news?category=all');
+        if (!response.ok) throw new Error('Failed to fetch news');
+        const data = await response.json();
+        return data.slice(0, 3); // Only show 3 latest
+      } catch (error) {
+        console.error('News fetch error:', error);
+        // Fallback to mock data
+        return [
+          { id: '1', title: 'Nueva regulación aduanera en UE', category: 'regulacion', createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000) },
+          { id: '2', title: 'Tratado comercial China-LATAM', category: 'tratado', createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000) },
+          { id: '3', title: 'Alerta: Sanciones Rusia', category: 'alerta', createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+        ];
+      }
+    }
+  });
+
+  const getTimeAgo = (date: Date) => {
+    const now = Date.now();
+    const diff = now - new Date(date).getTime();
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const days = Math.floor(hours / 24);
+    
+    if (hours < 1) return language === 'es' ? 'Hace menos de 1h' : 'Less than 1h ago';
+    if (hours < 24) return `${hours}h`;
+    return `${days}d`;
+  };
+
+  const getCategoryLabel = (category: string) => {
+    const labels: Record<string, { es: string; en: string }> = {
+      regulacion: { es: 'Regulación', en: 'Regulation' },
+      tratado: { es: 'Tratado', en: 'Treaty' },
+      alerta: { es: 'Alerta', en: 'Alert' },
+      mercado: { es: 'Mercado', en: 'Market' },
+      logistica: { es: 'Logística', en: 'Logistics' }
+    };
+    return labels[category]?.[language] || category;
+  };
+  
+  return (
+    <div className="bg-[#0D2137] border border-cyan-900/30 rounded-lg p-4">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-white font-bold flex items-center gap-2">
+          <span className="text-cyan-400">📰</span>
+          World Trade Pulse
+        </h3>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="text-cyan-400 hover:text-cyan-300 text-xs h-auto p-0"
+          onClick={() => navigate('/news')}
+        >
+          {language === 'es' ? 'Ver todo' : 'See all'}
         </Button>
       </div>
-
-      {/* Filters */}
-      <div className="flex flex-col md:flex-row gap-4 mb-8 bg-[#0D2137] p-4 rounded-lg border border-cyan-900/30">
-        <div className="flex-1">
-            <HsCodeSearch 
-                onSelect={(code) => setSearchTerm(code)}
-            />
-        </div>
-        <div className="flex gap-2">
-            <Button 
-                variant={typeFilter === 'all' ? 'default' : 'outline'} 
-                className={typeFilter === 'all' ? 'bg-gray-700 hover:bg-gray-600' : 'border-gray-700 text-gray-400'}
-                onClick={() => setTypeFilter('all')}
-            >
-                {language === 'es' ? 'Todos' : 'All'}
-            </Button>
-            <Button 
-                variant={typeFilter === 'sell' ? 'default' : 'outline'} 
-                className={typeFilter === 'sell' ? 'bg-green-700 hover:bg-green-600' : 'border-gray-700 text-gray-400'}
-                onClick={() => setTypeFilter('sell')}
-            >
-                {language === 'es' ? 'Ofertas' : 'Offers'}
-            </Button>
-            <Button 
-                variant={typeFilter === 'buy' ? 'default' : 'outline'} 
-                className={typeFilter === 'buy' ? 'bg-blue-700 hover:bg-blue-600' : 'border-gray-700 text-gray-400'}
-                onClick={() => setTypeFilter('buy')}
-            >
-                {language === 'es' ? 'Demandas' : 'Demands'}
-            </Button>
-        </div>
+      <div className="space-y-3">
+        {news.map((item: any) => (
+          <div 
+            key={item.id} 
+            className="pb-3 border-b border-gray-800 last:border-0 cursor-pointer hover:bg-white/5 p-2 rounded transition-colors"
+            onClick={() => navigate('/news')}
+          >
+            <p className="text-white text-sm font-medium line-clamp-2">{item.title}</p>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-xs text-cyan-400">{getCategoryLabel(item.category)}</span>
+              <span className="text-xs text-gray-500">• {getTimeAgo(item.createdAt)}</span>
+            </div>
+          </div>
+        ))}
       </div>
+    </div>
+  );
+}
 
-      {/* Grid */}
-      {isLoading ? (
-          <div className="text-center py-20 text-gray-500">Loading marketplace...</div>
-      ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredPosts.map((post: any) => (
-                  <ListingCard key={post.id} post={post} />
-              ))}
+// Events Widget
+function EventsWidget() {
+  const { language } = useLanguage();
+  
+  return (
+    <div className="bg-[#0D2137] border border-cyan-900/30 rounded-lg p-4">
+      <h3 className="text-white font-bold mb-4">
+        {language === 'es' ? 'Eventos de Comercio' : 'Trade Events'}
+      </h3>
+      <div className="space-y-3">
+        {[
+          { name: 'Expo Agro 2025', date: 'Mar 15', location: 'Buenos Aires' },
+          { name: 'Webinar: Exportar a China', date: 'Mar 20', location: 'Online' }
+        ].map((event, i) => (
+          <div key={i} className="p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer">
+            <p className="text-white text-sm font-medium">{event.name}</p>
+            <p className="text-xs text-gray-400 mt-1">{event.date} • {event.location}</p>
           </div>
-      )}
+        ))}
+      </div>
+    </div>
+  );
+}
 
-      {!isLoading && filteredPosts.length === 0 && (
-          <div className="text-center py-20 bg-[#0D2137]/50 rounded-lg border-2 border-dashed border-gray-800">
-              <ShoppingCart className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400">No matching listings found.</p>
+// Suggested Groups Widget
+function SuggestedGroupsWidget() {
+  const { language } = useLanguage();
+  
+  return (
+    <div className="bg-[#0D2137] border border-cyan-900/30 rounded-lg p-4">
+      <h3 className="text-white font-bold mb-4">
+        {language === 'es' ? 'Grupos Sugeridos' : 'Suggested Groups'}
+      </h3>
+      <div className="space-y-3">
+        {[
+          { name: 'Exportadores de Soya LATAM', members: '12k' },
+          { name: 'Importadores UE', members: '8.5k' },
+          { name: 'Logística Internacional', members: '5k' }
+        ].map((group, i) => (
+          <div key={i} className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
+                {group.name.substring(0, 2).toUpperCase()}
+              </div>
+              <div>
+                <p className="text-white text-sm font-medium">{group.name}</p>
+                <p className="text-xs text-gray-400">{group.members} {language === 'es' ? 'miembros' : 'members'}</p>
+              </div>
+            </div>
+            <Button variant="outline" size="sm" className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-900/20">
+              <Plus className="w-4 h-4" />
+            </Button>
           </div>
-      )}
+        ))}
+      </div>
     </div>
   );
 }

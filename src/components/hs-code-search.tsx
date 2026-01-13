@@ -24,18 +24,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
+// Command imports removed to fix double search issue
 } from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+// Popover imports removed to cleanup UI
 import type { HsSubpartida, HsPartida } from "@shared/schema";
 import { countries, getCountryTreaties, getTariffReduction, type CountryData } from "@shared/countries-data";
 
@@ -202,8 +193,8 @@ export default function HsCodeSearch({ onProductSelected, onPartidaSelected }: H
               <Globe className="w-4 h-4 inline mr-2 text-blue-400" />
               {language === 'es' ? 'País de Origen/Destino' : 'Origin/Destination Country'}
             </Label>
-            <Select value={originCountry} onValueChange={setOriginCountry}>
-              <SelectTrigger className="bg-white/5 border-white/10 text-white focus:ring-blue-500/50 focus:border-blue-500/50">
+            <Select value={originCountry} onValueChange={setOriginCountry} name="originCountry">
+              <SelectTrigger id="originCountry" className="bg-white/5 border-white/10 text-white focus:ring-blue-500/50 focus:border-blue-500/50">
                 <SelectValue placeholder={language === 'es' ? "Selecciona un país" : "Select a country"} />
               </SelectTrigger>
               <SelectContent className="max-h-96 bg-slate-900 border-white/10 text-white">
@@ -230,8 +221,8 @@ export default function HsCodeSearch({ onProductSelected, onPartidaSelected }: H
             <Label className="text-sm font-medium text-blue-100">
               {language === 'es' ? 'Tipo de Operación' : 'Operation Type'}
             </Label>
-            <Select value={operationType} onValueChange={setOperationType}>
-              <SelectTrigger className="bg-white/5 border-white/10 text-white focus:ring-blue-500/50 focus:border-blue-500/50">
+            <Select value={operationType} onValueChange={setOperationType} name="operationType">
+              <SelectTrigger id="operationType" className="bg-white/5 border-white/10 text-white focus:ring-blue-500/50 focus:border-blue-500/50">
                 <SelectValue placeholder={language === 'es' ? "Selecciona operación" : "Select operation"} />
               </SelectTrigger>
               <SelectContent className="bg-slate-900 border-white/10 text-white">
@@ -280,8 +271,6 @@ export default function HsCodeSearch({ onProductSelected, onPartidaSelected }: H
           <div className="relative group">
             <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg blur opacity-30 group-hover:opacity-75 transition duration-500"></div>
             
-            <Popover open={open} onOpenChange={setOpen}>
-              <PopoverTrigger asChild>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 z-10" />
                   <Input
@@ -314,61 +303,6 @@ export default function HsCodeSearch({ onProductSelected, onPartidaSelected }: H
                     </Button>
                   </div>
                 </div>
-              </PopoverTrigger>
-              
-              <PopoverContent 
-                className="p-0 w-[var(--radix-popover-trigger-width)] bg-slate-900 border-white/10 shadow-2xl z-50" 
-                align="start"
-                onOpenAutoFocus={(e) => e.preventDefault()}
-              >
-                <Command className="bg-transparent text-white">
-                  <CommandList className="max-h-[300px] overflow-y-auto custom-scrollbar">
-                    {isLoading && (
-                      <div className="p-4 text-center">
-                        <div className="animate-spin w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-                        <p className="text-xs text-blue-300">{language === 'es' ? 'Buscando en la base global...' : 'Searching global database...'}</p>
-                      </div>
-                    )}
-                    
-                    {!isLoading && allResults.length === 0 && searchQuery.length >= 3 && (
-                      <CommandEmpty className="p-4 text-sm text-center text-gray-400">
-                        {language === 'es' ? 'No se encontraron resultados' : 'No results found'}
-                      </CommandEmpty>
-                    )}
-
-                    <CommandGroup heading={language === 'es' ? 'Resultados HS' : 'HS Results'}>
-                      {allResults.map((item) => (
-                        <CommandItem
-                          key={item.code}
-                          value={item.code + " " + item.description}
-                          onSelect={() => {
-                            handleProductSelect(item);
-                            setOpen(false);
-                          }}
-                          className="flex flex-col items-start p-3 aria-selected:bg-white/10 cursor-pointer border-b border-white/5 last:border-0"
-                        >
-                          <div className="flex items-center gap-2 mb-1 w-full">
-                            <Badge variant="outline" className="font-mono text-[10px] bg-blue-500/10 text-blue-400 border-blue-500/30">
-                              {item.code}
-                            </Badge>
-                            <span className="text-[10px] text-gray-500">
-                              {'partidaCode' in item ? 'Subpartida' : 'Partida'}
-                            </span>
-                            <div className="ml-auto text-green-400 text-[10px] font-bold">
-                              {item.tariffRate}%
-                            </div>
-                          </div>
-                          <span className="text-sm font-medium text-white line-clamp-1">{item.description}</span>
-                          {item.descriptionEn && language === 'es' && (
-                            <span className="text-[10px] text-gray-400 italic line-clamp-1">{item.descriptionEn}</span>
-                          )}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
           </div>
         </div>
 

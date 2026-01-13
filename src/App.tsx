@@ -83,7 +83,7 @@ function Router() {
       <Route path="/expansion-dashboard" component={ExpansionDashboard} />
       <Route path="/coverage" component={CoverageDashboard} />
       <Route path="/marketplace" component={Marketplace} />
-      <Route path="/admin" component={AdminDashboard} />
+      <Route path="/market" component={Marketplace} />
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/profile" component={ProfilePage} />
       <Route path="/news" component={NewsPage} />

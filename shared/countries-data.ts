@@ -370,15 +370,40 @@ export const countries: CountryData[] = [
   { code: 'BZ', name: 'Belice', nameEn: 'Belize', region: 'Central America', treaties: ['sica', 'caricom', 'ca4'], majorExports: ['sugar', 'bananas', 'citrus'], majorImports: ['machinery', 'fuel', 'food'] },
   { code: 'DO', name: 'República Dominicana', nameEn: 'Dominican Republic', region: 'Caribbean', treaties: ['cafta_dr', 'sica', 'caricom'], majorExports: ['textiles', 'sugar', 'tobacco'], majorImports: ['machinery', 'fuel', 'food'] },
   
-  // Caribe y Asia-Pacífico adicionales (20 países nuevos)
-  { code: 'TT', name: 'Trinidad y Tobago', nameEn: 'Trinidad and Tobago', region: 'Caribbean', treaties: ['caricom'], majorExports: ['oil', 'gas', 'chemicals', 'steel'], majorImports: ['machinery', 'food', 'vehicles'] },
-  { code: 'BB', name: 'Barbados', nameEn: 'Barbados', region: 'Caribbean', treaties: ['caricom'], majorExports: ['sugar', 'rum', 'chemicals'], majorImports: ['machinery', 'food', 'fuel'] },
-  { code: 'BS', name: 'Bahamas', nameEn: 'Bahamas', region: 'Caribbean', treaties: ['caricom'], majorExports: ['fish', 'rum', 'salt'], majorImports: ['machinery', 'food', 'fuel', 'vehicles'] },
-  { code: 'HT', name: 'Haití', nameEn: 'Haiti', region: 'Caribbean', treaties: ['caricom'], majorExports: ['textiles', 'coffee', 'mangoes'], majorImports: ['food', 'fuel', 'machinery'] },
+  // Caribe y Centroamérica (Adicionales)
+  { code: 'JM', name: 'Jamaica', nameEn: 'Jamaica', region: 'Caribbean', treaties: ['caricom'], majorExports: ['bauxite', 'sugar', 'bananas'], majorImports: ['machinery', 'fuel', 'food'] },
+  { code: 'TT', name: 'Trinidad y Tobago', nameEn: 'Trinidad and Tobago', region: 'Caribbean', treaties: ['caricom'], majorExports: ['oil', 'gas', 'chemicals'], majorImports: ['machinery', 'food', 'vehicles'] },
+  { code: 'BB', name: 'Barbados', nameEn: 'Barbados', region: 'Caribbean', treaties: ['caricom'], majorExports: ['sugar', 'rum', 'chemicals'], majorImports: ['machinery', 'fuel', 'food'] },
+  { code: 'BS', name: 'Bahamas', nameEn: 'Bahamas', region: 'Caribbean', treaties: ['caricom'], majorExports: ['pharmaceuticals', 're_exports'], majorImports: ['machinery', 'fuel', 'food'] },
+  { code: 'HT', name: 'Haití', nameEn: 'Haiti', region: 'Caribbean', treaties: ['caricom'], majorExports: ['textiles', 'coffee'], majorImports: ['food', 'fuel', 'machinery'] },
+  { code: 'AG', name: 'Antigua y Barbuda', nameEn: 'Antigua and Barbuda', region: 'Caribbean', treaties: ['caricom'], majorExports: ['tourism', 'textiles'], majorImports: ['machinery', 'fuel', 'food'] },
+  { code: 'DM', name: 'Dominica', nameEn: 'Dominica', region: 'Caribbean', treaties: ['caricom'], majorExports: ['bananas', 'soap'], majorImports: ['machinery', 'fuel', 'food'] },
+  { code: 'GD', name: 'Granada', nameEn: 'Grenada', region: 'Caribbean', treaties: ['caricom'], majorExports: ['nutmeg', 'cocoa'], majorImports: ['machinery', 'fuel', 'food'] },
+  { code: 'KN', name: 'San Cristóbal y Nieves', nameEn: 'Saint Kitts and Nevis', region: 'Caribbean', treaties: ['caricom'], majorExports: ['sugar', 'textiles'], majorImports: ['machinery', 'fuel', 'food'] },
+  { code: 'LC', name: 'Santa Lucía', nameEn: 'Saint Lucia', region: 'Caribbean', treaties: ['caricom'], majorExports: ['bananas', 'textiles'], majorImports: ['machinery', 'fuel', 'food'] },
+  { code: 'VC', name: 'San Vicente y las Granadinas', nameEn: 'Saint Vincent and the Grenadines', region: 'Caribbean', treaties: ['caricom'], majorExports: ['bananas', 'arrowroot'], majorImports: ['machinery', 'fuel', 'food'] },
+  
+  // Cuba & Puerto Rico
   { code: 'CU', name: 'Cuba', nameEn: 'Cuba', region: 'Caribbean', treaties: [], majorExports: ['sugar', 'tobacco', 'nickel', 'rum'], majorImports: ['food', 'fuel', 'machinery'], restrictions: ['us_embargo'] },
   { code: 'PR', name: 'Puerto Rico', nameEn: 'Puerto Rico', region: 'Caribbean', treaties: ['usmca'], majorExports: ['chemicals', 'electronics', 'pharmaceuticals'], majorImports: ['machinery', 'food', 'fuel'] },
+
+  // Microstates (Caribbean, Pacific, Europe, Asia)
+  { code: 'KY', name: 'Islas Caimán', nameEn: 'Cayman Islands', region: 'Caribbean', treaties: [], majorExports: ['re_exports'], majorImports: ['food', 'fuel'] },
+  { code: 'AW', name: 'Aruba', nameEn: 'Aruba', region: 'Caribbean', treaties: [], majorExports: ['oil_refining', 'tourism'], majorImports: ['food', 'fuel'] },
+  { code: 'CW', name: 'Curazao', nameEn: 'Curacao', region: 'Caribbean', treaties: [], majorExports: ['oil_refining'], majorImports: ['crude_oil', 'food'] },
+  { code: 'SX', name: 'Sint Maarten', nameEn: 'Sint Maarten', region: 'Caribbean', treaties: [], majorExports: ['tourism'], majorImports: ['food', 'fuel'] },
+  { code: 'BM', name: 'Bermudas', nameEn: 'Bermuda', region: 'North America', treaties: [], majorExports: ['re_exports'], majorImports: ['food', 'fuel', 'machinery'] },
   
-  // Asia del Sur y Sudeste (14 países adicionales)
+  { code: 'WS', name: 'Samoa', nameEn: 'Samoa', region: 'Oceania', treaties: [], majorExports: ['fish', 'coconut'], majorImports: ['machinery', 'food'] },
+  { code: 'TO', name: 'Tonga', nameEn: 'Tonga', region: 'Oceania', treaties: [], majorExports: ['squash', 'vanilla'], majorImports: ['food', 'fuel'] },
+  { code: 'VU', name: 'Vanuatu', nameEn: 'Vanuatu', region: 'Oceania', treaties: [], majorExports: ['fish', 'copra'], majorImports: ['machinery', 'food'] },
+  { code: 'SB', name: 'Islas Salomón', nameEn: 'Solomon Islands', region: 'Oceania', treaties: [], majorExports: ['timber', 'fish'], majorImports: ['machinery', 'fuel'] },
+  { code: 'PF', name: 'Polinesia Francesa', nameEn: 'French Polynesia', region: 'Oceania', treaties: [], majorExports: ['pearls', 'vanilla'], majorImports: ['fuel', 'food'] },
+  { code: 'NC', name: 'Nueva Caledonia', nameEn: 'New Caledonia', region: 'Oceania', treaties: [], majorExports: ['nickel'], majorImports: ['machinery', 'fuel'] },
+  { code: 'FJ', name: 'Fiyi', nameEn: 'Fiji', region: 'Oceania', treaties: [], majorExports: ['sugar', 'fish', 'gold', 'timber'], majorImports: ['machinery', 'fuel', 'food'] },
+  { code: 'PG', name: 'Papúa Nueva Guinea', nameEn: 'Papua New Guinea', region: 'Oceania', treaties: [], majorExports: ['gold', 'copper', 'oil', 'coffee'], majorImports: ['machinery', 'fuel', 'food'] },
+
+  // Asia y Eurasia (Adicionales)
   { code: 'BD', name: 'Bangladesh', nameEn: 'Bangladesh', region: 'Asia', treaties: [], majorExports: ['textiles', 'jute', 'fish', 'leather'], majorImports: ['machinery', 'fuel', 'food', 'chemicals'] },
   { code: 'PK', name: 'Pakistán', nameEn: 'Pakistan', region: 'Asia', treaties: [], majorExports: ['textiles', 'rice', 'leather', 'sports_goods'], majorImports: ['machinery', 'fuel', 'chemicals', 'food'] },
   { code: 'LK', name: 'Sri Lanka', nameEn: 'Sri Lanka', region: 'Asia', treaties: [], majorExports: ['tea', 'textiles', 'rubber', 'gems'], majorImports: ['machinery', 'fuel', 'food', 'vehicles'] },
@@ -388,47 +413,34 @@ export const countries: CountryData[] = [
   { code: 'LA', name: 'Laos', nameEn: 'Laos', region: 'Asia', treaties: ['asean', 'rcep'], majorExports: ['electricity', 'copper', 'coffee'], majorImports: ['machinery', 'fuel', 'vehicles'] },
   { code: 'BN', name: 'Brunéi', nameEn: 'Brunei', region: 'Asia', treaties: ['asean', 'rcep'], majorExports: ['oil', 'gas'], majorImports: ['machinery', 'food', 'vehicles'] },
   { code: 'MN', name: 'Mongolia', nameEn: 'Mongolia', region: 'Asia', treaties: [], majorExports: ['copper', 'coal', 'gold', 'cashmere'], majorImports: ['machinery', 'fuel', 'food', 'vehicles'] },
+  { code: 'UZ', name: 'Uzbekistán', nameEn: 'Uzbekistan', region: 'Asia', treaties: [], majorExports: ['cotton', 'gold', 'gas'], majorImports: ['machinery', 'chemicals', 'food'] },
+  { code: 'KG', name: 'Kirguistán', nameEn: 'Kyrgyzstan', region: 'Asia', treaties: ['eaeu'], majorExports: ['gold', 'wool', 'cotton'], majorImports: ['machinery', 'fuel', 'food'] },
+  { code: 'KP', name: 'Corea del Norte', nameEn: 'North Korea', region: 'Asia', treaties: [], majorExports: ['coal', 'textiles'], majorImports: ['oil', 'food'], restrictions: ['sanctions'] },
+  { code: 'AF', name: 'Afganistán', nameEn: 'Afghanistan', region: 'Asia', treaties: [], majorExports: ['minerals', 'carpets'], majorImports: ['food', 'fuel', 'machinery'], restrictions: ['political_instability'] },
   { code: 'TW', name: 'Taiwán', nameEn: 'Taiwan', region: 'Asia', treaties: [], majorExports: ['electronics', 'machinery', 'plastics', 'chemicals'], majorImports: ['machinery', 'fuel', 'electronics'] },
   { code: 'HK', name: 'Hong Kong', nameEn: 'Hong Kong', region: 'Asia', treaties: [], majorExports: ['electronics', 'textiles', 'jewelry', 're_exports'], majorImports: ['machinery', 'electronics', 'food'] },
   { code: 'MO', name: 'Macao', nameEn: 'Macau', region: 'Asia', treaties: [], majorExports: ['textiles', 'electronics', 'toys'], majorImports: ['machinery', 'food', 'fuel'] },
-  { code: 'FJ', name: 'Fiyi', nameEn: 'Fiji', region: 'Oceania', treaties: [], majorExports: ['sugar', 'fish', 'gold', 'timber'], majorImports: ['machinery', 'fuel', 'food'] },
-  { code: 'PG', name: 'Papúa Nueva Guinea', nameEn: 'Papua New Guinea', region: 'Oceania', treaties: [], majorExports: ['gold', 'copper', 'oil', 'coffee'], majorImports: ['machinery', 'fuel', 'food'] },
+  { code: 'MV', name: 'Maldivas', nameEn: 'Maldives', region: 'Asia', treaties: [], majorExports: ['fish'], majorImports: ['fuel', 'food'] },
+  { code: 'BT', name: 'Bután', nameEn: 'Bhutan', region: 'Asia', treaties: [], majorExports: ['electricity', 'cement'], majorImports: ['fuel', 'machinery'] },
+  { code: 'TL', name: 'Timor Oriental', nameEn: 'East Timor', region: 'Asia', treaties: [], majorExports: ['oil', 'coffee'], majorImports: ['food', 'fuel'] },
+  { code: 'TJ', name: 'Tayikistán', nameEn: 'Tajikistan', region: 'Asia', treaties: [], majorExports: ['aluminum', 'cotton'], majorImports: ['petroleum', 'machinery'] },
+  { code: 'TM', name: 'Turkmenistán', nameEn: 'Turkmenistan', region: 'Asia', treaties: [], majorExports: ['gas', 'cotton'], majorImports: ['machinery', 'food'] },
 
-  // Caribe
-  { code: 'JM', name: 'Jamaica', nameEn: 'Jamaica', region: 'Caribbean', treaties: ['caricom'], majorExports: ['bauxite', 'sugar', 'bananas'], majorImports: ['machinery', 'fuel', 'food'] },
-  { code: 'TT', name: 'Trinidad y Tobago', nameEn: 'Trinidad and Tobago', region: 'Caribbean', treaties: ['caricom'], majorExports: ['oil', 'gas', 'chemicals'], majorImports: ['machinery', 'food', 'vehicles'] },
-  { code: 'BB', name: 'Barbados', nameEn: 'Barbados', region: 'Caribbean', treaties: ['caricom'], majorExports: ['sugar', 'rum', 'chemicals'], majorImports: ['machinery', 'fuel', 'food'] },
-  { code: 'BS', name: 'Bahamas', nameEn: 'Bahamas', region: 'Caribbean', treaties: ['caricom'], majorExports: ['pharmaceuticals', 're_exports'], majorImports: ['machinery', 'fuel', 'food'] },
-  { code: 'GY', name: 'Guyana', nameEn: 'Guyana', region: 'Caribbean', treaties: ['caricom', 'prosur'], majorExports: ['gold', 'oil', 'rice'], majorImports: ['machinery', 'fuel', 'food'] },
-  { code: 'SR', name: 'Suriname', nameEn: 'Suriname', region: 'Caribbean', treaties: ['caricom', 'unasur'], majorExports: ['gold', 'oil', 'bauxite'], majorImports: ['machinery', 'fuel', 'food'] },
-  { code: 'HT', name: 'Haití', nameEn: 'Haiti', region: 'Caribbean', treaties: ['caricom'], majorExports: ['textiles', 'coffee'], majorImports: ['food', 'fuel', 'machinery'] },
-  { code: 'AG', name: 'Antigua y Barbuda', nameEn: 'Antigua and Barbuda', region: 'Caribbean', treaties: ['caricom'], majorExports: ['tourism', 'textiles'], majorImports: ['machinery', 'fuel', 'food'] },
-  { code: 'DM', name: 'Dominica', nameEn: 'Dominica', region: 'Caribbean', treaties: ['caricom'], majorExports: ['bananas', 'soap'], majorImports: ['machinery', 'fuel', 'food'] },
-  { code: 'GD', name: 'Granada', nameEn: 'Grenada', region: 'Caribbean', treaties: ['caricom'], majorExports: ['nutmeg', 'cocoa'], majorImports: ['machinery', 'fuel', 'food'] },
-  { code: 'KN', name: 'San Cristóbal y Nieves', nameEn: 'Saint Kitts and Nevis', region: 'Caribbean', treaties: ['caricom'], majorExports: ['sugar', 'textiles'], majorImports: ['machinery', 'fuel', 'food'] },
-  { code: 'LC', name: 'Santa Lucía', nameEn: 'Saint Lucia', region: 'Caribbean', treaties: ['caricom'], majorExports: ['bananas', 'textiles'], majorImports: ['machinery', 'fuel', 'food'] },
-  { code: 'VC', name: 'San Vicente y las Granadinas', nameEn: 'Saint Vincent and the Grenadines', region: 'Caribbean', treaties: ['caricom'], majorExports: ['bananas', 'arrowroot'], majorImports: ['machinery', 'fuel', 'food'] },
-
-  // Europa adicional
+  // Europa (Adicionales)
   { code: 'LI', name: 'Liechtenstein', nameEn: 'Liechtenstein', region: 'Europe', treaties: ['efta', 'eea'], majorExports: ['machinery', 'electronics', 'ceramics'], majorImports: ['machinery', 'electronics', 'fuel'] },
+  { code: 'RU', name: 'Rusia', nameEn: 'Russia', region: 'Europe', treaties: ['eaeu'], majorExports: ['oil', 'gas', 'metals', 'wheat'], majorImports: ['machinery', 'electronics', 'vehicles'], restrictions: ['sanctions'] },
+  { code: 'UA', name: 'Ucrania', nameEn: 'Ukraine', region: 'Europe', treaties: [], majorExports: ['wheat', 'iron_ore', 'steel'], majorImports: ['machinery', 'fuel', 'chemicals'], restrictions: ['war_conditions'] },
+  { code: 'BY', name: 'Bielorrusia', nameEn: 'Belarus', region: 'Europe', treaties: ['eaeu'], majorExports: ['machinery', 'chemicals', 'food'], majorImports: ['oil', 'gas', 'machinery'] },
+  { code: 'MD', name: 'Moldavia', nameEn: 'Moldova', region: 'Europe', treaties: [], majorExports: ['food', 'textiles', 'machinery'], majorImports: ['machinery', 'fuel', 'chemicals'] },
+  { code: 'MT', name: 'Malta', nameEn: 'Malta', region: 'Europe', treaties: ['eu'], majorExports: ['electronics', 'machinery', 'food'], majorImports: ['machinery', 'fuel', 'food'] },
+  { code: 'LU', name: 'Luxemburgo', nameEn: 'Luxembourg', region: 'Europe', treaties: ['eu'], majorExports: ['steel', 'chemicals', 'machinery'], majorImports: ['machinery', 'electronics', 'fuel'] },
+  { code: 'IS', name: 'Islandia', nameEn: 'Iceland', region: 'Europe', treaties: ['efta', 'eea'], majorExports: ['fish', 'aluminum', 'machinery'], majorImports: ['machinery', 'fuel', 'food'] },
+  { code: 'MC', name: 'Mónaco', nameEn: 'Monaco', region: 'Europe', treaties: ['customs_union_eu'], majorExports: ['cosmetics', 'pharmaceuticals'], majorImports: ['luxury_goods'] },
+  { code: 'AD', name: 'Andorra', nameEn: 'Andorra', region: 'Europe', treaties: ['customs_union_eu'], majorExports: ['tobacco', 'furniture'], majorImports: ['food', 'fuel'] },
+  { code: 'SM', name: 'San Marino', nameEn: 'San Marino', region: 'Europe', treaties: ['customs_union_eu'], majorExports: ['ceramics', 'chemicals'], majorImports: ['gas', 'machinery'] },
+  { code: 'VA', name: 'Vaticano', nameEn: 'Vatican City', region: 'Europe', treaties: [], majorExports: [], majorImports: ['food', 'consumer_goods'] },
 
-  // Medio Oriente
-  { code: 'SA', name: 'Arabia Saudí', nameEn: 'Saudi Arabia', region: 'Middle East', treaties: ['gcc'], majorExports: ['oil', 'chemicals', 'plastics'], majorImports: ['machinery', 'vehicles', 'electronics', 'food'] },
-  { code: 'AE', name: 'Emiratos Árabes Unidos', nameEn: 'United Arab Emirates', region: 'Middle East', treaties: ['gcc'], majorExports: ['oil', 'aluminum', 're_exports'], majorImports: ['machinery', 'electronics', 'vehicles', 'gold'] },
-  { code: 'IL', name: 'Israel', nameEn: 'Israel', region: 'Middle East', treaties: [], majorExports: ['electronics', 'chemicals', 'textiles', 'diamonds'], majorImports: ['machinery', 'electronics', 'fuel', 'diamonds'] },
-  { code: 'TR', name: 'Turquía', nameEn: 'Turkey', region: 'Middle East', treaties: [], majorExports: ['textiles', 'machinery', 'vehicles', 'food'], majorImports: ['machinery', 'chemicals', 'fuel', 'electronics'] },
-  { code: 'QA', name: 'Catar', nameEn: 'Qatar', region: 'Middle East', treaties: ['gcc'], majorExports: ['gas', 'oil', 'chemicals'], majorImports: ['machinery', 'vehicles', 'food'] },
-  { code: 'KW', name: 'Kuwait', nameEn: 'Kuwait', region: 'Middle East', treaties: ['gcc'], majorExports: ['oil', 'chemicals'], majorImports: ['machinery', 'vehicles', 'food'] },
-  { code: 'BH', name: 'Baréin', nameEn: 'Bahrain', region: 'Middle East', treaties: ['gcc'], majorExports: ['oil', 'aluminum', 'textiles'], majorImports: ['machinery', 'chemicals', 'food'] },
-  { code: 'OM', name: 'Omán', nameEn: 'Oman', region: 'Middle East', treaties: ['gcc'], majorExports: ['oil', 'gas', 'fish'], majorImports: ['machinery', 'vehicles', 'food'] },
-  { code: 'IR', name: 'Irán', nameEn: 'Iran', region: 'Middle East', treaties: [], majorExports: ['oil', 'gas', 'chemicals'], majorImports: ['machinery', 'food', 'electronics'], restrictions: ['sanctions'] },
-  { code: 'IQ', name: 'Irak', nameEn: 'Iraq', region: 'Middle East', treaties: [], majorExports: ['oil', 'dates'], majorImports: ['machinery', 'food', 'electronics'] },
-  { code: 'JO', name: 'Jordania', nameEn: 'Jordan', region: 'Middle East', treaties: [], majorExports: ['textiles', 'chemicals', 'phosphates'], majorImports: ['machinery', 'oil', 'food'] },
-  { code: 'LB', name: 'Líbano', nameEn: 'Lebanon', region: 'Middle East', treaties: [], majorExports: ['jewelry', 'food', 'chemicals'], majorImports: ['machinery', 'fuel', 'food'] },
-  { code: 'SY', name: 'Siria', nameEn: 'Syria', region: 'Middle East', treaties: [], majorExports: ['oil', 'textiles'], majorImports: ['machinery', 'food', 'fuel'], restrictions: ['war_conditions'] },
-  { code: 'YE', name: 'Yemen', nameEn: 'Yemen', region: 'Middle East', treaties: [], majorExports: ['oil', 'coffee'], majorImports: ['machinery', 'food', 'fuel'], restrictions: ['war_conditions'] },
-
-  // Países adicionales de África para completar bloques regionales
+  // África (Adicionales)
   { code: 'BJ', name: 'Benín', nameEn: 'Benin', region: 'Africa', treaties: ['afcfta', 'ecowas'], majorExports: ['cotton', 'cashews'], majorImports: ['machinery', 'fuel', 'food'] },
   { code: 'BF', name: 'Burkina Faso', nameEn: 'Burkina Faso', region: 'Africa', treaties: ['afcfta', 'ecowas'], majorExports: ['gold', 'cotton'], majorImports: ['machinery', 'fuel', 'food'] },
   { code: 'CV', name: 'Cabo Verde', nameEn: 'Cape Verde', region: 'Africa', treaties: ['afcfta', 'ecowas'], majorExports: ['fish', 'textiles'], majorImports: ['machinery', 'fuel', 'food'] },
@@ -440,8 +452,6 @@ export const countries: CountryData[] = [
   { code: 'NE', name: 'Níger', nameEn: 'Niger', region: 'Africa', treaties: ['afcfta', 'ecowas'], majorExports: ['uranium', 'livestock'], majorImports: ['machinery', 'fuel', 'food'] },
   { code: 'SL', name: 'Sierra Leona', nameEn: 'Sierra Leone', region: 'Africa', treaties: ['afcfta', 'ecowas'], majorExports: ['diamonds', 'iron_ore'], majorImports: ['machinery', 'fuel', 'food'] },
   { code: 'TG', name: 'Togo', nameEn: 'Togo', region: 'Africa', treaties: ['afcfta', 'ecowas'], majorExports: ['phosphates', 'cotton'], majorImports: ['machinery', 'fuel', 'food'] },
-
-  // Países adicionales de África Oriental y Austral
   { code: 'BI', name: 'Burundi', nameEn: 'Burundi', region: 'Africa', treaties: ['afcfta', 'comesa'], majorExports: ['coffee', 'tea'], majorImports: ['machinery', 'fuel', 'food'] },
   { code: 'KM', name: 'Comoras', nameEn: 'Comoros', region: 'Africa', treaties: ['afcfta', 'comesa'], majorExports: ['vanilla', 'ylang_ylang'], majorImports: ['machinery', 'fuel', 'food'] },
   { code: 'CD', name: 'Rep. Dem. del Congo', nameEn: 'Democratic Republic of Congo', region: 'Africa', treaties: ['afcfta', 'comesa', 'sadc'], majorExports: ['copper', 'cobalt'], majorImports: ['machinery', 'fuel', 'food'] },
@@ -457,117 +467,16 @@ export const countries: CountryData[] = [
   { code: 'SC', name: 'Seychelles', nameEn: 'Seychelles', region: 'Africa', treaties: ['afcfta', 'comesa', 'sadc'], majorExports: ['fish', 'tourism'], majorImports: ['machinery', 'fuel', 'food'] },
   { code: 'SD', name: 'Sudán', nameEn: 'Sudan', region: 'Africa', treaties: ['afcfta', 'comesa'], majorExports: ['oil', 'gold'], majorImports: ['machinery', 'food', 'chemicals'] },
   { code: 'SS', name: 'Sudán del Sur', nameEn: 'South Sudan', region: 'Africa', treaties: ['afcfta'], majorExports: ['oil'], majorImports: ['machinery', 'food', 'fuel'] },
-
-  // Países adicionales importantes de Europa
-  { code: 'RU', name: 'Rusia', nameEn: 'Russia', region: 'Europe', treaties: ['eaeu'], majorExports: ['oil', 'gas', 'metals', 'wheat'], majorImports: ['machinery', 'electronics', 'vehicles'], restrictions: ['sanctions'] },
-  { code: 'PL', name: 'Polonia', nameEn: 'Poland', region: 'Europe', treaties: ['eu'], majorExports: ['machinery', 'vehicles', 'food'], majorImports: ['machinery', 'electronics', 'fuel'] },
-  { code: 'CZ', name: 'República Checa', nameEn: 'Czech Republic', region: 'Europe', treaties: ['eu'], majorExports: ['machinery', 'vehicles', 'electronics'], majorImports: ['machinery', 'electronics', 'fuel'] },
-  { code: 'HU', name: 'Hungría', nameEn: 'Hungary', region: 'Europe', treaties: ['eu'], majorExports: ['machinery', 'vehicles', 'electronics'], majorImports: ['machinery', 'electronics', 'fuel'] },
-  { code: 'RO', name: 'Rumania', nameEn: 'Romania', region: 'Europe', treaties: ['eu'], majorExports: ['machinery', 'textiles', 'food'], majorImports: ['machinery', 'electronics', 'fuel'] },
-  { code: 'UA', name: 'Ucrania', nameEn: 'Ukraine', region: 'Europe', treaties: [], majorExports: ['wheat', 'iron_ore', 'steel'], majorImports: ['machinery', 'fuel', 'chemicals'], restrictions: ['war_conditions'] },
-  { code: 'NO', name: 'Noruega', nameEn: 'Norway', region: 'Europe', treaties: ['efta', 'eea'], majorExports: ['oil', 'gas', 'fish', 'aluminum'], majorImports: ['machinery', 'electronics', 'vehicles'] },
-  { code: 'SE', name: 'Suecia', nameEn: 'Sweden', region: 'Europe', treaties: ['eu'], majorExports: ['machinery', 'vehicles', 'wood', 'iron_ore'], majorImports: ['machinery', 'electronics', 'fuel'] },
-  { code: 'DK', name: 'Dinamarca', nameEn: 'Denmark', region: 'Europe', treaties: ['eu'], majorExports: ['machinery', 'food', 'chemicals'], majorImports: ['machinery', 'electronics', 'fuel'] },
-  { code: 'FI', name: 'Finlandia', nameEn: 'Finland', region: 'Europe', treaties: ['eu'], majorExports: ['machinery', 'wood', 'electronics'], majorImports: ['machinery', 'electronics', 'fuel'] },
-  { code: 'AT', name: 'Austria', nameEn: 'Austria', region: 'Europe', treaties: ['eu'], majorExports: ['machinery', 'vehicles', 'chemicals'], majorImports: ['machinery', 'electronics', 'fuel'] },
-  { code: 'GR', name: 'Grecia', nameEn: 'Greece', region: 'Europe', treaties: ['eu'], majorExports: ['food', 'textiles', 'chemicals'], majorImports: ['machinery', 'electronics', 'fuel'] },
-  { code: 'PT', name: 'Portugal', nameEn: 'Portugal', region: 'Europe', treaties: ['eu'], majorExports: ['textiles', 'food', 'machinery'], majorImports: ['machinery', 'electronics', 'fuel'] },
-  { code: 'IE', name: 'Irlanda', nameEn: 'Ireland', region: 'Europe', treaties: ['eu'], majorExports: ['chemicals', 'electronics', 'food'], majorImports: ['machinery', 'electronics', 'fuel'] },
-  { code: 'BG', name: 'Bulgaria', nameEn: 'Bulgaria', region: 'Europe', treaties: ['eu'], majorExports: ['machinery', 'food', 'textiles'], majorImports: ['machinery', 'electronics', 'fuel'] },
-  { code: 'HR', name: 'Croacia', nameEn: 'Croatia', region: 'Europe', treaties: ['eu'], majorExports: ['machinery', 'food', 'chemicals'], majorImports: ['machinery', 'electronics', 'fuel'] },
-  { code: 'SI', name: 'Eslovenia', nameEn: 'Slovenia', region: 'Europe', treaties: ['eu'], majorExports: ['machinery', 'vehicles', 'chemicals'], majorImports: ['machinery', 'electronics', 'fuel'] },
-  { code: 'SK', name: 'Eslovaquia', nameEn: 'Slovakia', region: 'Europe', treaties: ['eu'], majorExports: ['machinery', 'vehicles', 'electronics'], majorImports: ['machinery', 'electronics', 'fuel'] },
-  { code: 'LT', name: 'Lituania', nameEn: 'Lithuania', region: 'Europe', treaties: ['eu'], majorExports: ['machinery', 'food', 'chemicals'], majorImports: ['machinery', 'electronics', 'fuel'] },
-  { code: 'LV', name: 'Letonia', nameEn: 'Latvia', region: 'Europe', treaties: ['eu'], majorExports: ['machinery', 'food', 'wood'], majorImports: ['machinery', 'electronics', 'fuel'] },
-  { code: 'EE', name: 'Estonia', nameEn: 'Estonia', region: 'Europe', treaties: ['eu'], majorExports: ['machinery', 'electronics', 'food'], majorImports: ['machinery', 'electronics', 'fuel'] },
-  { code: 'BY', name: 'Bielorrusia', nameEn: 'Belarus', region: 'Europe', treaties: ['eaeu'], majorExports: ['machinery', 'chemicals', 'food'], majorImports: ['oil', 'gas', 'machinery'] },
-  { code: 'MD', name: 'Moldavia', nameEn: 'Moldova', region: 'Europe', treaties: [], majorExports: ['food', 'textiles', 'machinery'], majorImports: ['machinery', 'fuel', 'chemicals'] },
-  { code: 'CY', name: 'Chipre', nameEn: 'Cyprus', region: 'Europe', treaties: ['eu'], majorExports: ['food', 'chemicals', 'textiles'], majorImports: ['machinery', 'electronics', 'fuel'] },
-  { code: 'MT', name: 'Malta', nameEn: 'Malta', region: 'Europe', treaties: ['eu'], majorExports: ['electronics', 'machinery', 'food'], majorImports: ['machinery', 'fuel', 'food'] },
-  { code: 'LU', name: 'Luxemburgo', nameEn: 'Luxembourg', region: 'Europe', treaties: ['eu'], majorExports: ['steel', 'chemicals', 'machinery'], majorImports: ['machinery', 'electronics', 'fuel'] },
-  { code: 'IS', name: 'Islandia', nameEn: 'Iceland', region: 'Europe', treaties: ['efta', 'eea'], majorExports: ['fish', 'aluminum', 'machinery'], majorImports: ['machinery', 'fuel', 'food'] },
-
-  // Países adicionales de Asia
-  { code: 'BN', name: 'Brunéi', nameEn: 'Brunei', region: 'Asia', treaties: ['asean', 'cptpp', 'rcep'], majorExports: ['oil', 'gas'], majorImports: ['machinery', 'electronics', 'food'] },
-  { code: 'KH', name: 'Camboya', nameEn: 'Cambodia', region: 'Asia', treaties: ['asean', 'rcep'], majorExports: ['textiles', 'rice', 'rubber'], majorImports: ['machinery', 'fuel', 'electronics'] },
-  { code: 'LA', name: 'Laos', nameEn: 'Laos', region: 'Asia', treaties: ['asean', 'rcep'], majorExports: ['electricity', 'copper', 'wood'], majorImports: ['machinery', 'fuel', 'vehicles'] },
-  { code: 'MM', name: 'Myanmar', nameEn: 'Myanmar', region: 'Asia', treaties: ['asean', 'rcep'], majorExports: ['gas', 'textiles', 'rice'], majorImports: ['machinery', 'fuel', 'electronics'], restrictions: ['political_instability'] },
-  { code: 'TW', name: 'Taiwán', nameEn: 'Taiwan', region: 'Asia', treaties: [], majorExports: ['electronics', 'machinery', 'chemicals'], majorImports: ['electronics', 'machinery', 'oil'] },
-  { code: 'HK', name: 'Hong Kong', nameEn: 'Hong Kong', region: 'Asia', treaties: [], majorExports: ['electronics', 're_exports'], majorImports: ['electronics', 'machinery', 'food'] },
-  { code: 'PK', name: 'Pakistán', nameEn: 'Pakistan', region: 'Asia', treaties: [], majorExports: ['textiles', 'rice', 'chemicals'], majorImports: ['machinery', 'oil', 'electronics'] },
-  { code: 'BD', name: 'Bangladesh', nameEn: 'Bangladesh', region: 'Asia', treaties: [], majorExports: ['textiles', 'jute', 'fish'], majorImports: ['machinery', 'oil', 'electronics'] },
-  { code: 'LK', name: 'Sri Lanka', nameEn: 'Sri Lanka', region: 'Asia', treaties: [], majorExports: ['tea', 'textiles', 'rubber'], majorImports: ['machinery', 'oil', 'food'] },
-  { code: 'KZ', name: 'Kazajistán', nameEn: 'Kazakhstan', region: 'Asia', treaties: ['eaeu'], majorExports: ['oil', 'gas', 'metals'], majorImports: ['machinery', 'electronics', 'vehicles'] },
-  { code: 'UZ', name: 'Uzbekistán', nameEn: 'Uzbekistan', region: 'Asia', treaties: [], majorExports: ['cotton', 'gold', 'gas'], majorImports: ['machinery', 'chemicals', 'food'] },
-  { code: 'KG', name: 'Kirguistán', nameEn: 'Kyrgyzstan', region: 'Asia', treaties: ['eaeu'], majorExports: ['gold', 'wool', 'cotton'], majorImports: ['machinery', 'fuel', 'food'] },
-  { code: 'AM', name: 'Armenia', nameEn: 'Armenia', region: 'Asia', treaties: ['eaeu'], majorExports: ['copper', 'gold', 'brandy'], majorImports: ['machinery', 'fuel', 'food'] },
-  { code: 'AZ', name: 'Azerbaiyán', nameEn: 'Azerbaijan', region: 'Asia', treaties: [], majorExports: ['oil', 'gas', 'cotton'], majorImports: ['machinery', 'food', 'chemicals'] },
-  { code: 'GE', name: 'Georgia', nameEn: 'Georgia', region: 'Asia', treaties: [], majorExports: ['wine', 'copper', 'textiles'], majorImports: ['machinery', 'fuel', 'chemicals'] },
-  { code: 'MN', name: 'Mongolia', nameEn: 'Mongolia', region: 'Asia', treaties: [], majorExports: ['copper', 'coal', 'gold'], majorImports: ['machinery', 'fuel', 'food'] },
-  { code: 'KP', name: 'Corea del Norte', nameEn: 'North Korea', region: 'Asia', treaties: [], majorExports: ['coal', 'textiles'], majorImports: ['oil', 'food'], restrictions: ['sanctions'] },
-  { code: 'AF', name: 'Afganistán', nameEn: 'Afghanistan', region: 'Asia', treaties: [], majorExports: ['minerals', 'carpets'], majorImports: ['food', 'fuel', 'machinery'], restrictions: ['political_instability'] },
-
-  // Países adicionales de África
-  { code: 'DZ', name: 'Argelia', nameEn: 'Algeria', region: 'Africa', treaties: ['afcfta'], majorExports: ['oil', 'gas'], majorImports: ['machinery', 'food', 'chemicals'] },
-  { code: 'MA', name: 'Marruecos', nameEn: 'Morocco', region: 'Africa', treaties: ['afcfta'], majorExports: ['phosphates', 'textiles', 'food'], majorImports: ['machinery', 'fuel', 'chemicals'] },
-  { code: 'TN', name: 'Túnez', nameEn: 'Tunisia', region: 'Africa', treaties: ['afcfta'], majorExports: ['textiles', 'oil', 'phosphates'], majorImports: ['machinery', 'fuel', 'food'] },
-  { code: 'LY', name: 'Libia', nameEn: 'Libya', region: 'Africa', treaties: ['afcfta'], majorExports: ['oil'], majorImports: ['machinery', 'food', 'chemicals'], restrictions: ['political_instability'] },
-  { code: 'ET', name: 'Etiopía', nameEn: 'Ethiopia', region: 'Africa', treaties: ['afcfta'], majorExports: ['coffee', 'textiles', 'gold'], majorImports: ['machinery', 'fuel', 'food'] },
-  { code: 'GH', name: 'Ghana', nameEn: 'Ghana', region: 'Africa', treaties: ['afcfta'], majorExports: ['gold', 'cocoa', 'oil'], majorImports: ['machinery', 'fuel', 'food'] },
-  { code: 'CI', name: 'Costa de Marfil', nameEn: 'Ivory Coast', region: 'Africa', treaties: ['afcfta'], majorExports: ['cocoa', 'coffee', 'wood'], majorImports: ['machinery', 'fuel', 'food'] },
-  { code: 'SN', name: 'Senegal', nameEn: 'Senegal', region: 'Africa', treaties: ['afcfta'], majorExports: ['fish', 'phosphates', 'textiles'], majorImports: ['machinery', 'fuel', 'food'] },
-  { code: 'TZ', name: 'Tanzania', nameEn: 'Tanzania', region: 'Africa', treaties: ['afcfta'], majorExports: ['gold', 'coffee', 'cotton'], majorImports: ['machinery', 'fuel', 'food'] },
-  { code: 'UG', name: 'Uganda', nameEn: 'Uganda', region: 'Africa', treaties: ['afcfta'], majorExports: ['coffee', 'tea', 'fish'], majorImports: ['machinery', 'fuel', 'food'] },
   { code: 'ZM', name: 'Zambia', nameEn: 'Zambia', region: 'Africa', treaties: ['afcfta'], majorExports: ['copper', 'cobalt'], majorImports: ['machinery', 'fuel', 'food'] },
   { code: 'ZW', name: 'Zimbabue', nameEn: 'Zimbabwe', region: 'Africa', treaties: ['afcfta'], majorExports: ['tobacco', 'gold', 'platinum'], majorImports: ['machinery', 'fuel', 'food'] },
   { code: 'BW', name: 'Botsuana', nameEn: 'Botswana', region: 'Africa', treaties: ['afcfta'], majorExports: ['diamonds', 'beef'], majorImports: ['machinery', 'fuel', 'food'] },
   { code: 'NA', name: 'Namibia', nameEn: 'Namibia', region: 'Africa', treaties: ['afcfta'], majorExports: ['diamonds', 'uranium', 'fish'], majorImports: ['machinery', 'fuel', 'food'] },
   { code: 'AO', name: 'Angola', nameEn: 'Angola', region: 'Africa', treaties: ['afcfta'], majorExports: ['oil', 'diamonds'], majorImports: ['machinery', 'food', 'chemicals'] },
-
-  // Los países de Centroamérica ya están definidos arriba con sus tratados correctos
-  // Los países del Caribe ya están definidos arriba con CARICOM y otros tratados
-  { code: 'HT', name: 'Haití', nameEn: 'Haiti', region: 'Caribbean', treaties: [], majorExports: ['textiles', 'coffee'], majorImports: ['machinery', 'fuel', 'food'] },
-  { code: 'TT', name: 'Trinidad y Tobago', nameEn: 'Trinidad and Tobago', region: 'Caribbean', treaties: [], majorExports: ['oil', 'gas', 'chemicals'], majorImports: ['machinery', 'food', 'vehicles'] },
-  { code: 'BB', name: 'Barbados', nameEn: 'Barbados', region: 'Caribbean', treaties: [], majorExports: ['sugar', 'rum', 'chemicals'], majorImports: ['machinery', 'fuel', 'food'] },
-  { code: 'BS', name: 'Bahamas', nameEn: 'Bahamas', region: 'Caribbean', treaties: [], majorExports: ['fish', 'rum'], majorImports: ['machinery', 'fuel', 'food'] },
-
-  // --- FINAL BATCH: MICROSTATES & ISLANDS (~30 Countries) ---
-  
-  // Caribbean & Central America
-  { code: 'KY', name: 'Islas Caimán', nameEn: 'Cayman Islands', region: 'Caribbean', treaties: [], majorExports: ['re_exports'], majorImports: ['food', 'fuel'] },
-  { code: 'AW', name: 'Aruba', nameEn: 'Aruba', region: 'Caribbean', treaties: [], majorExports: ['oil_refining', 'tourism'], majorImports: ['food', 'fuel'] },
-  { code: 'CW', name: 'Curazao', nameEn: 'Curacao', region: 'Caribbean', treaties: [], majorExports: ['oil_refining'], majorImports: ['crude_oil', 'food'] },
-  { code: 'SX', name: 'Sint Maarten', nameEn: 'Sint Maarten', region: 'Caribbean', treaties: [], majorExports: ['tourism'], majorImports: ['food', 'fuel'] },
-  { code: 'BM', name: 'Bermudas', nameEn: 'Bermuda', region: 'North America', treaties: [], majorExports: ['re_exports'], majorImports: ['food', 'fuel', 'machinery'] },
-
-  // Pacific Islands
-  { code: 'WS', name: 'Samoa', nameEn: 'Samoa', region: 'Oceania', treaties: [], majorExports: ['fish', 'coconut'], majorImports: ['machinery', 'food'] },
-  { code: 'TO', name: 'Tonga', nameEn: 'Tonga', region: 'Oceania', treaties: [], majorExports: ['squash', 'vanilla'], majorImports: ['food', 'fuel'] },
-  { code: 'VU', name: 'Vanuatu', nameEn: 'Vanuatu', region: 'Oceania', treaties: [], majorExports: ['fish', 'copra'], majorImports: ['machinery', 'food'] },
-  { code: 'SB', name: 'Islas Salomón', nameEn: 'Solomon Islands', region: 'Oceania', treaties: [], majorExports: ['timber', 'fish'], majorImports: ['machinery', 'fuel'] },
-  { code: 'PF', name: 'Polinesia Francesa', nameEn: 'French Polynesia', region: 'Oceania', treaties: [], majorExports: ['pearls', 'vanilla'], majorImports: ['fuel', 'food'] },
-  { code: 'NC', name: 'Nueva Caledonia', nameEn: 'New Caledonia', region: 'Oceania', treaties: [], majorExports: ['nickel'], majorImports: ['machinery', 'fuel'] },
-
-  // Africa Microstates & Others
-  { code: 'CV', name: 'Cabo Verde', nameEn: 'Cape Verde', region: 'Africa', treaties: ['afcfta'], majorExports: ['fish', 'shoes'], majorImports: ['food', 'fuel'] },
   { code: 'ST', name: 'Santo Tomé y Príncipe', nameEn: 'Sao Tome and Principe', region: 'Africa', treaties: ['afcfta'], majorExports: ['cocoa'], majorImports: ['food', 'fuel'] },
   { code: 'GQ', name: 'Guinea Ecuatorial', nameEn: 'Equatorial Guinea', region: 'Africa', treaties: ['afcfta'], majorExports: ['oil', 'gas'], majorImports: ['machinery', 'food'] },
   { code: 'GA', name: 'Gabón', nameEn: 'Gabon', region: 'Africa', treaties: ['afcfta'], majorExports: ['oil', 'manganese'], majorImports: ['machinery', 'food'] },
   { code: 'CG', name: 'Congo', nameEn: 'Republic of the Congo', region: 'Africa', treaties: ['afcfta'], majorExports: ['oil', 'copper'], majorImports: ['machinery', 'food'] },
-  { code: 'MR', name: 'Mauritania', nameEn: 'Mauritania', region: 'Africa', treaties: ['afcfta'], majorExports: ['iron_ore', 'fish', 'gold'], majorImports: ['machinery', 'food'] },
-
-  // Europe Microstates
-  { code: 'MC', name: 'Mónaco', nameEn: 'Monaco', region: 'Europe', treaties: ['customs_union_eu'], majorExports: ['cosmetics', 'pharmaceuticals'], majorImports: ['luxury_goods'] },
-  { code: 'AD', name: 'Andorra', nameEn: 'Andorra', region: 'Europe', treaties: ['customs_union_eu'], majorExports: ['tobacco', 'furniture'], majorImports: ['food', 'fuel'] },
-  { code: 'SM', name: 'San Marino', nameEn: 'San Marino', region: 'Europe', treaties: ['customs_union_eu'], majorExports: ['ceramics', 'chemicals'], majorImports: ['gas', 'machinery'] },
-  { code: 'VA', name: 'Vaticano', nameEn: 'Vatican City', region: 'Europe', treaties: [], majorExports: [], majorImports: ['food', 'consumer_goods'] },
-
-  // Asia Others
-  { code: 'MV', name: 'Maldivas', nameEn: 'Maldives', region: 'Asia', treaties: [], majorExports: ['fish'], majorImports: ['fuel', 'food'] },
-  { code: 'BT', name: 'Bután', nameEn: 'Bhutan', region: 'Asia', treaties: [], majorExports: ['electricity', 'cement'], majorImports: ['fuel', 'machinery'] },
-  { code: 'TL', name: 'Timor Oriental', nameEn: 'East Timor', region: 'Asia', treaties: [], majorExports: ['oil', 'coffee'], majorImports: ['food', 'fuel'] },
-  { code: 'TJ', name: 'Tayikistán', nameEn: 'Tajikistan', region: 'Asia', treaties: [], majorExports: ['aluminum', 'cotton'], majorImports: ['petroleum', 'machinery'] },
-  { code: 'TM', name: 'Turkmenistán', nameEn: 'Turkmenistan', region: 'Asia', treaties: [], majorExports: ['gas', 'cotton'], majorImports: ['machinery', 'food'] }
+  { code: 'MR', name: 'Mauritania', nameEn: 'Mauritania', region: 'Africa', treaties: ['afcfta'], majorExports: ['iron_ore', 'fish', 'gold'], majorImports: ['machinery', 'food'] }
 ];
 
 // Función para obtener tratados de un país

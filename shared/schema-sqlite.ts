@@ -512,3 +512,21 @@ export const sanctionsList = sqliteTable("sanctions_list", {
   severity: text("severity").notNull(), // "CRITICAL", "WARNING"
   updatedAt: integer("updated_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });
+
+export const news = sqliteTable("news", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  title: text("title").notNull(),
+  content: text("content"),
+  publishedAt: integer("published_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+  source: text("source"),
+  url: text("url"),
+  imageUrl: text("image_url")
+});
+
+export const syncStatus = sqliteTable("sync_status", {
+  hsCode: text("hs_code").primaryKey(),
+  lastSync: integer("last_sync", { mode: "timestamp" }),
+  status: text("status"), // 'pending', 'synced', 'failed'
+  errorMessage: text("error_message"),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date())
+});

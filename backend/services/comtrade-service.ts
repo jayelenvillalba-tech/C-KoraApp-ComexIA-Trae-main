@@ -44,7 +44,8 @@ export class ComtradeService {
       
       const response = await fetch(url, {
           headers: {
-              'User-Agent': 'ComexIA-Agent/1.0'
+              'User-Agent': 'ComexIA-Agent/1.0',
+              'Ocp-Apim-Subscription-Key': process.env.COMTRADE_API_KEY || ''
           }
       });
       

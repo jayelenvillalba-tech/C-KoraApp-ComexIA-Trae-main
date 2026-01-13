@@ -56,7 +56,9 @@ export default function PostCard({ post }: PostCardProps) {
   // const userId = "mock-user-1"; 
 
   const handleContact = async () => {
+    console.log('PostCard: handleContact clicked', { hasUser: !!user, userId: user?.id, userName: user?.name });
     if (!user) {
+       console.log('PostCard: User missing, showing AuthGuardModal');
        setShowAuthModal(true);
        return;
     }

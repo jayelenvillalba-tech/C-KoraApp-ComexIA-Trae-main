@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from 'wouter';
-import { Map, Marker } from 'pigeon-maps';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -10,18 +9,13 @@ import { ChevronLeft, ChevronRight, Ship, TrendingUp, AlertCircle, Globe, MapPin
 import LogisticsSimulator from '@/components/logistics-simulator';
 import CostCalculatorDialog from '@/components/cost-calculator-dialog';
 import { MarketTrendsChart } from "@/components/market-trends-chart";
-
-// Dark satellite map provider
-function darkMapTileProvider(x: number, y: number, z: number) {
-  return `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`;
-}
+import InteractiveMap from '@/components/map/interactive-map';
+import { HistoricalChart } from '@/components/market-analysis/historical-chart';
 
 export default function Analysis() {
   const { language } = useLanguage();
   const [, navigate] = useLocation();
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
-  const [mapCenter, setMapCenter] = useState<[number, number]>([20, 0]); // World view
-  const [mapZoom, setMapZoom] = useState(2);
   const [showLogisticsSimulator, setShowLogisticsSimulator] = useState(false);
   const [showCostCalculator, setShowCostCalculator] = useState(false);
   
@@ -37,8 +31,6 @@ export default function Analysis() {
     queryKey: ["/api/country-requirements", selectedCountry, code],
     queryFn: async () => {
       // Find country code for selected country name
-      // This is a bit hacky because selectedCountry is a name here, not a code
-      // We should really track countryCode in state
       let targetCode = 'US'; // Default fallback
       if (selectedCountry?.includes('China')) targetCode = 'CN';
       if (selectedCountry?.includes('Alemania')) targetCode = 'DE';
@@ -58,35 +50,6 @@ export default function Analysis() {
     enabled: !!selectedCountry && !!code,
   });
 
-  // Mock data for top buyers and recommended countries with coordinates
-
-  // Mock data for top buyers and recommended countries with coordinates
-  const topBuyers = [
-    { rank: 1, country: 'China', countryCode: 'CN', flag: '🇨🇳', coordinates: [35.8617, 104.1954] as [number, number] },
-    { rank: 2, country: 'Estados Unidos', countryCode: 'US', flag: '🇺🇸', coordinates: [37.0902, -95.7129] as [number, number] },
-    { rank: 3, country: 'Alemania', countryCode: 'DE', flag: '🇩🇪', coordinates: [51.1657, 10.4515] as [number, number] }
-  ];
-
-  const recommendedCountries = [
-    { rank: 1, country: 'Brasil (Mercosur)', countryCode: 'BR', treaty: 'Mercosur', coordinates: [-14.2350, -51.9253] as [number, number] },
-    { rank: 2, country: 'Chile (Acuerdo Bilateral)', countryCode: 'CL', treaty: 'Bilateral', coordinates: [-35.6751, -71.5430] as [number, number] },
-    { rank: 3, country: 'Unión Europea', countryCode: 'EU', treaty: 'UE-Mercosur', coordinates: [54.5260, 15.2551] as [number, number] }
-  ];
-
-  // Additional opportunity pins
-  const opportunityPins = [
-    { coordinates: [35.6762, 139.6503] as [number, number], country: 'Japón' }, // Tokyo
-    { coordinates: [-33.8688, 151.2093] as [number, number], country: 'Australia' }, // Sydney
-    { coordinates: [19.4326, -99.1332] as [number, number], country: 'México' }, // Mexico City
-    { coordinates: [55.7558, 37.6173] as [number, number], country: 'Rusia' }, // Moscow
-  ];
-
-  const allPins = [
-    ...topBuyers.map(b => ({ ...b, type: 'buyer' as const })),
-    ...recommendedCountries.map(c => ({ ...c, type: 'recommended' as const })),
-    ...opportunityPins.map(p => ({ ...p, type: 'opportunity' as const }))
-  ];
-
   const globalNews = [
     {
       title: language === 'es' ? 'Aumento de la demanda de carne argentina en Asia' : 'Increase in demand for Argentine beef in Asia',
@@ -98,14 +61,49 @@ export default function Analysis() {
     }
   ];
 
+  // Fetch market analysis for dynamic data
+  const { data: marketAnalysis } = useQuery<any>({
+    queryKey: ['market-analysis', code, country, operation],
+    queryFn: async () => {
+      if (!code) return null;
+      const res = await fetch(`/api/market-analysis?hsCode=${code}&country=${country}&operation=${operation}`);
+      if (!res.ok) return null;
+      return res.json();
+    },
+    enabled: !!code
+  });
+
+  const topBuyers = marketAnalysis?.analysis?.topBuyers || [];
+  const recommendedCountries = marketAnalysis?.analysis?.recommendedCountries || [
+    { rank: 1, country: 'Brasil (Mercosur)', countryCode: 'BR', treaty: 'Mercosur', coordinates: [-14.2350, -51.9253] as [number, number] },
+    { rank: 2, country: 'Chile (Acuerdo Bilateral)', countryCode: 'CL', treaty: 'Bilateral', coordinates: [-35.6751, -71.5430] as [number, number] },
+    { rank: 3, country: 'Unión Europea', countryCode: 'EU', treaty: 'UE-Mercosur', coordinates: [54.5260, 15.2551] as [number, number] }
+  ];
+  const relevantNews = marketAnalysis?.analysis?.relevantNews || globalNews;
+  
+  // New Historical Data
+  const historicalData = marketAnalysis?.analysis?.historicalData || [];
+
+  // Additional opportunity pins
+  const opportunityPins = [
+    { coordinates: [35.6762, 139.6503] as [number, number], country: 'Japón' }, // Tokyo
+    { coordinates: [-33.8688, 151.2093] as [number, number], country: 'Australia' }, // Sydney
+    { coordinates: [19.4326, -99.1332] as [number, number], country: 'México' }, // Mexico City
+    { coordinates: [55.7558, 37.6173] as [number, number], country: 'Rusia' }, // Moscow
+  ];
+
+  const allPins = [
+    ...topBuyers.map((b: any) => ({ ...b, type: 'buyer' as const })),
+    ...recommendedCountries.map((c: any) => ({ ...c, type: 'recommended' as const })),
+    ...opportunityPins.map(p => ({ ...p, type: 'opportunity' as const }))
+  ];
+
   const handlePinClick = (country: string, coords: [number, number]) => {
     setSelectedCountry(country);
-    setMapCenter(coords);
-    setMapZoom(5);
   };
 
   return (
-    <div className="min-h-screen bg-[#0A1929]">
+    <div className="min-h-screen bg-[#0A1929] overflow-hidden">
       {/* Breadcrumb */}
       <div className="bg-[#0D2137] border-b border-cyan-900/30 px-6 py-3">
         <div className="flex items-center gap-2 text-sm">
@@ -143,50 +141,35 @@ export default function Analysis() {
       </div>
 
       <div className="flex h-[calc(100vh-60px)]">
-        {/* Map Section */}
-        <div className="flex-1 relative">
-          <Map
-            provider={darkMapTileProvider}
-            center={mapCenter}
-            zoom={mapZoom}
-            onBoundsChanged={({ center, zoom }) => {
-              setMapCenter(center);
-              setMapZoom(zoom);
-            }}
-            attribution={false}
-            height={window.innerHeight - 60}
-          >
-            {allPins.map((pin, idx) => (
-              <Marker
-                key={idx}
-                anchor={pin.coordinates}
-                onClick={() => handlePinClick(pin.country, pin.coordinates)}
-              >
-                <div className="relative group cursor-pointer">
-                  {/* Glow effect */}
-                  <div className="absolute inset-0 bg-cyan-400 rounded-full blur-xl opacity-60 group-hover:opacity-100 transition-opacity w-8 h-8 -translate-x-4 -translate-y-4" />
-                  {/* Pin */}
-                  <div className="relative">
-                    <MapPin className="w-8 h-8 text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]" fill="currentColor" />
-                  </div>
-                </div>
-              </Marker>
-            ))}
-          </Map>
+        {/* Map & Chart Section - SPLIT Layout */}
+        <div className="flex-1 flex flex-col min-w-0">
+            {/* Map Area */}
+            <div className="flex-1 relative min-h-0">
+                <InteractiveMap 
+                    hsCode={code}
+                    year={2024}
+                    onCountryClick={handlePinClick}
+                />
 
-          {/* Map Overlay Stats */}
-          <div className="absolute top-4 left-4 space-y-2 z-10">
-            <div className="bg-[#0D2137]/90 backdrop-blur-md border border-cyan-900/30 rounded-lg p-3 text-white">
-              <div className="text-xs text-gray-400 mb-1">
-                {language === 'es' ? 'Oportunidades Totales' : 'Total Opportunities'}
-              </div>
-              <div className="text-2xl font-bold text-cyan-400">47</div>
+                {/* Map Overlay Stats */}
+                <div className="absolute top-4 left-4 space-y-2 z-10 pointer-events-none">
+                    <div className="bg-[#0D2137]/90 backdrop-blur-md border border-cyan-900/30 rounded-lg p-3 text-white pointer-events-auto">
+                    <div className="text-xs text-gray-400 mb-1">
+                        {language === 'es' ? 'Oportunidades Totales' : 'Total Opportunities'}
+                    </div>
+                    <div className="text-2xl font-bold text-cyan-400">{allPins.length}</div>
+                    </div>
+                </div>
             </div>
-          </div>
+
+            {/* Historical Chart Panel (Bottom of Middle Column) */}
+            <div className="h-[250px] bg-[#0A1929] border-t border-cyan-900/30 p-2 z-20 shrink-0">
+                <HistoricalChart data={historicalData} />
+            </div>
         </div>
 
         {/* Right Sidebar */}
-        <div className="w-96 bg-[#0D2137] border-l border-cyan-900/30 overflow-y-auto">
+        <div className="w-96 bg-[#0D2137] border-l border-cyan-900/30 overflow-y-auto shrink-0">
           {selectedCountry ? (
             // Country Details Panel
             <div className="p-6 space-y-6">
@@ -228,10 +211,9 @@ export default function Analysis() {
                   {language === 'es' ? 'Distancia Argentina - ' : 'Distance Argentina - '}{selectedCountry}
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="text-2xl font-bold text-white">~19,000 km</div>
+                  <div className="text-2xl font-bold text-white">~12,000 km</div>
                   <Ship className="w-6 h-6 text-cyan-400" />
                 </div>
-                <div className="text-xs text-gray-500 mt-1">/ 11,800 mi</div>
               </div>
 
               {/* Alerts */}
@@ -251,7 +233,7 @@ export default function Analysis() {
                 </div>
               </div>
 
-                {/* Simulation Tools - Restored as per user screenshots */}
+                {/* Simulation Tools */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
                 <Button 
                     variant="outline" 
@@ -259,7 +241,7 @@ export default function Analysis() {
                     onClick={() => setShowLogisticsSimulator(true)}
                 >
                     <Ship className="w-6 h-6" />
-                    <span>{language === 'es' ? 'Simulador de Logística (Incoterm)' : 'Logistics Simulator (Incoterm)'}</span>
+                    <span>{language === 'es' ? 'Simulador de Logística' : 'Logistics Simulator'}</span>
                 </Button>
                 <Button 
                     variant="outline" 
@@ -272,19 +254,13 @@ export default function Analysis() {
               </div>
 
               {/* Regulatory Documentation Section */}
-              {/* [FIX] Removed hardcoded check for 0201. Now shows for any product if requirements exist or if we want to show empty state */}
               <div className="bg-[#0A1929] rounded-lg p-4 border border-purple-500/30 space-y-3">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-purple-300 flex items-center gap-2">
                       📋 {language === 'es' ? 'Documentación Reglamentaria Requerida' : 'Required Regulatory Documentation'}
                     </h3>
-                    <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded">
-                      {code} → {selectedCountry}
-                    </span>
                   </div>
                   
-
-
                   {requirements?.requiredDocuments && requirements.requiredDocuments.length > 0 ? (
                     <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
                       {requirements.requiredDocuments.map((doc: any, idx: number) => (
@@ -301,57 +277,18 @@ export default function Analysis() {
                               {doc.isSanction && <AlertCircle className="w-3 h-3" />}
                               {doc.name}
                             </h4>
-                            <span className={`text-[10px] px-2 py-0.5 rounded ${
-                              doc.isSanction ? 'bg-red-600 text-white font-bold' : 'bg-blue-500/20 text-blue-300'
-                            }`}>
-                              {doc.issuer}
-                            </span>
                           </div>
                           <p className={`text-[10px] mb-2 ${doc.isSanction ? 'text-red-200 font-medium' : 'text-gray-400'}`}>
-                            {doc.description || doc.importance || ''}
+                            {doc.description || ''}
                           </p>
-                          {(doc.requirements || doc.instruction) && (
-                            <div className={`text-[10px] p-2 rounded ${doc.isSanction ? 'bg-red-900/40 text-red-100' : 'bg-gray-800/50 text-gray-400'}`}>
-                                <span className="font-semibold">{doc.isSanction ? 'SANCIONA: ' : 'Requisito: '}</span>
-                                <span>{doc.requirements || doc.instruction}</span>
-                            </div>
-                          )}
-                          {doc.link && (
-                            <a href={doc.link} target="_blank" rel="noopener noreferrer" className={`block mt-2 text-[10px] hover:underline ${doc.isSanction ? 'text-red-400' : 'text-cyan-400'}`}>
-                              Ver fuente oficial →
-                            </a>
-                          )}
                         </div>
                       ))}
                     </div>
                   ) : (
                     <div className="text-gray-400 text-xs italic p-4 text-center">
-                       {language === 'es' ? 'Cargando o sin requisitos específicos...' : 'Loading or no specific requirements...'}
+                       {language === 'es' ? 'Cargando o sin requisitos específicos...' : 'Loading...'}
                     </div>
                   )}
-
-                  <Button 
-                    onClick={() => {
-                        import('jspdf').then(jsPDF => {
-                            import('jspdf-autotable').then(autoTable => {
-                                const doc = new jsPDF.default();
-                                doc.text(`Requisitos: ${code} -> ${selectedCountry}`, 14, 20);
-                                const rows = requirements?.requiredDocuments?.map((d: any) => [d.name, d.issuer, d.description]) || [];
-                                autoTable.default(doc, {
-                                    head: [['Documento', 'Emisor', 'Descripción']],
-                                    body: rows,
-                                    startY: 30
-                                });
-                                doc.save('requisitos.pdf');
-                            });
-                        });
-                    }}
-                    variant="outline"
-                    size="sm"
-                    className="w-full text-xs border-purple-500/30 text-purple-300 hover:bg-purple-500/10"
-                  >
-                    📄 Descargar Guía PDF
-                  </Button>
                 </div>
             </div>
           ) : (
@@ -363,7 +300,7 @@ export default function Analysis() {
                   {language === 'es' ? 'Top 3 Compradores' : 'Top 3 Buyers'}
                 </h2>
                 <div className="space-y-2">
-                  {topBuyers.map((buyer) => (
+                  {topBuyers.map((buyer: any) => (
                     <div
                       key={buyer.countryCode}
                       onClick={() => setSelectedCountry(buyer.country)}
@@ -389,7 +326,7 @@ export default function Analysis() {
                   {language === 'es' ? 'Países Recomendados (Tratados)' : 'Recommended Countries (Treaties)'}
                 </h2>
                 <div className="space-y-2">
-                  {recommendedCountries.map((country) => (
+                  {recommendedCountries.map((country: any) => (
                     <div
                       key={country.countryCode}
                       onClick={() => setSelectedCountry(country.country)}
@@ -413,7 +350,7 @@ export default function Analysis() {
                   {language === 'es' ? 'Noticias Globales Relevantes' : 'Relevant Global News'}
                 </h2>
                 <div className="space-y-2">
-                  {globalNews.map((news, idx) => (
+                  {relevantNews.map((news: any, idx: number) => (
                     <div key={idx} className="bg-[#0A1929] rounded-lg p-3 border border-cyan-900/30">
                       <div className="flex gap-2">
                         <div className={`w-12 h-12 ${news.image} rounded flex-shrink-0`} />

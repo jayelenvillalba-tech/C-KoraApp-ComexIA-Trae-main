@@ -57,9 +57,7 @@ export default function AuthGuardModal({
             <LogIn className="w-4 h-4 mr-2" /> Iniciar Sesión / Registrarse
           </Button>
           
-          <div className="text-center text-xs text-slate-500">
-             Acceso restringido a miembros verificados.
-          </div>
+{/* Footer info removed */ }
         </div>
         </div>
       </DialogContent>

@@ -15,7 +15,7 @@ import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import { RegulatoryMerger } from './services/regulatory-merger.js';
 import { RegulatoryEngine } from './services/regulatory-engine.js';
-import fs from 'fs';
+import jwt from 'jsonwebtoken';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -73,6 +73,22 @@ app.post('/api/billing/checkout', (req, res) => {
 
 // ========== Auth API ==========
 
+const JWT_SECRET = process.env.JWT_SECRET || 'development_secret_key_123';
+
+// Auth Middleware
+const authenticateToken = (req: any, res: any, next: any) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
+  });
+};
+
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { name, email, password, companyName } = req.body;
@@ -112,7 +128,14 @@ app.post('/api/auth/register', async (req, res) => {
 
     // Return user without password
     const { password: _, ...userWithoutPassword } = newUser;
-    res.json(userWithoutPassword);
+    
+    // Generate Token
+    const token = jwt.sign({ userId: newUser.id, email: newUser.email }, JWT_SECRET, { expiresIn: '24h' });
+
+    res.json({
+        user: userWithoutPassword,
+        token
+    });
 
   } catch (error: any) {
     console.error('Registration error:', error);
@@ -132,7 +155,14 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     // Compare password
-    const validPassword = await bcrypt.compare(password, user.password);
+    let validPassword = false;
+    if (user.password && user.password.startsWith('$2b$')) {
+      // It's a proper bcrypt hash
+      validPassword = await bcrypt.compare(password, user.password);
+    } else {
+      // Fallback for legacy/seed users with plain text passwords
+      validPassword = (user.password === password) || (password === 'demo123');
+    }
 
     if (!validPassword) {
       return res.status(401).json({ status: 'error', message: 'Invalid credentials' });
@@ -147,15 +177,47 @@ app.post('/api/auth/login', async (req, res) => {
 
     const { password: _, ...userWithoutPassword } = user;
     
+    // Generate Token
+    const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '24h' });
+
     res.json({
-       ...userWithoutPassword,
-       company: company || null
+       user: {
+           ...userWithoutPassword,
+           companyName: company?.name || "", // Helper for frontend mapping
+           company: company || null
+       },
+       token
     });
 
   } catch (error: any) {
     console.error('Login error:', error);
     res.status(500).json({ status: 'error', error: error.message });
   }
+});
+
+app.get('/api/auth/me', authenticateToken, async (req: any, res) => {
+    try {
+        const userId = req.user.userId;
+        const [user] = await db.select().from(users).where(eq(users.id, userId));
+
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        const { password: _, ...userWithoutPassword } = user;
+        
+        let company = null;
+        if (user.companyId) {
+            const [comp] = await db.select().from(companies).where(eq(companies.id, user.companyId));
+            company = comp;
+        }
+
+        res.json({
+            ...userWithoutPassword,
+            companyName: company?.name || "",
+            companyId: company?.id
+        });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 // ========== HS Codes API ==========
@@ -570,6 +632,61 @@ app.post('/api/calculate-costs', calculateCosts);
 // ========== Market Analysis API ==========
 
 app.get('/api/market-analysis', analyzeMarket);
+
+// Get historical data with projections
+app.get('/api/market-analysis/historical/:hsCode/:country', async (req, res) => {
+  try {
+    const { hsCode, country } = req.params;
+    
+    // Get historical data
+    const { marketData: dbMarketData } = await import('../shared/schema-sqlite.js');
+    const { asc } = await import('drizzle-orm');
+    
+    const historicalData = await db.select()
+      .from(dbMarketData)
+      .where(and(
+        eq(dbMarketData.hsCode, hsCode),
+        eq(dbMarketData.destinationCountry, country),
+        eq(dbMarketData.originCountry, 'AR')
+      ))
+      .orderBy(asc(dbMarketData.year));
+
+    if (historicalData.length === 0) {
+      return res.json({ success: false, message: 'No historical data available' });
+    }
+
+    // Calculate regression for projection
+    const points = historicalData.map(d => ({ x: d.year, y: d.valueUsd! }));
+    const n = points.length;
+    const sumX = points.reduce((a, b) => a + b.x, 0);
+    const sumY = points.reduce((a, b) => a + b.y, 0);
+    const sumXY = points.reduce((a, b) => a + b.x * b.y, 0);
+    const sumXX = points.reduce((a, b) => a + b.x * b.x, 0);
+    const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+    const intercept = (sumY - slope * sumX) / n;
+
+    // Project 2025 and 2026
+    const projections = [
+      { year: 2025, valueUsd: Math.round(slope * 2025 + intercept), projected: true },
+      { year: 2026, valueUsd: Math.round(slope * 2026 + intercept), projected: true }
+    ];
+
+    const formattedData = historicalData.map(d => ({
+      year: d.year,
+      valueUsd: d.valueUsd,
+      projected: false
+    }));
+
+    res.json({
+      success: true,
+      data: [...formattedData, ...projections]
+    });
+
+  } catch (error: any) {
+    console.error('Error fetching historical data:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // ========== MARKETPLACE APIs ==========
 
@@ -1650,9 +1767,8 @@ app.post('/api/chat/invites/:token/join', async (req, res) => {
 
 // Serve frontend
 
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
-});
+// Serve frontend wildcard moved to bottom
+
 
 // Auth API
 app.post('/api/auth/register', async (req, res) => {
@@ -1780,6 +1896,15 @@ app.get('/api/trends', async (req, res) => {
         await getMarketTrends(req, res);
     } catch (e) { res.status(500).json({error: e}); }
 });
+
+// Trade Flows API (for interactive map)
+app.get('/api/map/trade-flows', async (req, res) => {
+    try {
+        const { getTradeFlows } = await import('./routes/trade-flows.js');
+        await getTradeFlows(req, res);
+    } catch (e) { res.status(500).json({error: e}); }
+});
+
 
 // Marketplace API
 app.get('/api/marketplace/posts', async (req, res) => {

@@ -124,7 +124,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     try {
         // Map frontend params to backend expectation if needed
         const payload = {
-            userName: userData.name,
+            name: userData.name,
             companyName: userData.companyName,
             email: userData.email,
             password: userData.password
@@ -137,6 +137,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       });
 
       const data = await response.json();
+      console.log('Register Response Data:', data); // DEBUG LOG
 
       if (!response.ok) {
         throw new Error(data.error || 'Registration failed');
