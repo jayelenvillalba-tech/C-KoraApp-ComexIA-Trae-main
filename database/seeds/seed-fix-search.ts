@@ -49,6 +49,17 @@ async function seedCriticalCommodities() {
         subHeadingCode: '0901',
         keywords: 'cafe, coffee, grano',
         isActive: 1
+    },
+    {
+        code: '2204',
+        description: 'Vino de uvas frescas, incluso encabezado; mosto de uva',
+        descriptionEn: 'Wine of fresh grapes, including fortified wines; grape must',
+        sectionCode: '04',
+        chapterCode: '22',
+        headingCode: '2204',
+        subHeadingCode: '2204',
+        keywords: 'vino, wine, bebida, alcohol, uva',
+        isActive: 1
     }
   ];
 

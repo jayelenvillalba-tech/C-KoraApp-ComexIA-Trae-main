@@ -118,12 +118,12 @@ export default function InteractiveMap({ hsCode, year = 2024, onCountryClick }: 
 
       uniqueLocations.forEach((loc: any) => {
         L.circleMarker([loc.lat, loc.lng], {
-          radius: 4,
-          fillColor: '#00d4ff',
+          radius: 8,
+          fillColor: '#f97316', // Neon Orange
           color: '#fff',
           weight: 1,
           opacity: 1,
-          fillOpacity: 0.8
+          fillOpacity: 1
         }).addTo(map).bindPopup(`
           <div style="color: #fff; background: #0D2137; padding: 8px; border-radius: 4px;">
             <strong>${loc.code}</strong>
@@ -151,21 +151,30 @@ export default function InteractiveMap({ hsCode, year = 2024, onCountryClick }: 
 
             L.circle([stat.lat, stat.lng], {
                 color: 'transparent',
-                fillColor: '#f59e0b', // Amber/Orange for heat
-                fillOpacity: 0.3 + (intensity * 0.4),
-                radius: radius
+                fillColor: '#f97316', // Bright Neon Orange
+                fillOpacity: 0.4 + (intensity * 0.5),
+                radius: radius,
+                className: 'heat-pulse' // Add pulse animation via CSS if possible or rely on opacity
             }).addTo(map);
         });
     }
   }, [tradeData, selectedLayer]);
 
   return (
-    <div className="relative w-full h-full">
-      <div ref={mapContainerRef} className="w-full h-full" />
+    <div className="relative w-full h-full bg-[#020617]">
+      <div ref={mapContainerRef} className="w-full h-full z-0" />
       
+      {/* Custom Styles for Map Overlays */}
+      <style>{`
+        .leaflet-container { background: #020617; }
+        .trade-route { stroke-dasharray: 10; animation: dash 30s linear infinite; filter: drop-shadow(0 0 5px rgba(56, 189, 248, 0.5)); }
+        @keyframes dash { to { stroke-dashoffset: -1000; } }
+      `}</style>
+
       {/* Layer Controls */}
-      <div className="absolute top-4 right-4 z-[1000] bg-[#0D2137]/90 backdrop-blur-md border border-cyan-900/30 rounded-lg p-3">
-        <div className="text-xs text-gray-400 mb-2">Layers</div>
+      <div className="absolute top-4 right-4 z-10 bg-[#0f172a]/90 backdrop-blur-md border border-cyan-500/30 rounded-lg p-3 shadow-[0_0_15px_rgba(6,182,212,0.15)]">
+        <div className="text-xs font-bold text-cyan-400 mb-2 uppercase tracking-wider">Map Layers</div>
+
         <div className="flex flex-col gap-2">
           <button
             onClick={() => setSelectedLayer('routes')}
@@ -201,7 +210,7 @@ export default function InteractiveMap({ hsCode, year = 2024, onCountryClick }: 
       </div>
 
       {/* Legend */}
-      <div className="absolute bottom-4 left-4 z-[1000] bg-[#0D2137]/90 backdrop-blur-md border border-cyan-900/30 rounded-lg p-3">
+      <div className="absolute bottom-4 left-4 z-10 bg-[#0D2137]/90 backdrop-blur-md border border-cyan-900/30 rounded-lg p-3">
         <div className="text-xs text-gray-400 mb-2">Trade Volume</div>
         <div className="flex items-center gap-2 text-xs text-white">
           <div className="w-8 h-0.5 bg-cyan-400" style={{ opacity: 0.3 }}></div>

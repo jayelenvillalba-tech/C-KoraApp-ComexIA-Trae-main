@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useLanguage } from '@/hooks/use-language';
 import { Ship, Plane, Truck, DollarSign, Clock, Package, TrendingUp, Lock, RefreshCw } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { AiAnalysisWidget } from './ai-analysis-widget';
 
 interface LogisticsSimulatorProps {
   open: boolean;
@@ -108,6 +109,16 @@ export default function LogisticsSimulator({ open, onOpenChange, origin, destina
           </DialogHeader>
 
           <div className="space-y-6 mt-4">
+             {/* AI Analysis Integration */}
+             <AiAnalysisWidget 
+                hsCode="" 
+                originCountry={origin} 
+                targetCountry={destination} 
+                productName={product} 
+                compact={true}
+                className="mb-4"
+              />
+
             {/* Routes Comparison */}
             <div>
               <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">

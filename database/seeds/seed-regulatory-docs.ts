@@ -1,5 +1,6 @@
 
-import { initDatabase, saveDatabase, getSqliteDb } from '../db-sqlite.js';
+import { initDatabase, saveDatabase, db } from '../db-sqlite.js';
+import { regulatoryRules } from '../../shared/schema-sqlite.js';
 import crypto from 'crypto';
 
 console.log('=== SEED: DOCUMENTACIÓN REGLAMENTARIA (Debug Mode) ===');
@@ -11,6 +12,15 @@ const REGULATORY_DOCS = [
     requiredDocuments: JSON.stringify([
       { name: 'Certificado Fitosanitario', issuer: 'SENASA', description: 'Plagas', requirements: 'Inspección' },
       { name: 'Certificado de Origen', issuer: 'Cámara Comercio', description: 'Origen', requirements: 'Factura' }
+    ])
+  },
+  {
+    countryCode: 'CN',
+    hsCode: '1001', // Trigo
+    requiredDocuments: JSON.stringify([
+      { name: 'Certificado Fitosanitario (Protocolo Trigo)', issuer: 'SENASA', description: 'Libre de Tilletia indica', requirements: 'Inspección previa embarque' },
+      { name: 'Certificado de Calidad', issuer: 'Senasa/Privado', description: 'Proteína y Humedad', requirements: 'Análisis Lab' },
+      { name: 'Licencia de Importación (China)', issuer: 'MOFCOM', description: 'Quota Importación', requirements: 'Comprador debe poseerla' }
     ])
   },
   {
@@ -26,8 +36,6 @@ const REGULATORY_DOCS = [
 async function main() {
   try {
     await initDatabase();
-    const sqliteDb = getSqliteDb();
-    if (!sqliteDb) throw new Error("DB handle is null");
     
     console.log('✅ Connected to database');
     
@@ -38,11 +46,15 @@ async function main() {
 
       for (const rDoc of requiredDocs) {
         try {
-          const id = crypto.randomUUID();
-          sqliteDb.run(
-            'INSERT INTO regulatory_rules (id, country_code, hs_chapter, document_name, issuer, description, requirements, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-            [id, doc.countryCode, hsChapter, rDoc.name, rDoc.issuer, rDoc.description, rDoc.requirements, Date.now()]
-          );
+          await db.insert(regulatoryRules).values({
+            id: crypto.randomUUID(),
+            countryCode: doc.countryCode,
+            hsChapter: hsChapter,
+            documentName: rDoc.name,
+            issuer: rDoc.issuer,
+            description: rDoc.description,
+            requirements: rDoc.requirements,
+          });
           console.log(`✓ Inserted: ${rDoc.name} for ${doc.countryCode}`);
           inserted++;
         } catch (error: any) {

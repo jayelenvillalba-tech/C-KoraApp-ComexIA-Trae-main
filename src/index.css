@@ -131,6 +131,26 @@
   .bg-kora-error {
     background-color: var(--kora-error);
   }
+
+  /* Premium Utilities */
+  .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+  }
+  .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+  }
+  
+  .glass-premium {
+    background: rgba(13, 33, 55, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(6, 182, 212, 0.1);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500;
+  }
 }
 
 /* Animations at root level */
@@ -138,6 +158,16 @@
   to {
     stroke-dashoffset: -100;
   }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
 }
 
 .trade-route {

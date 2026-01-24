@@ -32,7 +32,7 @@ export default function AuthPage() {
 
     try {
       await login({ email: loginEmail, password: loginPassword });
-      navigate('/'); 
+      navigate('/marketplace'); 
     } catch (error) {
       // Error handled in context
     } finally {
@@ -53,7 +53,7 @@ export default function AuthPage() {
       });
 
       if (success) {
-        navigate('/');
+        navigate('/marketplace');
       }
     } catch (error) {
       // Error handled in context

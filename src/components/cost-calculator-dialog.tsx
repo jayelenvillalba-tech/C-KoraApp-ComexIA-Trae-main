@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useLanguage } from '@/hooks/use-language';
 import { DollarSign, TrendingUp, Package, AlertCircle, Lock, Calculator } from 'lucide-react';
+import { AiAnalysisWidget } from './ai-analysis-widget';
 
 interface CostCalculatorDialogProps {
   open: boolean;
@@ -269,6 +270,16 @@ export default function CostCalculatorDialog({ open, onOpenChange, origin, desti
                 </CardContent>
               </Card>
             )}
+
+             {/* AI Analysis Integration (Bottom) */}
+             <AiAnalysisWidget 
+                hsCode="" 
+                originCountry={origin} 
+                targetCountry={destination} 
+                productName={product} 
+                compact={true}
+                className="mt-4"
+              />
           </div>
         </DialogContent>
       </Dialog>

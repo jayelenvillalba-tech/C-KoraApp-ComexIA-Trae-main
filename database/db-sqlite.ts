@@ -1,6 +1,7 @@
 
-import { drizzle } from 'drizzle-orm/sql-js';
-import initSqlJs from 'sql.js';
+
+import { drizzle } from 'drizzle-orm/better-sqlite3';
+import Database from 'better-sqlite3';
 import * as schema from '../shared/schema-sqlite.js';
 import { config } from 'dotenv';
 import path from 'path';
@@ -24,38 +25,27 @@ let sqliteDb: any;
 
 // Función para inicializar la base de datos
 async function initDatabase() {
-  const SQL = await initSqlJs();
+  console.log(`🔄 Initializing better-sqlite3 database...`);
   
-  // Intentar cargar base de datos existente
-  console.log(`Checking if database exists at: ${dbPath}`);
-  if (fs.existsSync(dbPath)) {
-    console.log('File exists on disk.');
-    const buffer = fs.readFileSync(dbPath);
-    sqliteDb = new SQL.Database(buffer);
-    console.log('✅ Loaded existing database');
-  } else {
-    console.log('File does NOT exist on disk.');
-    if (process.env.NODE_ENV === 'production') {
-       // List files to help debug
-       console.log('Files in root:', fs.readdirSync(process.cwd()));
-       throw new Error(`CRITICAL: Database file not found at ${dbPath}`);
-    }
-    sqliteDb = new SQL.Database();
-    console.log('⚠️ Created new EMPTY database (Development only)');
-  }
+  // better-sqlite3 crea el archivo automáticamente si no existe
+  sqliteDb = new Database(dbPath, { 
+    verbose: process.env.NODE_ENV === 'development' ? console.log : undefined 
+  });
+  
+  // Configurar WAL mode para mejor performance y concurrencia
+  sqliteDb.pragma('journal_mode = WAL');
+  
+  console.log('✅ Database connected with better-sqlite3 (auto-persistent)');
   
   db = drizzle(sqliteDb, { schema });
   return db;
 }
 
+
 // Función para guardar la base de datos
 function saveDatabase() {
-  if (sqliteDb) {
-    const data = sqliteDb.export();
-    const buffer = Buffer.from(data);
-    fs.writeFileSync(dbPath, buffer);
-    console.log('💾 Database saved');
-  }
+  // better-sqlite3 persiste automáticamente - no se requiere acción manual
+  console.log('✅ Database auto-persisted to disk (better-sqlite3)');
 }
 
 // Función para cerrar la conexión

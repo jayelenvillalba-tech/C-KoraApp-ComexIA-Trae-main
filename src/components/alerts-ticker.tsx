@@ -29,25 +29,27 @@ export function AlertsTicker() {
   if (!isVisible || !criticalAlert) return null;
 
   return (
-    <div className="bg-red-600 text-white px-4 py-2 text-sm font-medium flex items-center justify-between relative z-50">
+    <div className="fixed top-16 left-0 right-0 z-40 bg-red-500/10 backdrop-blur-md border-b border-red-500/20 px-4 py-2 text-sm font-medium flex items-center justify-between">
       <div 
-        className="flex items-center gap-2 cursor-pointer flex-1"
+        className="container mx-auto flex items-center gap-2 cursor-pointer"
         onClick={() => setLocation('/alerts')}
       >
-        <AlertTriangle className="w-4 h-4 animate-pulse" />
-        <span className="uppercase tracking-wider font-bold text-red-100 mr-2">
+        <div className="bg-red-500/20 p-1 rounded">
+             <AlertTriangle className="w-4 h-4 text-red-500 animate-pulse" />
+        </div>
+        <span className="uppercase tracking-wider font-bold text-red-400 mr-2">
             REGULATORY ALERT:
         </span>
-        <span className="truncate">
+        <span className="truncate text-red-100">
             {criticalAlert.title}
         </span>
-        <span className="ml-2 underline text-red-200 text-xs hidden md:inline">
-            Read more
+        <span className="ml-2 text-xs text-red-400/80 hover:text-red-300 flex items-center gap-1 transition-colors">
+            Ver detalles <span aria-hidden="true">&rarr;</span>
         </span>
       </div>
       <button 
         onClick={() => setIsVisible(false)}
-        className="text-red-200 hover:text-white ml-4 p-1 rounded-full hover:bg-red-700"
+        className="text-red-400/50 hover:text-red-300 p-1 rounded hover:bg-red-500/10 transition-colors"
       >
         <X className="w-4 h-4" />
       </button>

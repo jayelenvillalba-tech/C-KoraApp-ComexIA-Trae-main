@@ -11,6 +11,8 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { exportCostAnalysisPDF } from "@/lib/pdf-export";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
+import { CONTINENTAL_COORDINATES } from "@shared/continental-coordinates";
+import { RegulatoryDocsViewer } from "@/components/regulatory-docs-viewer";
 
 interface CostBreakdown {
   fob: number;
@@ -94,22 +96,16 @@ export default function CostCalculator() {
 
   const breakdown = calculateMutation.data as CostBreakdown | undefined;
 
-  const destinations = [
-    { value: "buenos-aires", label: "Buenos Aires, Argentina", country: "AR" },
-    { value: "sao-paulo", label: "São Paulo, Brasil", country: "BR" },
-    { value: "valparaiso", label: "Valparaíso, Chile", country: "CL" },
-    { value: "lima", label: "Lima, Perú", country: "PE" },
-    { value: "hamburg", label: "Hamburgo, Alemania", country: "DE" },
-    { value: "los-angeles", label: "Los Ángeles, EE.UU.", country: "US" },
-    { value: "rotterdam", label: "Rotterdam, Holanda", country: "NL" },
-  ];
+  const destinations = CONTINENTAL_COORDINATES.map(c => ({
+    value: c.countryCode,
+    label: c.countryName,
+    country: c.countryCode
+  })).sort((a, b) => a.label.localeCompare(b.label));
 
-  const origins = [
-    { value: "santos", label: "Santos, Brasil" },
-    { value: "buenos-aires", label: "Buenos Aires, Argentina" },
-    { value: "montevideo", label: "Montevideo, Uruguay" },
-    { value: "valparaiso", label: "Valparaíso, Chile" },
-  ];
+  const origins = CONTINENTAL_COORDINATES.filter(c => ['AR', 'BR', 'UY', 'PY', 'CL', 'PE', 'CO'].includes(c.countryCode)).map(c => ({
+    value: c.countryCode,
+    label: c.countryName
+  }));
 
   const hsProducts = [
     { value: "0901", label: "Café (0901)" },
@@ -141,10 +137,11 @@ export default function CostCalculator() {
       </h3>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="calculator">Calculadora</TabsTrigger>
           <TabsTrigger value="analysis">Análisis</TabsTrigger>
           <TabsTrigger value="optimization">Optimización</TabsTrigger>
+          <TabsTrigger value="documentation">Documentación</TabsTrigger>
         </TabsList>
         
         <TabsContent value="calculator" className="space-y-6">
@@ -708,6 +705,13 @@ export default function CostCalculator() {
               <p className="text-gray-600">Realiza un cálculo primero para ver las oportunidades de optimización</p>
             </div>
           )}
+        </TabsContent>
+        <TabsContent value="documentation" className="space-y-6">
+          <RegulatoryDocsViewer 
+            hsCode={hsCode}
+            countryCode={destination}
+            countryName={destinations.find(d => d.value === destination)?.label}
+          />
         </TabsContent>
       </Tabs>
     </div>

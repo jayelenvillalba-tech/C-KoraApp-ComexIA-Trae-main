@@ -389,3 +389,80 @@ export function exportCountryRecommendationsPDF(
   
   doc.save(`ComexIA-Recomendaciones-${metadata.hsCode}-${Date.now()}.pdf`);
 }
+
+export function exportRegulatoryDocsPDF(
+  documents: Array<{ documentName: string; issuer: string; requirements: string; description?: string }>,
+  metadata: {
+    hsCode: string;
+    productName: string;
+    countryName: string;
+    countryCode: string;
+  }
+) {
+  const doc = new jsPDF();
+  
+  // Header
+  doc.setFontSize(20);
+  doc.setTextColor(37, 99, 235);
+  doc.text('ComexIA - Documentación Reglamentaria', 105, 20, { align: 'center' });
+  
+  doc.setFontSize(10);
+  doc.setTextColor(100, 100, 100);
+  doc.text(`Generado: ${new Date().toLocaleDateString('es-AR')}`, 105, 28, { align: 'center' });
+  
+  // Context
+  doc.setFontSize(14);
+  doc.setTextColor(0, 0, 0);
+  doc.text('Contexto de la Operación', 14, 40);
+  
+  const contextInfo = [
+    ['Producto:', `${metadata.productName} (HS: ${metadata.hsCode})`],
+    ['Destino:', `${metadata.countryName} (${metadata.countryCode})`],
+    ['Total Documentos:', documents.length.toString()]
+  ];
+  
+  autoTable(doc, {
+    startY: 45,
+    body: contextInfo,
+    theme: 'plain',
+    styles: { fontSize: 10 },
+    columnStyles: {
+      0: { fontStyle: 'bold', cellWidth: 50 },
+      1: { cellWidth: 'auto' }
+    }
+  });
+
+  // Docs Table
+  const currentY = (doc as any).lastAutoTable.finalY + 10;
+  doc.setFontSize(14);
+  doc.text('Requisitos Documentales', 14, currentY);
+  
+  const docsData = documents.map(d => [
+    d.documentName,
+    d.issuer || 'N/A',
+    d.requirements || 'N/A',
+    d.description || '-'
+  ]);
+  
+  autoTable(doc, {
+    startY: currentY + 5,
+    head: [['Documento', 'Emisor', 'Requisitos', 'Descripción']],
+    body: docsData,
+    theme: 'striped',
+    headStyles: { fillColor: [234, 88, 12], textColor: 255 }, // Orange/Red for mandatory
+    styles: { fontSize: 9 },
+    columnStyles: {
+      0: { cellWidth: 50, fontStyle: 'bold' },
+      1: { cellWidth: 40 },
+      2: { cellWidth: 50 },
+      3: { cellWidth: 50 }
+    }
+  });
+
+  // Footer
+  doc.setFontSize(8);
+  doc.setTextColor(150, 150, 150);
+  doc.text('ComexIA - Inteligencia Regulatoria Global', 105, 285, { align: 'center' });
+  
+  doc.save(`ComexIA-RegulatoryDocs-${metadata.countryCode}-${metadata.hsCode}.pdf`);
+}

@@ -132,6 +132,9 @@ export default function MarketAnalysisDetail() {
               />
             )}
 
+            {/* Documentación Reglamentaria */}
+            <RegulatoryDocsSection hsCode={hsCode} country={country} language={language} />
+
             {/* Competition & Opportunities */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Competition */}
@@ -204,6 +207,43 @@ export default function MarketAnalysisDetail() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function RegulatoryDocsSection({ hsCode, country, language }: { hsCode: string, country: string, language: string }) {
+  const { data: docs, isLoading } = useQuery({
+    queryKey: ['regulatory-docs', hsCode, country],
+    queryFn: async () => {
+       const res = await fetch(`/api/market-analysis/docs?code=${hsCode}&country=${country}`);
+       if (!res.ok) return [];
+       return res.json();
+    },
+    enabled: !!hsCode && !!country
+  });
+
+  if (isLoading) return <div className="animate-pulse h-24 bg-[#0D2137] rounded-lg"></div>;
+  if (!docs || docs.length === 0) return null;
+
+  return (
+    <div className="bg-[#0D2137] rounded-lg p-6 border border-cyan-900/30">
+        <h3 className="text-lg font-semibold text-white mb-4">
+            {language === 'es' ? 'Documentación Reglamentaria Requerida' : 'Required Regulatory Documentation'}
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {docs.map((doc: any, i: number) => (
+                <div key={i} className="p-4 bg-[#0A1929] border border-cyan-500/20 rounded-lg hover:border-cyan-500/50 transition-colors">
+                    <div className="font-medium text-cyan-400 mb-1">{doc.documentName}</div>
+                    <div className="text-xs text-gray-400 mb-2">{doc.issuer}</div>
+                    <p className="text-sm text-gray-300">{doc.description}</p>
+                    {doc.requirements && (
+                        <div className="mt-3 text-xs bg-cyan-950/30 p-2 rounded text-cyan-200">
+                            Requirement: {doc.requirements}
+                        </div>
+                    )}
+                </div>
+            ))}
+        </div>
     </div>
   );
 }
