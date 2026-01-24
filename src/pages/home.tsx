@@ -1,6 +1,6 @@
 
-import { useState } from 'react';
-import WorldMap4D from '@/components/world-map-4d';
+import { useState, useEffect } from 'react';
+// import WorldMap4D from '@/components/world-map-4d'; // Disabled to prevent WebSocket error
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { FeatureCard } from '@/components/feature-card';
@@ -12,10 +12,23 @@ import {
 import HsCodeSearch from '@/components/hs-code-search';
 import { AlertsTicker } from '@/components/alerts-ticker';
 import { motion } from 'framer-motion';
+import AOS from 'aos';
+import 'aos/dist/aos.css';
 
 export default function Home() {
   const { language, setLanguage } = useLanguage();
   const [, navigate] = useLocation();
+
+  // Initialize AOS
+  useEffect(() => {
+    AOS.init({
+      duration: 800,
+      easing: 'ease-out-cubic',
+      once: true,
+      offset: 100,
+      delay: 0,
+    });
+  }, []);
 
   const handleProductSelected = (product: any, country: string, operation: string, productName: string) => {
     navigate(`/analysis?code=${product.code}&country=${country}&operation=${operation}&product=${encodeURIComponent(productName)}`);
@@ -39,7 +52,7 @@ export default function Home() {
         <div className="container mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
-              <img src="/logo.png" alt="Logo" className="w-5 h-5 object-contain invert brightness-0" />
+              <img src="/logo.png" alt="Che.Comex AI" className="w-5 h-5 object-contain invert brightness-0" />
             </div>
             <span className="font-bold text-lg tracking-tight text-white">
               CHE.<span className="text-cyan-400">COMEX</span>
@@ -79,30 +92,30 @@ export default function Home() {
         <div className="container mx-auto">
           
           {/* Welcome Section */}
-          <section className="relative min-h-[500px] rounded-3xl overflow-hidden glass-premium border border-white/10 mb-8 flex flex-col items-center justify-center text-center p-8">
-            <WorldMap4D className="absolute inset-0 opacity-40 mix-blend-screen pointer-events-none" />
+          <section className="relative min-h-[500px] rounded-3xl overflow-hidden glass-premium border border-white/10 mb-8 flex flex-col items-center justify-center text-center p-8" data-aos="fade-up">
+            {/* <WorldMap4D className="absolute inset-0 opacity-40 mix-blend-screen pointer-events-none" /> */}
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#050B14]/50 to-[#050B14]" />
             
             <div className="relative z-10 max-w-4xl mx-auto space-y-8">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-bold uppercase tracking-wider animate-in fade-in zoom-in duration-500">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-bold uppercase tracking-wider">
                 <Sparkles className="w-3 h-3" />
                 Sistema Operativo de Comercio Exterior
               </div>
               
-              <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight leading-none animate-in fade-in slide-in-from-bottom-4 duration-700">
+              <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight leading-none">
                 Ecosistema Integral <br/>
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500">
                   Che.Comex AI
                 </span>
               </h1>
               
-              <p className="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
+              <p className="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
                 Desde la clasificación arancelaria hasta el cálculo logístico puerta a puerta. 
                 Todo lo que necesitas para operar, en una sola plataforma.
               </p>
 
               {/* Search Box */}
-              <div className="max-w-2xl mx-auto w-full animate-in fade-in slide-in-from-bottom-12 duration-700 delay-200">
+              <div className="max-w-2xl mx-auto w-full" data-aos="fade-up" data-aos-delay="200">
                 <div className="bg-[#0D1623]/80 backdrop-blur-xl p-2 rounded-2xl border border-white/10 shadow-2xl shadow-cyan-900/20">
                   <HsCodeSearch 
                     onProductSelected={handleProductSelected}
@@ -131,7 +144,7 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
             
             {/* Left Column: Stats & Alerts */}
-            <div className="md:col-span-4 space-y-6">
+            <div className="md:col-span-4 space-y-6" data-aos="fade-up" data-aos-delay="400">
               <div className="glass-premium rounded-2xl p-6 border border-white/5 h-full">
                 <h3 className="text-white font-bold mb-4 flex items-center gap-2">
                   <ShieldAlert className="w-5 h-5 text-yellow-500" />
@@ -160,7 +173,7 @@ export default function Home() {
             </div>
 
             {/* Right Column: Main Modules */}
-            <div className="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-6" data-aos="fade-up" data-aos-delay="600">
               <FeatureCard 
                 icon={<Ship className="w-8 h-8" />}
                 title="Calculadora Logística"
