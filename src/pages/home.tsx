@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-// import WorldMap4D from '@/components/world-map-4d'; // Disabled to prevent WebSocket error
+import WorldMap4D from '@/components/world-map-4d'; // Re-enabled with FPS fix
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { FeatureCard } from '@/components/feature-card';
@@ -93,7 +93,7 @@ export default function Home() {
           
           {/* Welcome Section */}
           <section className="relative min-h-[500px] rounded-3xl overflow-hidden glass-premium border border-white/10 mb-8 flex flex-col items-center justify-center text-center p-8" data-aos="fade-up">
-            {/* <WorldMap4D className="absolute inset-0 opacity-40 mix-blend-screen pointer-events-none" /> */}
+            <WorldMap4D className="absolute inset-0 opacity-40 mix-blend-screen pointer-events-none" />
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#050B14]/50 to-[#050B14]" />
             
             <div className="relative z-10 max-w-4xl mx-auto space-y-8">

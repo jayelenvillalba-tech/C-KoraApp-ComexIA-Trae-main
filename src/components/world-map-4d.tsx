@@ -100,7 +100,7 @@ export default function WorldMap4D({ className = '' }: WorldMap4DProps) {
     ];
 
     const particles: any[] = [];
-    for(let i=0; i<80; i++) { // Más partículas para más actividad
+    for(let i=0; i<40; i++) { // Reduced to 40 for performance stability
         particles.push({
             routeIdx: Math.floor(Math.random() * routes.length),
             t: Math.random(),
@@ -257,11 +257,29 @@ export default function WorldMap4D({ className = '' }: WorldMap4DProps) {
             }
         });
 
-        time += 0.01;
-        requestAnimationFrame(render);
+        // Limit FPS to 30 to prevent thread starvation
+        // time += 0.01; // Original unchecked
+        // requestAnimationFrame(render);
     };
 
-    render();
+    // FPS Throttling Wrapper
+    let lastTime = 0;
+    const fps = 30;
+    const interval = 1000 / fps;
+
+    const animate = (timestamp: number) => {
+        if (!lastTime) lastTime = timestamp;
+        const elapsed = timestamp - lastTime;
+
+        if (elapsed > interval) {
+            lastTime = timestamp - (elapsed % interval);
+            time += 0.01; // Update logical time
+            render();
+        }
+        requestAnimationFrame(animate);
+    };
+
+    requestAnimationFrame(animate);
 
     return () => {};
   }, []);
