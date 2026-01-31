@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { useLanguage } from '@/hooks/use-language';
+import { useUser } from "@/context/user-context"; // Added useUser
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // Added Avatar
 import { ChevronLeft, ChevronRight, Ship, TrendingUp, AlertCircle, Globe, MapPin } from 'lucide-react';
 import LogisticsSimulator from '@/components/logistics-simulator';
 import CostCalculatorDialog from '@/components/cost-calculator-dialog';
@@ -35,6 +37,7 @@ import { AiAnalysisWidget } from '@/components/ai-analysis-widget';
 
 export default function Analysis() {
   const { language } = useLanguage();
+  const { user } = useUser(); // Get user state
   const [, navigate] = useLocation();
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [showLogisticsSimulator, setShowLogisticsSimulator] = useState(false);
@@ -280,13 +283,36 @@ export default function Analysis() {
               ))}
             </div>
             
-            <Button 
-              variant="outline"
-              className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:text-cyan-300 h-9 text-xs font-bold"
-              onClick={() => navigate('/auth')}
-            >
-              LOGIN
-            </Button>
+            
+            {user ? (
+               <Button 
+                onClick={() => navigate('/profile')}
+                variant="ghost" 
+                className="flex items-center gap-2 hover:bg-slate-800 text-white px-2 border border-slate-700/50"
+              >
+                 <Avatar className="w-8 h-8 border border-cyan-500/50">
+                    <AvatarImage src={user.avatar || "/placeholder-user.jpg"} />
+                    <AvatarFallback className="bg-cyan-900 text-cyan-200">{user.name?.substring(0,2)?.toUpperCase() || "U"}</AvatarFallback>
+                 </Avatar>
+                 <span className="hidden lg:inline text-sm max-w-[100px] truncate">{user.name || "Usuario"}</span>
+              </Button>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="ghost"
+                  className="text-gray-300 hover:text-white h-9 text-xs"
+                  onClick={() => navigate('/auth')}
+                >
+                  {language === 'es' ? 'Ingresar' : 'Login'}
+                </Button>
+                <Button 
+                  className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/20 border-0 h-9 text-xs"
+                  onClick={() => navigate('/auth?view=register')}
+                >
+                  {language === 'es' ? 'Crear Cuenta' : 'Register'}
+                </Button>
+              </div>
+            )}
           </div>
       </div>
 

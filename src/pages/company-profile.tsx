@@ -72,20 +72,55 @@ const fallbackCompany = {
   ],
   recentPosts: [
     {
+      id: "inst-1",
+      type: "institutional",
+      title: "Innovación en Procesos de Envasado",
+      content: "Anunciamos la incorporación de sistemas de envasado al vacío y túneles IQF (Individual Quick Freezing) para mejorar la calidad, trazabilidad y vida útil de nuestros productos en exportación. Esta inversión refuerza nuestro compromiso con la excelencia.",
+      image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
+      stats: "Hace 3 días",
+      likes: 245,
+      comments: 18
+    },
+    {
+      id: "mkt-1",
+      type: "marketplace",
+      title: "Stock Disponible - Cortes Premium Cuota Hilton",
+      content: "Oferta exclusiva de cortes bovinos de alta calidad certificados para exportación.",
+      product: {
+        name: "Bife Angosto y Ojo de Bife",
+        origin: "Buenos Aires, Argentina",
+        weight: "20 Toneladas disponibles",
+        certifications: ["HACCP", "Halal", "Cuota Hilton", "BRC"],
+        blockchainVerified: true
+      },
+      image: "https://images.unsplash.com/photo-1588168333986-5078d3ae3976?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
+      stats: "Publicado hace 1 día",
+      likes: 89,
+      comments: 12,
+      cta: {
+        label: "Solicitar Cotización",
+        action: "/marketplace/quote"
+      }
+    },
+    {
       id: "p1",
-      type: "video",
+      type: "institutional",
       title: "Nueva exportación exitosa a China",
       content: "Cumplimos con procesos estrictos (China, UE, EE.UU). #CarneArgentina #Blockchain. Contenedor refrigerado con monitoreo satelital.",
       image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      stats: "Hace 45 días • 5 semanas • 120 likes"
+      stats: "Hace 45 días",
+      likes: 120,
+      comments: 8
     },
     {
       id: "p2",
-      type: "article",
+      type: "institutional",
       title: "Actualización: Protocolo sanitario China renovado",
       content: "Fuente: SENASA. Nuevas regulaciones para la exportación de carne bovina congelada sin hueso.",
       image: null,
-      stats: "Hace 2 días • Fuente Oficial"
+      stats: "Hace 2 días",
+      likes: 67,
+      comments: 5
     }
   ]
 };
@@ -425,30 +460,136 @@ import ReputationBadge from "@/components/ui/reputation-badge";
                     {language === 'es' ? 'Actividad Reciente' : 'Recent Activity'}
                   </h3>
                   
-                  {company.recentPosts.map((post) => (
-                    <Card key={post.id} className="bg-[#0D2137] border-cyan-900/30 mb-4 hover:border-cyan-500/30 transition-colors cursor-pointer">
-                      <CardContent className="p-4">
-                        <div className="flex gap-4">
-                          {post.image && (
-                            <div className="w-32 h-24 rounded-lg overflow-hidden flex-shrink-0">
-                              <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
-                            </div>
-                          )}
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <Badge variant="outline" className="text-xs border-cyan-500/30 text-cyan-400">
-                                {post.type === 'video' ? <Video className="w-3 h-3 mr-1" /> : <FileText className="w-3 h-3 mr-1" />}
-                                {post.type.toUpperCase()}
-                              </Badge>
+                  {company.recentPosts.map((post: any) => {
+                    const isMarketplace = post.type === 'marketplace';
+                    
+                    return (
+                      <Card 
+                        key={post.id} 
+                        className={`bg-[#0D2137] mb-4 hover:border-cyan-500/30 transition-colors cursor-pointer ${
+                          isMarketplace 
+                            ? 'border-blue-500/40 shadow-lg shadow-blue-900/10' 
+                            : 'border-cyan-900/30'
+                        }`}
+                      >
+                        <CardContent className="p-0">
+                          {/* Post Header */}
+                          <div className="p-4 border-b border-cyan-900/20">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <Badge 
+                                  variant="outline" 
+                                  className={`text-xs ${
+                                    isMarketplace 
+                                      ? 'border-blue-500/30 text-blue-400 bg-blue-900/20' 
+                                      : 'border-cyan-500/30 text-cyan-400 bg-cyan-900/10'
+                                  }`}
+                                >
+                                  {isMarketplace ? (
+                                    <>
+                                      <Package className="w-3 h-3 mr-1" />
+                                      MARKETPLACE
+                                    </>
+                                  ) : (
+                                    <>
+                                      <FileText className="w-3 h-3 mr-1" />
+                                      INSTITUCIONAL
+                                    </>
+                                  )}
+                                </Badge>
+                                {isMarketplace && post.product?.blockchainVerified && (
+                                  <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs gap-1">
+                                    <ShieldCheck className="w-3 h-3" />
+                                    Blockchain
+                                  </Badge>
+                                )}
+                              </div>
                               <span className="text-xs text-gray-500">{post.stats}</span>
                             </div>
-                            <h4 className="text-white font-medium mb-1">{post.title}</h4>
-                            <p className="text-sm text-gray-400 line-clamp-2">{post.content}</p>
+                            <h4 className="text-white font-semibold text-lg mb-1">{post.title}</h4>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+
+                          {/* Post Content */}
+                          <div className="flex gap-4 p-4">
+                            {post.image && (
+                              <div className={`rounded-lg overflow-hidden flex-shrink-0 ${
+                                isMarketplace ? 'w-48 h-36' : 'w-32 h-24'
+                              }`}>
+                                <img 
+                                  src={post.image} 
+                                  alt={post.title} 
+                                  className="w-full h-full object-cover" 
+                                />
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm text-gray-400 line-clamp-2 mb-3">{post.content}</p>
+                              
+                              {/* Marketplace Product Details */}
+                              {isMarketplace && post.product && (
+                                <div className="bg-white/5 rounded-lg p-3 mb-3 border border-blue-900/20">
+                                  <div className="grid grid-cols-2 gap-2 text-xs">
+                                    <div>
+                                      <span className="text-gray-500">Producto:</span>
+                                      <p className="text-white font-medium">{post.product.name}</p>
+                                    </div>
+                                    <div>
+                                      <span className="text-gray-500">Origen:</span>
+                                      <p className="text-white font-medium">{post.product.origin}</p>
+                                    </div>
+                                    <div>
+                                      <span className="text-gray-500">Disponible:</span>
+                                      <p className="text-white font-medium">{post.product.weight}</p>
+                                    </div>
+                                    <div>
+                                      <span className="text-gray-500">Certificaciones:</span>
+                                      <div className="flex flex-wrap gap-1 mt-1">
+                                        {post.product.certifications.map((cert: string, i: number) => (
+                                          <Badge key={i} variant="secondary" className="bg-green-900/20 text-green-400 border-green-500/30 text-[10px] px-1 py-0">
+                                            {cert}
+                                          </Badge>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Action Buttons */}
+                              <div className="flex items-center gap-3">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="text-gray-400 hover:text-cyan-400 hover:bg-cyan-900/20 h-8 px-3"
+                                >
+                                  <Star className="w-4 h-4 mr-1" />
+                                  {post.likes || 0}
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="text-gray-400 hover:text-cyan-400 hover:bg-cyan-900/20 h-8 px-3"
+                                >
+                                  <MessageSquare className="w-4 h-4 mr-1" />
+                                  {post.comments || 0}
+                                </Button>
+                                
+                                {/* Marketplace CTA */}
+                                {isMarketplace && post.cta && (
+                                  <Button 
+                                    className="ml-auto bg-blue-600 hover:bg-blue-700 text-white h-8 text-xs font-bold shadow-lg shadow-blue-900/20"
+                                  >
+                                    <TrendingUp className="w-3 h-3 mr-1" />
+                                    {post.cta.label}
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </>
               )}
               

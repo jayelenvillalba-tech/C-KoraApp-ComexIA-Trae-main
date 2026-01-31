@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, MapPin, Globe, Filter } from "lucide-react";
 import CompanyMapLeaflet from "@/components/company-map-leaflet";
+import Header from "@/components/header";
 
 export default function CompanyMapPage() {
   const { language } = useLanguage();
@@ -27,8 +28,10 @@ export default function CompanyMapPage() {
   });
 
   return (
-    <div className="min-h-screen bg-slate-950 pt-20 pb-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-slate-950">
+      <Header />
+      <div className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto space-y-8">
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">
             {language === 'es' ? 'Mapa Global de Empresas' : 'Global Company Map'}
@@ -127,6 +130,7 @@ export default function CompanyMapPage() {
           </Card>
         </div>
       </div>
+    </div>
     </div>
   );
 }

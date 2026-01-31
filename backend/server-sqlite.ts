@@ -41,7 +41,7 @@ const authenticateToken = (req: any, res: any, next: any) => {
 
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { name, email, password, companyName } = req.body;
+    const { name, email, password, companyName, companyType } = req.body;
     
     // Check if user exists
     const existingUser = await db.select().from(users).where(eq(users.email, email));
@@ -57,7 +57,7 @@ app.post('/api/auth/register', async (req, res) => {
        const [newCompany] = await db.insert(companies).values({
           name: companyName,
           country: 'AR', // Default or from request
-          type: 'exporter', // Default
+          type: companyType || 'exporter', // Use provided type or default
           verified: false
        }).returning();
        companyId = newCompany.id;
@@ -72,7 +72,7 @@ app.post('/api/auth/register', async (req, res) => {
       email,
       password: hashedPassword, 
       companyId,
-      role: 'admin',
+      role: 'admin', // Creator is admin
       verified: false
     }).returning();
 
@@ -96,26 +96,33 @@ app.post('/api/auth/register', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log(`[LOGIN ATTEMPT] Email: ${email}, Password length: ${password?.length}`);
     
     // Find user by email only
     const [user] = await db.select().from(users).where(eq(users.email, email));
     
     if (!user) {
-      return res.status(401).json({ status: 'error', message: 'Invalid credentials' });
+      console.log('[LOGIN FAIL] User not found in DB');
+      return res.status(401).json({ status: 'error', message: 'Invalid credentials (User not found)' });
     }
+
+    console.log(`[LOGIN] User found: ${user.email}, Hash starts with: ${user.password?.substring(0, 10)}...`);
 
     // Compare password
     let validPassword = false;
     if (user.password && user.password.startsWith('$2b$')) {
       // It's a proper bcrypt hash
       validPassword = await bcrypt.compare(password, user.password);
+      console.log(`[LOGIN] Bcrypt compare result: ${validPassword}`);
     } else {
       // Fallback for legacy/seed users with plain text passwords or demo
       validPassword = (user.password === password) || (password === 'demo123');
+      console.log(`[LOGIN] Plaintext/Demo compare result: ${validPassword}`);
     }
 
     if (!validPassword) {
-      return res.status(401).json({ status: 'error', message: 'Invalid credentials' });
+      console.log('[LOGIN FAIL] Invalid password');
+      return res.status(401).json({ status: 'error', message: 'Invalid credentials (Wrong password)' });
     }
 
     // Get company info if exists

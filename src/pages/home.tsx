@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import WorldMap4D from '@/components/world-map-4d'; // Re-enabled with FPS fix
+import PremiumGlobe3D from '@/components/premium-globe-3d'; // Premium 3D globe with Three.js
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { FeatureCard } from '@/components/feature-card';
@@ -14,6 +14,7 @@ import { AlertsTicker } from '@/components/alerts-ticker';
 import { motion } from 'framer-motion';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
+import Header from '@/components/header';
 
 export default function Home() {
   const { language, setLanguage } = useLanguage();
@@ -46,77 +47,45 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#050B14] overflow-x-hidden selection:bg-cyan-500/30">
-      {/* Header */}
-      <header className="fixed w-full top-0 z-50 bg-[#050B14]/80 backdrop-blur-xl border-b border-white/5">
-        <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
-              <img src="/logo.png" alt="Che.Comex AI" className="w-5 h-5 object-contain invert brightness-0" />
-            </div>
-            <span className="font-bold text-lg tracking-tight text-white">
-              CHE.<span className="text-cyan-400">COMEX</span>
-            </span>
-          </div>
+    <div className="min-h-screen bg-[#050B14] overflow-x-hidden selection:bg-cyan-500/30 relative">
+      {/* GLOBAL 3D BACKGROUND */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <PremiumGlobe3D className="w-full h-full opacity-60 mix-blend-screen" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#050B14]/30 via-transparent to-[#050B14]/90" />
+      </div>
 
-          <nav className="hidden md:flex items-center gap-6">
-            <div className="flex items-center gap-1 bg-white/5 p-1 rounded-lg border border-white/5">
-              {['es', 'en'].map((lang) => (
-                <button
-                  key={lang}
-                  onClick={() => setLanguage(lang as any)}
-                  className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
-                    language === lang 
-                      ? 'bg-cyan-600 text-white shadow-lg' 
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  {lang.toUpperCase()}
-                </button>
-              ))}
-            </div>
-            
-            <Button 
-              variant="outline"
-              className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:text-cyan-300 h-9 text-xs font-bold"
-              onClick={() => navigate('/auth')}
-            >
-              LOGIN
-            </Button>
-          </nav>
-        </div>
-      </header>
+      {/* Header */}
+      {/* Header */}
+      <Header />
 
       {/* Main Content */}
-      <main className="pt-24 pb-12 px-6">
-        <div className="container mx-auto">
-          
-          {/* Welcome Section */}
-          <section className="relative min-h-[500px] rounded-3xl overflow-hidden glass-premium border border-white/10 mb-8 flex flex-col items-center justify-center text-center p-8" data-aos="fade-up">
-            <WorldMap4D className="absolute inset-0 opacity-40 mix-blend-screen pointer-events-none" />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#050B14]/50 to-[#050B14]" />
+      <main className="pt-24 pb-12 px-6 relative z-10 w-full max-w-7xl mx-auto">
+        
+          {/* Welcome Section - Removida la caja "glass-premium" gigante */}
+          <section className="relative min-h-[500px] flex flex-col items-center justify-center text-center p-8" data-aos="fade-up">
             
             <div className="relative z-10 max-w-4xl mx-auto space-y-8">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-bold uppercase tracking-wider">
-                <Sparkles className="w-3 h-3" />
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-900/40 border border-cyan-500/30 text-cyan-300 text-sm font-bold uppercase tracking-wider backdrop-blur-md shadow-lg shadow-cyan-900/20">
+                <Sparkles className="w-4 h-4" />
                 Sistema Operativo de Comercio Exterior
               </div>
               
-              <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight leading-none">
+              <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight leading-tight drop-shadow-2xl">
                 Ecosistema Integral <br/>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-400 to-purple-400">
                   Che.Comex AI
                 </span>
               </h1>
               
-              <p className="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
+              <p className="text-gray-200 text-xl max-w-2xl mx-auto leading-relaxed drop-shadow-md font-medium">
                 Desde la clasificación arancelaria hasta el cálculo logístico puerta a puerta. 
                 Todo lo que necesitas para operar, en una sola plataforma.
               </p>
 
-              {/* Search Box */}
-              <div className="max-w-2xl mx-auto w-full" data-aos="fade-up" data-aos-delay="200">
-                <div className="bg-[#0D1623]/80 backdrop-blur-xl p-2 rounded-2xl border border-white/10 shadow-2xl shadow-cyan-900/20">
+              {/* Search Box - Flotando limpio */}
+              <div className="max-w-3xl mx-auto w-full mt-10" data-aos="fade-up" data-aos-delay="200">
+                {/* Contenedor del buscador con glass más suave */}
+                <div className="bg-[#0f172a]/60 backdrop-blur-2xl p-4 rounded-3xl border border-white/10 shadow-2xl shadow-blue-900/30">
                   <HsCodeSearch 
                     onProductSelected={handleProductSelected}
                     onPartidaSelected={handlePartidaSelected}
@@ -210,7 +179,6 @@ export default function Home() {
                 onAction={() => navigate('/marketplace')}
                 imageGradient="from-emerald-500 to-teal-500"
               />
-            </div>
           </div>
           
         </div>

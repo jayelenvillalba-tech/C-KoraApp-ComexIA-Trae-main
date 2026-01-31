@@ -26,6 +26,7 @@ import ProfilePage from "@/pages/profile";
 import NewsPage from "@/pages/news";
 import AuthPage from "@/pages/auth";
 import CheckoutSuccessPage from "@/pages/checkout-success";
+import OnboardingPage from "@/pages/onboarding";
 import { AlertsTicker } from "@/components/alerts-ticker";
 
 class ErrorBoundary extends React.Component<
@@ -93,6 +94,7 @@ function Router() {
       <Route path="/join-chat/:token" component={JoinChat} />
       <Route path="/landing" component={Landing} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/onboarding" component={OnboardingPage} />
       <Route path="/checkout/success" component={CheckoutSuccessPage} />
       <Route component={NotFound} />
     </Switch>

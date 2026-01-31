@@ -23,12 +23,10 @@ export default function CostCalculatorDialog({ open, onOpenChange, origin, desti
   const [volume, setVolume] = useState('10');
   const [value, setValue] = useState('50000');
   const [calculated, setCalculated] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const handleCalculate = () => {
     setCalculated(true);
-    // Show login modal after first calculation (demo limitation)
-    setTimeout(() => setShowLoginModal(true), 2000);
+    // Login modal disabled by user request - Cost calculator is now free to use
   };
 
   // Mock cost breakdown
@@ -284,65 +282,7 @@ export default function CostCalculatorDialog({ open, onOpenChange, origin, desti
         </DialogContent>
       </Dialog>
 
-      {/* Login/Register Modal for Demo */}
-      <Dialog open={showLoginModal} onOpenChange={setShowLoginModal}>
-        <DialogContent className="bg-[#0D2137] border-cyan-900/30 text-white">
-          <DialogHeader>
-            <div className="flex items-center justify-center mb-4">
-              <div className="w-16 h-16 bg-cyan-600/20 rounded-full flex items-center justify-center">
-                <Lock className="w-8 h-8 text-cyan-400" />
-              </div>
-            </div>
-            <DialogTitle className="text-2xl font-bold text-center text-cyan-400">
-              {language === 'es' ? '¡Desbloquea el Análisis Completo!' : 'Unlock Full Analysis!'}
-            </DialogTitle>
-            <DialogDescription className="text-center text-gray-400">
-              {language === 'es'
-                ? 'Regístrate para guardar tus cálculos, comparar múltiples rutas y exportar reportes detallados.'
-                : 'Register to save your calculations, compare multiple routes and export detailed reports.'}
-            </DialogDescription>
-          </DialogHeader>
 
-          <div className="space-y-4 mt-6">
-            <Button 
-              onClick={() => {
-                sessionStorage.setItem('searchContext', JSON.stringify({
-                  product,
-                  origin,
-                  destination,
-                  operation: origin.includes('Argentina') ? 'export' : 'import',
-                  timestamp: Date.now()
-                }));
-                window.location.href = '/marketplace';
-              }}
-              className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white py-6 text-lg font-semibold"
-            >
-              {language === 'es' ? 'Crear Cuenta Gratis' : 'Create Free Account'}
-            </Button>
-            <Button 
-              onClick={() => {
-                sessionStorage.setItem('searchContext', JSON.stringify({
-                  product,
-                  origin,
-                  destination,
-                  operation: origin.includes('Argentina') ? 'export' : 'import',
-                  timestamp: Date.now()
-                }));
-                window.location.href = '/marketplace';
-              }}
-              variant="outline" 
-              className="w-full border-cyan-900/30 text-cyan-400 hover:bg-cyan-900/20"
-            >
-              {language === 'es' ? 'Iniciar Sesión' : 'Login'}
-            </Button>
-            <p className="text-center text-xs text-gray-500">
-              {language === 'es'
-                ? '✓ Guardar cálculos  ✓ Comparar rutas  ✓ Exportar PDF  ✓ Alertas de precios'
-                : '✓ Save calculations  ✓ Compare routes  ✓ Export PDF  ✓ Price alerts'}
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }

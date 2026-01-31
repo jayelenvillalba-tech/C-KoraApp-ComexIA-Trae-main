@@ -68,7 +68,7 @@ export default function HsCodeSearch({ onProductSelected, onPartidaSelected }: H
   })).filter(group => group.countries.length > 0);
 
   // Search HS items with country and operation filters
-  const { data: searchResults, isLoading, error } = useQuery({
+  const { data: searchResults, isLoading, error, refetch } = useQuery({
     queryKey: ["/api/hs-search", searchQuery, originCountry, operationType],
     queryFn: async () => {
       console.log('🔍 Frontend: Executing search for:', searchQuery);
@@ -173,7 +173,7 @@ export default function HsCodeSearch({ onProductSelected, onPartidaSelected }: H
   const allResults = searchResults?.subpartidas || [];
 
   return (
-    <Card className="bg-white/10 backdrop-blur-xl border-white/20 shadow-2xl overflow-hidden">
+    <Card className="bg-white/10 backdrop-blur-xl border-white/20 shadow-2xl overflow-hidden relative z-50">
       <CardHeader className="bg-white/5 border-b border-white/10">
         <CardTitle className="flex items-center text-lg text-white">
           <Search className="mr-3 text-blue-400 w-5 h-5" />
@@ -197,7 +197,7 @@ export default function HsCodeSearch({ onProductSelected, onPartidaSelected }: H
               <SelectTrigger id="originCountry" className="bg-white/5 border-white/10 text-white focus:ring-blue-500/50 focus:border-blue-500/50">
                 <SelectValue placeholder={language === 'es' ? "Selecciona un país" : "Select a country"} />
               </SelectTrigger>
-              <SelectContent className="max-h-96 bg-slate-900 border-white/10 text-white">
+              <SelectContent className="max-h-96 bg-slate-900 border-white/10 text-white z-[60]">
                 <SelectItem value="all" className="focus:bg-white/10 focus:text-white">{language === 'es' ? 'Todos los países' : 'All countries'}</SelectItem>
                 {countriesByRegion.map(group => [
                   <div key={`${group.region}-header`} className="px-2 py-1.5 text-sm font-semibold text-blue-400 bg-white/5">
@@ -225,7 +225,7 @@ export default function HsCodeSearch({ onProductSelected, onPartidaSelected }: H
               <SelectTrigger id="operationType" className="bg-white/5 border-white/10 text-white focus:ring-blue-500/50 focus:border-blue-500/50">
                 <SelectValue placeholder={language === 'es' ? "Selecciona operación" : "Select operation"} />
               </SelectTrigger>
-              <SelectContent className="bg-slate-900 border-white/10 text-white">
+              <SelectContent className="bg-slate-900 border-white/10 text-white z-[60]">
                 <SelectItem value="all" className="focus:bg-white/10 focus:text-white">{language === 'es' ? 'Importar y Exportar' : 'Import and Export'}</SelectItem>
                 <SelectItem value="import" className="focus:bg-white/10 focus:text-white">
                   <div className="flex items-center">
@@ -283,20 +283,43 @@ export default function HsCodeSearch({ onProductSelected, onPartidaSelected }: H
                     onFocus={() => {
                       if (searchQuery.length >= 2) setOpen(true);
                     }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        refetch();
+                      }
+                    }}
                     className="pl-10 pr-24 bg-slate-900/90 border-white/10 text-white placeholder:text-gray-500 focus:ring-2 focus:ring-blue-500/50 focus:border-transparent h-12 w-full"
                   />
                   <div className="absolute right-1 top-1 bottom-1 z-10">
                     <Button 
                       size="sm"
                       className={`h-full px-4 ${
-                        (!originCountry || !operationType) 
+                        (searchQuery.length < 3) 
                           ? 'bg-gray-600 cursor-not-allowed' 
                           : 'bg-blue-600 hover:bg-blue-500'
                       } text-white`}
                       onClick={() => {
-                        if (allResults.length > 0) {
-                          handleProductSelect(allResults[0]);
-                        }
+                        if (searchQuery.length < 3) return;
+                        
+                        // Force refetch to ensure we have data
+                        refetch().then(({ data }) => {
+                          const results = data?.subpartidas || [];
+                          if (results.length === 0) {
+                            toast({
+                              title: language === 'es' ? 'Sin resultados' : 'No results',
+                              description: language === 'es' ? 'No encontramos productos con ese nombre.' : 'We could not find products with that name.',
+                              variant: "default",
+                            });
+                          } else {
+                            if (!originCountry || !operationType) {
+                                toast({
+                                  title: language === 'es' ? 'Selecciona País y Operación' : 'Select Country and Operation',
+                                  description: language === 'es' ? 'Hemos encontrado productos. Por favor selecciona país y operación para analizar.' : 'Products found. Please select country and operation to analyze.',
+                                  variant: "default",
+                                });
+                            }
+                          }
+                        });
                       }}
                     >
                       {language === 'es' ? 'ANALIZAR' : 'ANALYZE'}

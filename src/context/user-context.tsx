@@ -11,6 +11,8 @@ export interface User {
   companyId?: string;
   avatar?: string;
   verified: boolean;
+  onboardingStatus?: 'PENDING' | 'COMPLETED';
+  companyType?: string;
 }
 
 interface UserLogin {
@@ -22,7 +24,7 @@ interface UserContextType {
   user: User | null;
   isLoading: boolean;
   login: (credentials: UserLogin) => Promise<void>;
-  register: (data: { name: string; email: string; password?: string; companyName?: string }) => Promise<boolean>;
+  register: (data: { name: string; email: string; password?: string; companyName?: string; companyType?: string }) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -127,7 +129,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             name: userData.name,
             companyName: userData.companyName,
             email: userData.email,
-            password: userData.password
+            password: userData.password,
+            companyType: userData.companyType
         };
 
       const response = await fetch('/api/auth/register', {

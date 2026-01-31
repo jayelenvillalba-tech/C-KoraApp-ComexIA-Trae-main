@@ -23,7 +23,10 @@ import {
   ShieldCheck, 
   Download,
   Search,
-  MessageSquare
+  MessageSquare,
+  Store,
+  Calculator,
+  UserPlus
 } from "lucide-react";
 import FilteredNavbar from "@/components/filtered-navbar";
 import Footer from "@/components/footer";
@@ -31,6 +34,8 @@ import Footer from "@/components/footer";
 export default function ProfilePage() {
   const { language } = useLanguage();
   const [activeTab, setActiveTab] = useState("overview");
+  const [viewMode, setViewMode] = useState<'personal' | 'corporate'>('personal');
+  const isCorporate = viewMode === 'corporate';
 
   // Mock User Data
   const { user: contextUser } = useUser();
@@ -91,54 +96,159 @@ export default function ProfilePage() {
     }
   ];
 
+  // Corporate Profile Data
+  const corporateProfile = {
+    name: "Che.Comex",
+    tagline: "Ecosistema Integral de Comercio Internacional con IA & Blockchain",
+    bio: "Transformamos el comercio exterior para PyMEs en Latinoamérica. Somos una plataforma 'all-in-one' que integra inteligencia artificial generativa y trazabilidad blockchain para simplificar desde la búsqueda de códigos HS hasta el cierre de acuerdos comerciales.",
+    location: "Buenos Aires, Argentina (HQ)",
+    verified: true,
+    experts: [
+      { name: "J. Ayelén Villalba", role: "CEO", link: "#" },
+      { name: "Agente IA Che.Comex", role: "Soporte Técnico & IA", link: "#" },
+      { name: "Dpto. Operaciones", role: "Compliance & Aduana", link: "#" }
+    ]
+  };
+
+  // Personal Profile Data (Ayelén)
+  const personalProfile = {
+    name: "J. Ayelén Villalba",
+    role: "CEO & Founder de Che.Comex",
+    bio: "Apasionada por democratizar el comercio internacional a través de la tecnología. Lidero soluciones disruptivas para exportar de forma segura y eficiente.",
+    tags: ["#Comex", "#IAGenerativa", "#Fintech", "#Blockchain", "#Liderazgo"],
+    location: "Buenos Aires, Argentina"
+  };
+
+  // Determine current display data
+  const displayProfile = isCorporate ? corporateProfile : personalProfile;
+
   return (
     <div className="min-h-screen bg-[#0A1929] flex flex-col font-sans">
       <FilteredNavbar />
       
       <main className="flex-grow pt-24 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
+
+          {/* View Toggle */}
+          <div className="flex justify-center mb-8">
+             <div className="bg-[#0D2137] p-1 rounded-full border border-cyan-900/30 inline-flex">
+                <button
+                  onClick={() => setViewMode('personal')}
+                  className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                    !isCorporate 
+                      ? 'bg-cyan-600 text-white shadow-lg' 
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {language === 'es' ? 'Perfil Personal' : 'Personal Profile'}
+                </button>
+                <button
+                  onClick={() => setViewMode('corporate')}
+                  className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                    isCorporate 
+                      ? 'bg-blue-600 text-white shadow-lg' 
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                   {language === 'es' ? 'Perfil Empresa' : 'Company Profile'}
+                </button>
+             </div>
+          </div>
           
           {/* Header Profile */}
-          <div className="bg-[#0D2137] rounded-2xl shadow-lg border border-cyan-900/30 p-6 mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
+          <div className="bg-[#0D2137] rounded-2xl shadow-lg border border-cyan-900/30 p-8 mb-8 relative overflow-hidden">
              {/* Gradient Shine */}
-             <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none"></div>
+             <div className={`absolute top-0 right-0 w-96 h-96 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none ${isCorporate ? 'bg-blue-500/10' : 'bg-cyan-500/5'}`}></div>
 
-            <div className="flex items-center gap-6 relative">
-              <Avatar className="w-24 h-24 border-4 border-[#0A1929] shadow-md ring-2 ring-cyan-500/50">
-                <AvatarImage src={user.email.includes('demo') ? "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" : "/placeholder-user.jpg"} />
-                <AvatarFallback className="bg-cyan-900 text-cyan-200 text-2xl font-bold">{user.name.substring(0,2).toUpperCase()}</AvatarFallback>
-              </Avatar>
-              <div>
-                <h1 className="text-3xl font-bold text-white">{user.name}</h1>
-                <p className="text-slate-400 font-medium flex items-center gap-2">
-                  <Briefcase className="w-4 h-4 text-cyan-400" /> {user.role} <span className="text-cyan-600 font-semibold">{user.company !== "Sin Empresa" ? `en ${user.company}` : ""}</span>
-                </p>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  <Badge variant="secondary" className="bg-blue-900/30 text-blue-300 hover:bg-blue-900/50 transition-colors border border-blue-500/20">
-                    <MapPin className="w-3 h-3 mr-1" /> {user.location}
-                  </Badge>
-                  <Badge variant="outline" className="text-slate-400 border-slate-700 bg-slate-900/50">
-                    Miembro desde {user.joinDate}
-                  </Badge>
-                  {user.plan === 'free' && (
-                    <Badge variant="destructive" className="bg-orange-900/20 text-orange-400 hover:bg-orange-900/30 border-orange-500/30">
-                      Plan Gratuito
-                    </Badge>
+             <div className="flex flex-col md:flex-row gap-8 items-start relative z-10">
+               {/* Avatar / Logo */}
+               <div className="flex-shrink-0">
+                  <Avatar className={`w-32 h-32 border-4 shadow-xl ${isCorporate ? 'border-blue-900/50 ring-2 ring-blue-500/50' : 'border-[#0A1929] ring-2 ring-cyan-500/50'}`}>
+                    <AvatarImage src={isCorporate ? "/logo.png" : (user.email.includes('demo') ? "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" : "/placeholder-user.jpg")} className={isCorporate ? "object-contain p-2 bg-white" : ""} />
+                    <AvatarFallback className="bg-cyan-900 text-cyan-200 text-3xl font-bold">
+                      {isCorporate ? "CH" : user.name.substring(0,2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+               </div>
+
+               {/* Info */}
+               <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-3 mb-2">
+                    <h1 className="text-4xl font-bold text-white tracking-tight">{displayProfile.name}</h1>
+                    {isCorporate && (
+                       <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 gap-1 pl-1 pr-2">
+                          <Check className="w-3 h-3 bg-blue-500 rounded-full text-[#0D2137] p-0.5" />
+                          {language === 'es' ? 'Verificado Blockchain' : 'Blockchain Verified'}
+                       </Badge>
+                    )}
+                  </div>
+
+                  <p className={`text-lg font-medium mb-4 ${isCorporate ? 'text-blue-200' : 'text-cyan-200'}`}>
+                    {isCorporate ? (displayProfile as any).tagline : (displayProfile as any).role}
+                  </p>
+
+                  <p className="text-slate-300 leading-relaxed max-w-2xl mb-6">
+                    "{displayProfile.bio}"
+                  </p>
+
+                  {!isCorporate && (
+                    <div className="flex flex-wrap gap-2 mb-6">
+                       {(displayProfile as any).tags.map((tag: string) => (
+                          <Badge key={tag} variant="outline" className="border-cyan-500/20 text-cyan-400 bg-cyan-900/10">
+                            {tag}
+                          </Badge>
+                       ))}
+                    </div>
                   )}
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex gap-3 w-full md:w-auto relative">
-              <Button variant="outline" className="flex-1 md:flex-none border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white">
-                <Settings className="w-4 h-4 mr-2" />
-                {language === 'es' ? 'Configuración' : 'Settings'}
-              </Button>
-              <Button variant="destructive" className="flex-1 md:flex-none bg-red-900/20 text-red-400 hover:bg-red-900/30 border border-red-500/30 shadow-none">
-                <LogOut className="w-4 h-4 mr-2" />
-                {language === 'es' ? 'Cerrar Sesión' : 'Logout'}
-              </Button>
-            </div>
+
+                  {isCorporate && (
+                    <div className="mb-6">
+                      <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">
+                        {language === 'es' ? '🤝 Nuestro Equipo de Expertos' : '🤝 Our Expert Team'}
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {(displayProfile as any).experts.map((exp: any, i: number) => (
+                           <div key={i} className="bg-white/5 rounded-lg p-2 flex items-center gap-3 border border-white/5 hover:border-blue-500/30 transition-colors cursor-pointer text-left">
+                              <div className="w-8 h-8 rounded-full bg-blue-900/50 flex items-center justify-center text-xs font-bold text-blue-200">
+                                {exp.name.charAt(0)}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-xs font-bold text-white truncate">{exp.role}</p>
+                                <p className="text-[10px] text-slate-400 truncate">{exp.name}</p>
+                              </div>
+                           </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="flex flex-wrap gap-3">
+                    {isCorporate ? (
+                      <>
+                        <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-900/20">
+                           <Store className="w-4 h-4 mr-2" />
+                           {language === 'es' ? 'Ver Marketplace' : 'View Marketplace'}
+                        </Button>
+                        <Button variant="outline" className="border-blue-500/30 text-blue-400 hover:bg-blue-900/20">
+                           <Calculator className="w-4 h-4 mr-2" />
+                           {language === 'es' ? 'Simular Costos' : 'Simulate Costs'}
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button className="bg-cyan-600 hover:bg-cyan-700 text-white shadow-lg shadow-cyan-900/20">
+                           <MessageSquare className="w-4 h-4 mr-2" />
+                           {language === 'es' ? 'Mensaje Directo' : 'Direct Message'}
+                        </Button>
+                        <Button variant="outline" className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-900/20">
+                           <UserPlus className="w-4 h-4 mr-2" />
+                           {language === 'es' ? 'Conectar' : 'Connect'}
+                        </Button>
+                      </>
+                    )}
+                  </div>
+               </div>
+             </div>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
