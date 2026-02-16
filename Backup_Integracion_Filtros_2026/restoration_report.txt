@@ -1,0 +1,10 @@
+
+🔍 REPORTE FINAL
+================
+🌍 Países: undefined
+📁 Secciones: undefined
+📖 Capítulos: undefined
+🏷️ HS Codes: undefined
+📜 Reglas: undefined
+
+VALIDACIÓN: FALLIDA
