@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { User, Company } from '../models'; // Mongoose models
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { notificationService } from '../services/notification';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'comexia_secret_key_change_in_production';
 
@@ -67,6 +68,9 @@ export async function register(req: Request, res: Response) {
 
         // 5. Generate Token
         const token = generateToken(newUser);
+
+        // 6. Send Welcome Email (Async)
+        notificationService.sendWelcomeEmail(newUser).catch(err => console.error('Failed to send welcome email:', err));
 
         res.json({
             token,

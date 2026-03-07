@@ -12,6 +12,7 @@ export interface IUser extends Document {
   lastActive?: Date;
   createdAt: Date;
   updatedAt: Date;
+  interestedHSCodes?: string[]; // Array of HS Codes the user is interested in
 }
 
 const userSchema = new Schema({
@@ -31,6 +32,7 @@ const userSchema = new Schema({
   },
   verified: { type: Boolean, default: false },
   phone: String,
+  interestedHSCodes: [String],
   lastActive: Date
 }, { 
   timestamps: true,

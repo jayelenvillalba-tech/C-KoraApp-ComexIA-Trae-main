@@ -1,0 +1,117 @@
+{
+  "name": "New Post Notification",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "marketplace-post-created",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "find",
+        "collection": "users",
+        "query": "={ \"interestedHSCodes\": { \"$in\": [\"{{$json.body.post.hsCode}}\"] } }",
+        "options": {}
+      },
+      "name": "Find Interested Users",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ],
+      "credentials": {
+        "mongoDb": {
+          "id": "1",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$json.length}}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "name": "Check Users Found",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@comexia.com",
+        "toEmail": "={{$json.email}}",
+        "subject": "=New Opportunity: {{$node[\"Webhook\"].json[\"body\"][\"post\"][\"productName\"]}}",
+        "text": "=Hello {{$json.name}},\n\nA new product matching your interests has been posted:\n\nProduct: {{$node[\"Webhook\"].json[\"body\"][\"post\"][\"productName\"]}}\nHS Code: {{$node[\"Webhook\"].json[\"body\"][\"post\"][\"hsCode\"]}}\nOrigin: {{$node[\"Webhook\"].json[\"body\"][\"post\"][\"originCountry\"]}}\n\nLog in to ComexIA to view details.\n\nBest regards,\nComexIA Team",
+        "html": "=Hello {{$json.name}},<br><br>A new product matching your interests has been posted:<br><br><b>Product:</b> {{$node[\"Webhook\"].json[\"body\"][\"post\"][\"productName\"]}}<br><b>HS Code:</b> {{$node[\"Webhook\"].json[\"body\"][\"post\"][\"hsCode\"]}}<br><b>Origin:</b> {{$node[\"Webhook\"].json[\"body\"][\"post\"][\"originCountry\"]}}<br><br><a href=\"http://localhost:5173/marketplace\">Log in to ComexIA</a> to view details.<br><br>Best regards,<br>ComexIA Team"
+      },
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        850,
+        300
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "2",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Find Interested Users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Interested Users": {
+      "main": [
+        [
+          {
+            "node": "Check Users Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Users Found": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

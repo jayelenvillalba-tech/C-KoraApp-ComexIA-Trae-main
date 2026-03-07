@@ -1,0 +1,84 @@
+╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║          ✅ COMEXIA - COMPLETAMENTE LISTO PARA USAR             ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝
+
+┌────────────────────────────────────────────────────────────────┐
+│ QUÉ HICIMOS:                                                   │
+├────────────────────────────────────────────────────────────────┤
+│                                                                │
+│ ✅ Instalamos mongoose@8.23.0                                  │
+│ ✅ Instalamos node-cron@3.0.3                                  │
+│ ✅ Agregamos script "server" a backend/package.json            │
+│ ✅ Liberamos el puerto 3001                                    │
+│ ✅ Creamos scripts batch para levantar fácilmente              │
+│                                                                │
+└────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────┐
+│ CÓMO USAR AHORA (3 PASOS SIMPLES):                             │
+├────────────────────────────────────────────────────────────────┤
+│                                                                │
+│ 1️⃣  ABRE EXPLORADOR DE ARCHIVOS                               │
+│     Dirección: C:\KoraApp\ComexIA-Trae-main\                 │
+│                                                                │
+│ 2️⃣  DOBLE CLIC en INICIAR_BACKEND.bat                          │
+│     Espera a ver: "🚀 Server running on..."                   │
+│     ⚠️  NO CIERRES ESTA VENTANA                               │
+│                                                                │
+│ 3️⃣  DOBLE CLIC en INICIAR_FRONTEND.bat                         │
+│     Espera a ver: "➜ Local: http://localhost:5174/"           │
+│     ⚠️  NO CIERRES ESTA VENTANA                               │
+│                                                                │
+│ 4️⃣  ABRE TU NAVEGADOR                                          │
+│     URL: http://localhost:5174                                │
+│     ¡La aplicación debería cargar! 🎉                         │
+│                                                                │
+└────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────┐
+│ ARCHIVOS CREADOS PARA TI:                                      │
+├────────────────────────────────────────────────────────────────┤
+│                                                                │
+│ 📄 INICIAR_BACKEND.bat                                        │
+│    → Usa este para levantar el servidor backend               │
+│                                                                │
+│ 📄 INICIAR_FRONTEND.bat                                       │
+│    → Usa este para levantar la aplicación web                 │
+│                                                                │
+│ 📄 COMEXIA_LISTO.md                                           │
+│    → Guía completa (si necesitas más info)                    │
+│                                                                │
+└────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────┐
+│ SI ALGO SALE MAL:                                              │
+├────────────────────────────────────────────────────────────────┤
+│                                                                │
+│ ❌ "Port 3001 already in use"                                 │
+│    → Abre PowerShell y ejecuta:                               │
+│    taskkill /F /IM node.exe                                   │
+│    Luego intenta de nuevo                                     │
+│                                                                │
+│ ❌ La ventana se abre y se cierra                             │
+│    → Ejecuta manualmente:                                      │
+│    cd C:\KoraApp\ComexIA-Trae-main\backend                    │
+│    npm run server                                             │
+│    Ve qué error muestra                                        │
+│                                                                │
+│ ❌ "npm: command not found"                                   │
+│    → Instala Node.js desde https://nodejs.org/               │
+│    Reinicia tu computadora                                    │
+│    Intenta de nuevo                                           │
+│                                                                │
+└────────────────────────────────────────────────────────────────┘
+
+╔════════════════════════════════════════════════════════════════╗
+║                     ¡AHORA FUNCIONA! 🚀                        ║
+║                                                                ║
+║  Backend:  http://localhost:3001                              ║
+║  Frontend: http://localhost:5174                              ║
+║                                                                ║
+║  INSTRUCCIONES COMPLETAS EN: COMEXIA_LISTO.md                 ║
+╚════════════════════════════════════════════════════════════════╝

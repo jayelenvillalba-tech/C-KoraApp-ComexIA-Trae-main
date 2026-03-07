@@ -1,0 +1,135 @@
+{
+  "name": "User Onboarding",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "user-registered",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 5,
+        "unit": "minutes"
+      },
+      "name": "Wait 5 Minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "welcome@comexia.com",
+        "toEmail": "={{$json.body.user.email}}",
+        "subject": "Welcome to ComexIA!",
+        "text": "=Hello {{$json.body.user.name}},\n\nWelcome to ComexIA! We're excited to have you on board.\n\nHere are some quick tips to get started:\n1. Complete your profile\n2. Explore the Marketplace\n3. Use our AI HS Code classifier\n\nNeed help? Reply to this email.\n\nBest,\nComexIA Team",
+        "html": "=Hello {{$json.body.user.name}},<br><br>Welcome to ComexIA! We're excited to have you on board.<br><br>Here are some quick tips to get started:<br>1. Complete your profile<br>2. <a href=\"http://localhost:5173/marketplace\">Explore the Marketplace</a><br>3. Use our AI HS Code classifier<br><br>Need help? Reply to this email.<br><br>Best,<br>ComexIA Team"
+      },
+      "name": "Send Welcome Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        650,
+        300
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "2",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 24,
+        "unit": "hours"
+      },
+      "name": "Wait 24 Hours",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        850,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "support@comexia.com",
+        "toEmail": "={{$json.body.user.email}}",
+        "subject": "How is everything going?",
+        "text": "=Hello {{$json.body.user.name}},\n\nChecking in to see how you're finding ComexIA.\n\nIf you have any questions or feedback, please let us know!\n\nBest,\nComexIA Team",
+        "html": "=Hello {{$json.body.user.name}},<br><br>Checking in to see how you're finding ComexIA.<br><br>If you have any questions or feedback, please let us know!<br><br>Best,<br>ComexIA Team"
+      },
+      "name": "Send Follow-up Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        300
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "2",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Wait 5 Minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 5 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Send Welcome Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Welcome Email": {
+      "main": [
+        [
+          {
+            "node": "Wait 24 Hours",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 24 Hours": {
+      "main": [
+        [
+          {
+            "node": "Send Follow-up Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

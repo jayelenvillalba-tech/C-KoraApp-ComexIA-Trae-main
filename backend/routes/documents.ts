@@ -5,6 +5,7 @@
 
 import express from 'express';
 import { getRequiredDocuments, groupDocumentsByCategory, documentsDatabase } from '../../shared/documents-data';
+import { Country, Regulation } from '../models';
 
 const router = express.Router();
 
@@ -12,25 +13,70 @@ const router = express.Router();
  * GET /api/documents/required
  * Get required documents for a specific trade route
  */
-router.get('/required', (req, res) => {
+router.get('/required', async (req, res) => {
   try {
     const { hsCode, originCountry, destinationCountry, incoterm, direction } = req.query;
     
-    const documents = getRequiredDocuments({
+    // 1. Get Static Requirements (Base Catalog)
+    const staticDocs = getRequiredDocuments({
       hsCode: hsCode as string,
       originCountry: originCountry as string,
       destinationCountry: destinationCountry as string,
       incoterm: incoterm as string,
       direction: direction as 'import' | 'export'
     });
+
+    // 2. Fetch Dynamic Requirements from MongoDB
+    // Determine target country code based on direction
+    const targetCountryCode = direction === 'export' ? destinationCountry : originCountry;
     
-    const grouped = groupDocumentsByCategory(documents);
+    let dbDocs: any[] = [];
+    
+    if (targetCountryCode) {
+        // A. Country Base Requirements
+        const country = await Country.findOne({ code: targetCountryCode as string });
+        
+        // B. Specific HS Code Regulations
+        const rules = await Regulation.find({
+            countryCode: targetCountryCode as string,
+            $or: [
+                { hsCode: hsCode as string }, // Exact match
+                { hsChapter: (hsCode as string)?.substring(0, 2) } // Chapter match
+            ]
+        });
+
+        // Convert DB Rules to Document Format
+        const dynamicDocs = rules.map(r => ({
+            id: `reg-${r._id}`,
+            name: r.documentName,
+            nameEs: r.documentName, // Fallback
+            category: r.type === 'sanitary' ? 'product' : 'customs',
+            description: r.description || r.requirements || 'Specific regulation',
+            descriptionEs: r.description || r.requirements || 'Regulación específica',
+            requiredFor: { direction: 'both' }, // Assume both for now
+            managementLinks: {},
+            mandatory: true,
+            status: 'mandatory',
+            source: 'database' // Tag as DB sourced
+        }));
+        
+        dbDocs = [...dynamicDocs];
+
+        // Process Country Base Requirements if needed
+        // (For now, we assume staticDocs covers standard things like Invoice, but we could enforce from DB)
+    }
+
+    // 3. Merge Documents (Static + Dynamic)
+    const allDocs = [...staticDocs, ...dbDocs];
+
+    const grouped = groupDocumentsByCategory(allDocs as any); // Cast as any because of dynamic fields
     
     res.json({
-      documents,
+      documents: allDocs,
       grouped,
-      total: documents.length,
-      mandatory: documents.filter(d => d.mandatory).length
+      total: allDocs.length,
+      mandatory: allDocs.filter(d => d.mandatory).length,
+      source: 'hybrid' // Indicate data comes from mixed sources
     });
   } catch (error: any) {
     console.error('Error fetching required documents:', error);

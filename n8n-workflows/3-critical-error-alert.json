@@ -1,0 +1,77 @@
+{
+  "name": "Critical Error Alert",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "critical-error",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return {\n  json: {\n    ...items[0].json,\n    formattedTime: new Date(items[0].json.body.timestamp).toLocaleString()\n  }\n};"
+      },
+      "name": "Format Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "monitoring@comexia.com",
+        "toEmail": "admin@comexia.com",
+        "subject": "CRITICAL ERROR: {{$json.body.alert.error}}",
+        "text": "=CRITICAL ERROR ALERT\n\nError: {{$json.body.alert.error}}\nTime: {{$json.formattedTime}}\nSeverity: {{$json.body.alert.severity}}\n\nCheck logs immediately.",
+        "html": "=<h1>CRITICAL ERROR ALERT</h1><br><b>Error:</b> {{$json.body.alert.error}}<br><b>Time:</b> {{$json.formattedTime}}<br><b>Severity:</b> {{$json.body.alert.severity}}<br><br>Check logs immediately."
+      },
+      "name": "Send Admin Alert",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        650,
+        300
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "2",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Format Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Data": {
+      "main": [
+        [
+          {
+            "node": "Send Admin Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

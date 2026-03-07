@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { MarketplacePost, User, Company } from '../models'; // Mongoose models
+import { notificationService } from '../services/notification';
 
 export async function getPosts(req: Request, res: Response) {
   try {
@@ -116,6 +117,19 @@ export async function createPost(req: Request, res: Response) {
         });
 
         res.json({ success: true, data: newPost });
+
+        // Send Notifications to Interested Users (Async)
+        // Find users who have this HS Code in their interested list
+        // Note: verify if interestedHSCodes is string or array in User model update
+        User.find({ interestedHSCodes: body.hsCode })
+            .then(users => {
+                console.log(`Found ${users.length} users interested in HS Code ${body.hsCode}`);
+                users.forEach(user => {
+                    notificationService.sendNewOpportunityAlert(newPost, user)
+                        .catch(err => console.error(`Failed to send alert to ${user.email}:`, err));
+                });
+            })
+            .catch(err => console.error('Error finding interested users:', err));
 
     } catch (error: any) {
         console.error('Error creating post:', error);

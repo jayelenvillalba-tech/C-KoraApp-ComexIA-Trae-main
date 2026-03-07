@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button";
 import { FileText, ExternalLink, Clock, CheckCircle2, AlertCircle, Info } from "lucide-react";
 import { useLanguage } from "@/hooks/use-language";
 import { getManagementLink } from "@shared/documents-data";
+import { RelatedNewsWidget } from "@/components/related-news-widget";
 
 interface RequiredDocument {
   id: string;
   name: string;
   nameEs: string;
-  category: 'commercial' | 'transport' | 'customs' | 'product' | 'financial';
+  category: 'commercial' | 'transport' | 'customs' | 'product' | 'financial' | 'trade_bloc' | 'transversal_law' | 'other';
   description: string;
   descriptionEs: string;
   processingDays?: number;
@@ -69,7 +70,10 @@ export function RequiredDocuments({
     transport: { es: 'Transporte', en: 'Transport' },
     customs: { es: 'Aduaneros', en: 'Customs' },
     product: { es: 'Específicos del Producto', en: 'Product-Specific' },
-    financial: { es: 'Financieros', en: 'Financial' }
+    financial: { es: 'Financieros', en: 'Financial' },
+    trade_bloc: { es: 'Bloques Comerciales', en: 'Trade Blocs' },
+    transversal_law: { es: 'Leyes Transversales', en: 'Transversal Laws' },
+    other: { es: 'Otros', en: 'Other' }
   };
 
   const categoryIcons = {
@@ -77,7 +81,10 @@ export function RequiredDocuments({
     transport: '🚢',
     customs: '🛃',
     product: '📦',
-    financial: '💰'
+    financial: '💰',
+    trade_bloc: '🌍',
+    transversal_law: '⚖️',
+    other: '📄'
   };
 
   const getStatusBadge = (status: string) => {

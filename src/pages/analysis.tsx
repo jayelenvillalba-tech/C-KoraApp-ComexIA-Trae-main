@@ -35,7 +35,7 @@ function deg2rad(deg: number) {
   return deg * (Math.PI/180);
 }
 
-import { AiAnalysisWidget } from '@/components/ai-analysis-widget';
+import AIChatPanel from '@/components/AIChatPanel';
 
 export default function Analysis() {
   const { language } = useLanguage();
@@ -496,15 +496,18 @@ export default function Analysis() {
                  </Button>
               </div>
               
-              {/* AI Analysis Widget - Hidden by default */}
               {showAiAssistant && (
-                <AiAnalysisWidget 
-                  hsCode={code} 
-                  originCountry={country} 
-                  targetCountry="Global" 
-                  productName={product} 
-                  className="mb-4 animate-in fade-in slide-in-from-top-2 duration-300"
-                />
+                <div className="mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <AIChatPanel 
+                    context={{
+                      product: product,
+                      hsCode: code,
+                      country: country,
+                      operation: operation,
+                    }}
+                    onClose={() => setShowAiAssistant(false)}
+                  />
+                </div>
               )}
               {/* Top 3 Buyers */}
               <div>

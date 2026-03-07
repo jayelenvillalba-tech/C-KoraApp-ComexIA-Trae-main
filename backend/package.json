@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "tsx server.ts",
-    "dev": "tsx watch server.ts"
+    "dev": "tsx watch server.ts",
+    "server": "tsx server.ts"
   },
   "dependencies": {
     "@types/bcrypt": "^6.0.0",
@@ -18,7 +19,9 @@
     "drizzle-orm": "^0.44.5",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.3",
+    "mongoose": "^8.23.0",
     "multer": "^2.0.2",
+    "node-cron": "^3.0.3",
     "postgres": "^3.4.3"
   },
   "devDependencies": {

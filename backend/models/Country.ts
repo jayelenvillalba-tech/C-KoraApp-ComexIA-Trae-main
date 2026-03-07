@@ -9,6 +9,12 @@ export interface ICountry extends Document {
   currency?: string;
   languages?: string;
   timezone?: string;
+  baseRequirements?: {
+    labeling?: string[];
+    packaging?: string[];
+    documents?: string[];
+    processingTime?: number;
+  };
 }
 
 const countrySchema = new Schema({
@@ -19,7 +25,13 @@ const countrySchema = new Schema({
   flagUrl: String,
   currency: String,
   languages: String,
-  timezone: String
+  timezone: String,
+  baseRequirements: {
+    labeling: [String],
+    packaging: [String],
+    documents: [String],
+    processingTime: Number
+  }
 }, { timestamps: true });
 
 export const Country = model<ICountry>('Country', countrySchema);
