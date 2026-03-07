@@ -8,8 +8,7 @@ import { useLanguage } from '@/hooks/use-language';
 import { useUser } from "@/context/user-context"; // Added useUser
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // Added Avatar
 import { ChevronLeft, ChevronRight, Ship, TrendingUp, AlertCircle, Globe, MapPin, Sparkles, Bot } from 'lucide-react';
-import LogisticsSimulator from '@/components/logistics-simulator';
-import CostCalculatorDialog from '@/components/cost-calculator-dialog';
+import TradeCalculator from '@/components/TradeCalculator';
 import { MarketTrendsChart } from "@/components/market-trends-chart";
 import InteractiveMap from '@/components/map/interactive-map';
 import { HistoricalChart } from '@/components/market-analysis/historical-chart';
@@ -44,8 +43,7 @@ export default function Analysis() {
   const [location, setLocation] = useLocation();
   const navigate = setLocation; // [FIX] Alias setLocation to navigate for auth buttons
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
-  const [showLogisticsSimulator, setShowLogisticsSimulator] = useState(false);
-  const [showCostCalculator, setShowCostCalculator] = useState(false);
+  const [showCalculator, setShowCalculator] = useState(false);
   
   // Get query parameters
   const params = new URLSearchParams(window.location.search);
@@ -483,7 +481,14 @@ export default function Analysis() {
             <div className="p-6 space-y-6">
               {/* AI Analysis Section */}
               {/* Header with AI Toggle */}
-              <div className="flex justify-end mb-4">
+              <div className="flex justify-end gap-2 mb-4">
+                 <Button 
+                    onClick={() => setShowCalculator(true)}
+                    className="bg-violet-700 hover:bg-violet-600 text-white gap-2 shadow-lg shadow-violet-900/50"
+                 >
+                    <span>⚡</span>
+                    {language === 'es' ? 'Simular Costos & Logística' : 'Simulate Costs & Logistics'}
+                 </Button>
                  <Button 
                     onClick={() => setShowAiAssistant(!showAiAssistant)}
                     className="bg-cyan-600 hover:bg-cyan-700 text-white gap-2 shadow-lg shadow-cyan-900/50"
@@ -495,6 +500,7 @@ export default function Analysis() {
                     }
                  </Button>
               </div>
+
               
               {showAiAssistant && (
                 <div className="mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
@@ -641,22 +647,15 @@ export default function Analysis() {
         </div>
       </div>
 
-      {/* Simulation Dialogs */}
-      <LogisticsSimulator
-        open={showLogisticsSimulator}
-        onOpenChange={setShowLogisticsSimulator}
-        origin={country === 'AR' ? 'Argentina' : country}
-        destination={selectedCountry || 'China'}
-        product={product || code}
-      />
-      
-      <CostCalculatorDialog
-        open={showCostCalculator}
-        onOpenChange={setShowCostCalculator}
-        origin={country === 'AR' ? 'Argentina' : country}
-        destination={selectedCountry || 'China'}
-        product={product || code}
-      />
+      {/* Unified Trade Calculator Modal */}
+      {showCalculator && (
+        <TradeCalculator
+          defaultDestination={selectedCountry === 'China' ? 'CN' : selectedCountry === 'Brasil' ? 'BR' : selectedCountry === 'Chile' ? 'CL' : 'BR'}
+          defaultProduct={product || code}
+          defaultHsCode={code || '1001.99.00'}
+          onClose={() => setShowCalculator(false)}
+        />
+      )}
     </div>
   );
 }
