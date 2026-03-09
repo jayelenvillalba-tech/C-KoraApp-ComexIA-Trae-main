@@ -61,47 +61,51 @@ export default function Home() {
       {/* Main Content */}
       <main className="pt-24 pb-12 px-6 relative z-10 w-full max-w-7xl mx-auto">
         
-          {/* Welcome Section - Removida la caja "glass-premium" gigante */}
+          {/* Welcome Section */}
           <section className="relative min-h-[500px] flex flex-col items-center justify-center text-center p-8" data-aos="fade-up">
             
             <div className="relative z-10 max-w-4xl mx-auto space-y-8">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-900/40 border border-cyan-500/30 text-cyan-300 text-sm font-bold uppercase tracking-wider backdrop-blur-md shadow-lg shadow-cyan-900/20">
-                <Sparkles className="w-4 h-4" />
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-[2px] bg-[#00d4f010] border border-[#00d4f025] text-[#00d4f0] font-mono text-[10px] font-semibold uppercase tracking-[2px]">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#00d4f0] animate-pulse"></div>
                 Sistema Operativo de Comercio Exterior
               </div>
               
-              <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight leading-tight drop-shadow-2xl">
+              <h1 className="font-cond text-[clamp(44px,6vw,72px)] font-extrabold text-[#f0f8ff] uppercase leading-[1.05] tracking-[-0.5px]">
                 Ecosistema Integral <br/>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-400 to-purple-400">
-                  Che.Comex AI
-                </span>
+                <span className="text-[#00d4f0]">Che.</span><span className="text-[#f5a800]">Comex</span> <span className="text-[#00d4f0]">AI</span>
               </h1>
               
-              <p className="text-gray-200 text-xl max-w-2xl mx-auto leading-relaxed drop-shadow-md font-medium">
+              <p className="font-sans text-[15px] text-[#4a7090] max-w-[540px] mx-auto leading-[1.7]">
                 Desde la clasificación arancelaria hasta el cálculo logístico puerta a puerta. 
-                Todo lo que necesitas para operar, en una sola plataforma.
+                Todo lo que necesitas para operar en el comercio internacional, en una sola plataforma.
               </p>
 
               {/* Search Box - Flotando limpio */}
-              <div className="max-w-3xl mx-auto w-full mt-10" data-aos="fade-up" data-aos-delay="200">
-                {/* Contenedor del buscador con glass más suave */}
-                <div className="bg-[#0f172a]/60 backdrop-blur-2xl p-4 rounded-3xl border border-white/10 shadow-2xl shadow-blue-900/30">
-                  <HsCodeSearch 
-                    onProductSelected={handleProductSelected}
-                    onPartidaSelected={handlePartidaSelected}
-                  />
+              <div className="max-w-[680px] mx-auto w-full mt-10 text-left bg-[#060d16] border border-[#203548] rounded-[4px] p-[20px_24px]" data-aos="fade-up" data-aos-delay="200">
+                <div className="flex items-center gap-2 font-sans text-[13px] font-semibold text-[#c8dff0] mb-[14px]">
+                  🔍 Buscador de Códigos HS
+                  <span className="font-mono text-[9px] bg-[#00d4f015] text-[#00d4f0] border border-[#00d4f030] px-[7px] py-[2px] rounded-[2px] uppercase tracking-[0.8px]">
+                    AI Powered
+                  </span>
+                </div>
+                
+                <div className="mb-3">
+                   <HsCodeSearch 
+                     onProductSelected={handleProductSelected}
+                     onPartidaSelected={handlePartidaSelected}
+                   />
                 </div>
                 
                 {/* Quick Actions */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+                <div className="flex flex-wrap justify-center gap-2.5 mt-4">
                   {quickAccesItems.map((item, idx) => (
                     <button
                       key={idx}
                       onClick={() => navigate(item.path)}
-                      className={`flex items-center gap-3 p-3 rounded-xl border transition-all hover:scale-105 active:scale-95 text-left ${item.color} backdrop-blur-sm`}
+                      className="font-mono text-[10px] font-semibold px-[14px] py-[7px] border border-[#203548] text-[#4a7090] bg-[#09131e] rounded-[2px] cursor-pointer uppercase tracking-[0.8px] flex items-center gap-1.5 transition-all hover:border-[#2a4560] hover:text-[#c8dff0]"
                     >
                       {item.icon}
-                      <span className="text-sm font-semibold text-gray-200">{item.label}</span>
+                      {item.label}
                     </button>
                   ))}
                 </div>
@@ -110,76 +114,79 @@ export default function Home() {
           </section>
 
           {/* New Dashboard Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 max-w-[1100px] mx-auto">
             
             {/* Left Column: Stats & Alerts */}
             <div className="md:col-span-4 space-y-6" data-aos="fade-up" data-aos-delay="400">
-              <div className="glass-premium rounded-2xl p-6 border border-white/5 h-full">
-                <h3 className="text-white font-bold mb-4 flex items-center gap-2">
-                  <ShieldAlert className="w-5 h-5 text-yellow-500" />
-                  Alertas Globales
-                </h3>
-                <div className="space-y-4">
-                  <div className="p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors cursor-pointer">
-                    <div className="flex justify-between items-start mb-2">
-                        <span className="text-xs font-bold text-red-400">CRITICAL</span>
-                        <span className="text-xs text-gray-500">Hace 2h</span>
-                    </div>
-                    <p className="text-sm text-gray-300 font-medium">Nuevas sanciones a exportación de tecnología dual-use a Rusia.</p>
+              <div className="bg-[#03080f] rounded-none px-0 pb-[60px] h-full">
+                <div className="font-mono text-[9px] font-semibold text-[#2a4a68] tracking-[1.5px] uppercase mb-3 flex items-center gap-2 after:content-[''] after:flex-1 after:h-[1px] after:bg-[#1a2e42]">
+                  Alertas Recientes
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-start gap-3 p-[10px_14px] border border-[#1a2e42] bg-[#09131e] hover:bg-[#0d1a27] transition-colors cursor-pointer" onClick={() => navigate('/alerts')}>
+                    <span className="font-mono text-[9px] font-bold px-2 py-[2px] rounded-[2px] uppercase shrink-0 mt-[1px] bg-[#ff404015] text-[#ff4040] border border-[#ff404030]">Critical</span>
+                    <span className="font-sans text-[12px] text-[#8aafcc] flex-1 leading-[1.5]">Nuevas sanciones a exportación de tecnología dual-use a Rusia.</span>
+                    <span className="font-mono text-[9px] text-[#2a4a68] shrink-0">Hace 2h</span>
                   </div>
-                  <div className="p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors cursor-pointer">
-                    <div className="flex justify-between items-start mb-2">
-                        <span className="text-xs font-bold text-orange-400">WARNING</span>
-                        <span className="text-xs text-gray-500">Hace 5h</span>
-                    </div>
-                    <p className="text-sm text-gray-300 font-medium">Congestión portuaria en Shanghai aumenta tiempos de tránsito (+7 días).</p>
+                  <div className="flex items-start gap-3 p-[10px_14px] border border-[#1a2e42] bg-[#09131e] hover:bg-[#0d1a27] transition-colors cursor-pointer" onClick={() => navigate('/alerts')}>
+                    <span className="font-mono text-[9px] font-bold px-2 py-[2px] rounded-[2px] uppercase shrink-0 mt-[1px] bg-[#f5a80015] text-[#f5a800] border border-[#f5a80030]">Warning</span>
+                    <span className="font-sans text-[12px] text-[#8aafcc] flex-1 leading-[1.5]">Congestión portuaria en Shanghai aumenta tiempos de tránsito (+7 días).</span>
+                    <span className="font-mono text-[9px] text-[#2a4a68] shrink-0">Hace 5h</span>
                   </div>
-                  <Button variant="ghost" className="w-full text-cyan-400 text-xs hover:text-cyan-300 hover:bg-white/5" onClick={() => navigate('/alerts')}>
-                    Ver todas las alertas <ChevronRight className="w-3 h-3 ml-1" />
-                  </Button>
                 </div>
               </div>
             </div>
 
             {/* Right Column: Main Modules */}
-            <div className="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-6" data-aos="fade-up" data-aos-delay="600">
-              <FeatureCard 
-                icon={<Ship className="w-8 h-8" />}
-                title="Calculadora Logística"
-                description="Costos puerta a puerta con impuestos y servicios incluidos."
-                detailedDescription="Simula operaciones de expo/impo marítimas, aéreas y terrestres con precisión milimétrica."
-                actionLabel="Simular"
-                onAction={() => navigate('/analysis?tab=calculator')}
-                imageGradient="from-blue-600 to-indigo-600"
-              />
-              <FeatureCard 
-                icon={<FileText className="w-8 h-8" />}
-                title="Gestor Documental"
-                description="Generación automática de documentos regulatorios."
-                detailedDescription="Accede a templates oficiales y requisitos fitosanitarios por partida arancelaria y destino."
-                actionLabel="Ver Requisitos"
-                onAction={() => navigate('/analysis?tab=documentation')}
-                imageGradient="from-orange-500 to-red-500"
-              />
-              <FeatureCard 
-                icon={<BarChart3 className="w-8 h-8" />}
-                title="Inteligencia de Mercado"
-                description="Datos de flujos comerciales 2024-2025."
-                detailedDescription="Descubre nuevos mercados con análisis predictivo de demanda y competencia."
-                actionLabel="Analizar"
-                onAction={() => navigate('/analysis')}
-                imageGradient="from-purple-600 to-pink-600"
-              />
-              <FeatureCard 
-                icon={<Users className="w-8 h-8" />}
-                title="Red de Partners"
-                description="Conecta con agentes de carga y despachantes."
-                detailedDescription="Directorio verificado de proveedores de servicios logísticos y legales."
-                actionLabel="Buscar Partners"
-                onAction={() => navigate('/marketplace')}
-                imageGradient="from-emerald-500 to-teal-500"
-              />
-          </div>
+            <div className="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-4" data-aos="fade-up" data-aos-delay="600">
+              {/* Card 1 */}
+              <div className="bg-[#03080f] border-t-2 border-t-[#00d4f0] border-x border-b border-x-[#1a2e42] border-b-[#1a2e42] p-[24px_20px] rounded-[2px] cursor-pointer group hover:bg-[#060d16] transition-colors" onClick={() => navigate('/analysis')}>
+                 <div className="w-[42px] h-[42px] bg-[#00d4f010] border border-[#00d4f030] rounded-[2px] flex items-center justify-center text-[#00d4f0] mb-[20px] group-hover:scale-110 transition-transform">
+                    <BarChart3 className="w-[22px] h-[22px]" />
+                 </div>
+                 <h3 className="font-cond text-[24px] font-bold text-[#f0f8ff] tracking-[0.3px] leading-[1.1] mb-[10px]">INTELIGENCIA DE MERCADO</h3>
+                 <p className="font-sans text-[13px] text-[#8aafcc] leading-[1.6] mb-[20px]">Análisis predictivo de demandas, flujos comerciales y visualización interactiva de compradores globales.</p>
+                 <div className="font-mono text-[10px] text-[#4a7090] font-bold uppercase tracking-[1px] flex items-center gap-2 group-hover:text-[#00d4f0] transition-colors">
+                    Explorar Datos <ChevronRight className="w-3.5 h-3.5" />
+                 </div>
+              </div>
+
+              {/* Card 2 */}
+              <div className="bg-[#03080f] border-t-2 border-t-[#00e878] border-x border-b border-x-[#1a2e42] border-b-[#1a2e42] p-[24px_20px] rounded-[2px] cursor-pointer group hover:bg-[#060d16] transition-colors" onClick={() => navigate('/analysis?tab=calculator')}>
+                 <div className="w-[42px] h-[42px] bg-[#00e87810] border border-[#00e87830] rounded-[2px] flex items-center justify-center text-[#00e878] mb-[20px] group-hover:scale-110 transition-transform">
+                    <Ship className="w-[22px] h-[22px]" />
+                 </div>
+                 <h3 className="font-cond text-[24px] font-bold text-[#f0f8ff] tracking-[0.3px] leading-[1.1] mb-[10px]">CALCULADORA LOGÍSTICA</h3>
+                 <p className="font-sans text-[13px] text-[#8aafcc] leading-[1.6] mb-[20px]">Costos completos desde FOB hasta Landed Cost. Comparativa de los 11 Incoterms 2020 integrados.</p>
+                 <div className="font-mono text-[10px] text-[#4a7090] font-bold uppercase tracking-[1px] flex items-center gap-2 group-hover:text-[#00e878] transition-colors">
+                    Simular Costos <ChevronRight className="w-3.5 h-3.5" />
+                 </div>
+              </div>
+
+              {/* Card 3 */}
+              <div className="bg-[#03080f] border-t-2 border-t-[#f5a800] border-x border-b border-x-[#1a2e42] border-b-[#1a2e42] p-[24px_20px] rounded-[2px] cursor-pointer group hover:bg-[#060d16] transition-colors" onClick={() => navigate('/analysis?tab=documentation')}>
+                 <div className="w-[42px] h-[42px] bg-[#f5a80010] border border-[#f5a80030] rounded-[2px] flex items-center justify-center text-[#f5a800] mb-[20px] group-hover:scale-110 transition-transform">
+                    <FileText className="w-[22px] h-[22px]" />
+                 </div>
+                 <h3 className="font-cond text-[24px] font-bold text-[#f0f8ff] tracking-[0.3px] leading-[1.1] mb-[10px]">GESTOR DOCUMENTAL</h3>
+                 <p className="font-sans text-[13px] text-[#8aafcc] leading-[1.6] mb-[20px]">Requisitos fitosanitarios por partida HS, certificados de origen MERCOSUR y aduaneros listos para usar.</p>
+                 <div className="font-mono text-[10px] text-[#4a7090] font-bold uppercase tracking-[1px] flex items-center gap-2 group-hover:text-[#f5a800] transition-colors">
+                    Ver Requisitos <ChevronRight className="w-3.5 h-3.5" />
+                 </div>
+              </div>
+
+              {/* Card 4 */}
+              <div className="bg-[#03080f] border-t-2 border-t-[#8f40ff] border-x border-b border-x-[#1a2e42] border-b-[#1a2e42] p-[24px_20px] rounded-[2px] cursor-pointer group hover:bg-[#060d16] transition-colors" onClick={() => navigate('/marketplace')}>
+                 <div className="w-[42px] h-[42px] bg-[#8f40ff10] border border-[#8f40ff30] rounded-[2px] flex items-center justify-center text-[#8f40ff] mb-[20px] group-hover:scale-110 transition-transform">
+                    <Users className="w-[22px] h-[22px]" />
+                 </div>
+                 <h3 className="font-cond text-[24px] font-bold text-[#f0f8ff] tracking-[0.3px] leading-[1.1] mb-[10px]">RED DE PARTNERS</h3>
+                 <p className="font-sans text-[13px] text-[#8aafcc] leading-[1.6] mb-[20px]">Directorio B2B verificado. Conecta directamente con agentes de carga, despachantes y empresas.</p>
+                 <div className="font-mono text-[10px] text-[#4a7090] font-bold uppercase tracking-[1px] flex items-center gap-2 group-hover:text-[#8f40ff] transition-colors">
+                    Buscar Partners <ChevronRight className="w-3.5 h-3.5" />
+                 </div>
+              </div>
+            </div>
           
         </div>
       </main>

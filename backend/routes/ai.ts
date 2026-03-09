@@ -1,4 +1,5 @@
 import { Router, Request, Response } from "express";
+import { OnboardingRequirement } from "../models/OnboardingRequirement";
 
 const router = Router();
 
@@ -150,19 +151,18 @@ router.get("/search", async (req: Request, res: Response) => {
   }
 
   const hsDatabase = [
+    { code: "0901.21.00", description: "Café", product: "Café tostado sin descafeinar", chapter: "09", unit: "kg", notes: "Alta demanda en Colombia y Brasil. Importación regular." },
+    { code: "8517.12.00", description: "Smartphones / Celulares", product: "Teléfonos inteligentes", chapter: "85", unit: "u", notes: "Régimen especial Tierra del Fuego." },
     { code: "1001.99.00", description: "Trigo", product: "Trigo blando y escanda", chapter: "10", unit: "kg", notes: "Principal cereal exportación AR. Retención variable MEP." },
     { code: "1001.19.00", description: "Trigo duro", product: "Trigo duro (candeal)", chapter: "10", unit: "kg", notes: "Para pasta y semolín." },
     { code: "1005.90.10", description: "Maíz", product: "Maíz amarillo forrajero", chapter: "10", unit: "kg", notes: "2do cereal exportable AR. Retención variable." },
-    { code: "1201.90.00", description: "Soja", product: "Habas de soja", chapter: "12", unit: "kg", notes: "Principal exportación AR. Retención 33%." },
+    { code: "1201.90.00", description: "Soja / Soya", product: "Habas de soja", chapter: "12", unit: "kg", notes: "Principal exportación AR. Retención 33%." },
     { code: "1507.10.00", description: "Aceite de soja", product: "Aceite de soja en bruto", chapter: "15", unit: "kg", notes: "Complejo sojero. ROE requerido." },
     { code: "2304.00.10", description: "Pellets de soja", product: "Tortas y harina de soja (pellets)", chapter: "23", unit: "kg", notes: "Alta demanda China y UE." },
     { code: "0201.10.00", description: "Carne bovina", product: "Carne bovina fresca en canales", chapter: "02", unit: "kg", notes: "Con hueso. Cuota Hilton para UE." },
     { code: "0201.20.00", description: "Carne bovina deshuesada", product: "Carne bovina deshuesada fresca", chapter: "02", unit: "kg", notes: "Alta demanda China y UE." },
     { code: "0202.30.00", description: "Carne bovina congelada", product: "Carne bovina deshuesada congelada", chapter: "02", unit: "kg", notes: "Principal destino: China." },
     { code: "1006.30.21", description: "Arroz", product: "Arroz blanqueado grano largo", chapter: "10", unit: "kg", notes: "Exportación a Brasil, Chile, Irak." },
-    { code: "8517.12.00", description: "Smartphones / Celulares", product: "Teléfonos inteligentes", chapter: "85", unit: "u", notes: "Tierra del Fuego régimen especial." },
-    { code: "0402.10.10", description: "Leche en polvo", product: "Leche en polvo descremada", chapter: "04", unit: "kg", notes: "Exportación a Brasil, Algeria." },
-    { code: "2204.21.20", description: "Vino", product: "Vino embotellado ≤2L", chapter: "22", unit: "l", notes: "Mendoza, San Juan. Retención 0%." },
     { code: "0805.10.00", description: "Naranjas", product: "Naranjas frescas o secas", chapter: "08", unit: "kg", notes: "Entre Ríos, Corrientes. Cert. SENASA." },
     { code: "0810.40.00", description: "Arándanos", product: "Arándanos frescos", chapter: "08", unit: "kg", notes: "Tucumán, Buenos Aires. Alta demanda USA/Europa." },
     { code: "2401.10.10", description: "Tabaco", product: "Tabaco rubio sin desvenar", chapter: "24", unit: "kg", notes: "Jujuy, Salta, Misiones." },
@@ -235,6 +235,85 @@ Sé conciso (máx 200 palabras).`;
     res.json({ hsCode, product, country, operation, analysis });
   } catch (error: any) {
     res.status(500).json({ error: "Error al analizar", detail: error.message });
+  }
+});
+
+// ─── POST /api/ai/onboarding-docs — Generador dinámico de onboarding ───────────────
+router.post("/onboarding-docs", async (req: Request, res: Response) => {
+  try {
+    const { countryCode, countryName, role, operationType, industry = "general" } = req.body;
+
+    if (!countryCode || !role || !operationType) {
+      return res.status(400).json({ error: "Faltan parámetros requeridos: countryCode, role, operationType" });
+    }
+
+    // 1. Check Cache in MongoDB
+    const cachedReqs = await OnboardingRequirement.findOne({
+      countryCode,
+      role,
+      operationType,
+      industry
+    });
+
+    if (cachedReqs) {
+      return res.json({ source: "cache", data: cachedReqs });
+    }
+
+    // 2. Not in cache -> Ask Groq
+    const prompt = `Actúa como un experto en regulaciones de comercio internacional.
+Una empresa de ${countryName || countryCode} se está registrando en una plataforma B2B.
+Su rol es: ${role} (${role === 'trader' ? 'Comerciante' : role === 'logistics' ? 'Logística/Servicios' : 'Institucional'}).
+Su operación principal será: ${operationType} (${operationType === 'export' ? 'Exportación' : operationType === 'import' ? 'Importación' : operationType === 'both' ? 'Importación y Exportación' : 'Doméstica'}).
+Industria: ${industry}
+
+Tu tarea es devolver EXACTAMENTE UN ARRAY JSON con los 5 o 6 documentos legales, registros aduaneros, habilitaciones fiscales o requisitos financieros obligatorios que necesitan para operar legalmente y transaccionar internacionalmente desde su país.
+
+Formato requerido de salida (DEBE SER UN JSON ARRAY VÁLIDO, SIN TEXTO ANTES NI DESPUÉS):
+[
+  {
+    "name": "Nombre corto del documento o registro (ej. RIE AFIP)",
+    "hint": "Breve descripción de para qué sirve o cuál es el ente regulador (máx 15 palabras)",
+    "status": "req" | "warn" | "info", (usa "req" para obligatorios, "warn" para condicionales)
+    "points": 15 (un número entre 10 y 25 que sumarán al onboarding score)
+  }
+]`;
+
+    const generatedResponse = await callGroq(
+      [{ role: "user", content: prompt }],
+      COMEX_SYSTEM_PROMPT,
+      800
+    );
+
+    let docArray;
+    try {
+      // Intentar limpiar la respuesta en caso de que Groq agregue markdown (ej. \`\`\`json)
+      const cleanJson = generatedResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+      docArray = JSON.parse(cleanJson);
+      
+      if (!Array.isArray(docArray)) {
+        throw new Error("Groq no devolvió un array");
+      }
+    } catch (parseError) {
+      console.error("Error parseando respuesta de Groq para onboarding:", generatedResponse);
+      return res.status(500).json({ error: "La IA generó una respuesta inválida", raw: generatedResponse });
+    }
+
+    // 3. Save to Cache
+    const newDoc = new OnboardingRequirement({
+      countryCode,
+      role,
+      operationType,
+      industry,
+      requirements: docArray
+    });
+
+    await newDoc.save();
+
+    res.json({ source: "generated", data: newDoc });
+
+  } catch (error: any) {
+    console.error("Error en /onboarding-docs:", error);
+    res.status(500).json({ error: "Error interno", detail: error.message });
   }
 });
 

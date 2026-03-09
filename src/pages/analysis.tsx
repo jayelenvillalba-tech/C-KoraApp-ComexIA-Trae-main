@@ -7,13 +7,14 @@ import { Card } from '@/components/ui/card';
 import { useLanguage } from '@/hooks/use-language';
 import { useUser } from "@/context/user-context"; // Added useUser
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // Added Avatar
-import { ChevronLeft, ChevronRight, Ship, TrendingUp, AlertCircle, Globe, MapPin, Sparkles, Bot } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Ship, TrendingUp, AlertCircle, Globe, MapPin, Sparkles, Bot, FileText } from 'lucide-react';
 import TradeCalculator from '@/components/TradeCalculator';
 import { MarketTrendsChart } from "@/components/market-trends-chart";
 import InteractiveMap from '@/components/map/interactive-map';
 import { HistoricalChart } from '@/components/market-analysis/historical-chart';
 import { LandedCostPanel } from '@/components/market-analysis/landed-cost-panel';
 import { RequiredDocuments } from '@/components/required-documents';
+import GodModeAI from '@/components/GodModeAI';
 
 // Helper: Calculate distance between two coordinates (Haversine formula)
 function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -34,15 +35,13 @@ function deg2rad(deg: number) {
   return deg * (Math.PI/180);
 }
 
-import AIChatPanel from '@/components/AIChatPanel';
-
 export default function Analysis() {
-  const { language } = useLanguage();
+  const { language, setLanguage } = useLanguage();
   const { user } = useUser(); // Get user state
-  const [showAiAssistant, setShowAiAssistant] = useState(false);
   const [location, setLocation] = useLocation();
   const navigate = setLocation; // [FIX] Alias setLocation to navigate for auth buttons
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'mercado'|'oportunidades'|'documentos'|'detalle'>('mercado');
   const [showCalculator, setShowCalculator] = useState(false);
   
   // Get query parameters
@@ -359,293 +358,328 @@ export default function Analysis() {
         </div>
 
         {/* Right Sidebar */}
-        <div className="w-96 bg-[#0D2137] border-l border-cyan-900/30 overflow-y-auto shrink-0">
-          {selectedCountry ? (
-            // Country Details Panel
-            <div className="p-6 space-y-6">
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-white">
-                    {language === 'es' ? 'Detalle de Oportunidad' : 'Opportunity Detail'}
-                  </h2>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSelectedCountry(null)}
-                    className="text-gray-400 hover:text-white"
-                  >
-                    ✕
-                  </Button>
-                </div>
+        <div className="w-[420px] bg-[#03080f] border-l border-[#1a2e42] flex flex-col shrink-0 z-30">
+          
+          {/* Tabs Navigation */}
+          <div className="flex items-center border-b border-[#1a2e42] bg-[#060d16] p-[10px_10px_0]">
+            {[
+              { id: 'mercado', label: 'MERCADO', icon: <TrendingUp className="w-3.5 h-3.5" /> },
+              { id: 'oportunidades', label: 'OPORT.', icon: <Sparkles className="w-3.5 h-3.5" /> },
+              { id: 'documentos', label: 'DOCS', icon: <AlertCircle className="w-3.5 h-3.5" /> },
+              { id: 'detalle', label: 'DETALLE', icon: <Globe className="w-3.5 h-3.5" />, disabled: !selectedCountry }
+            ].map(tab => {
+               // Determine if this tab is active. If selectedCountry exists and no other tab was explicitly clicked, we show 'detalle'.
+               // For simplicity, we manage 'activeTab' explicitly.
+               const isActive = (!selectedCountry && !['mercado','oportunidades','documentos'].includes(activeTab)) ? tab.id === 'mercado' : activeTab === tab.id;
+               
+               return (
+                <button
+                  key={tab.id}
+                  disabled={tab.disabled}
+                  onClick={() => {
+                     setActiveTab(tab.id);
+                     if (tab.id !== 'detalle') setSelectedCountry(null);
+                  }}
+                  className={`
+                    flex items-center gap-1.5 px-3 py-2.5 font-mono text-[10px] font-bold tracking-[1px] uppercase transition-all flex-1 justify-center rounded-t-[4px]
+                    ${isActive 
+                      ? 'bg-[#09131e] text-[#00d4f0] border-t-2 border-t-[#00d4f0] border-x border-[#1a2e42] border-b-transparent shadow-[0_-4px_12px_rgba(0,212,240,0.05)]' 
+                      : 'text-[#4a7090] border-t-2 border-transparent hover:text-[#c8dff0] hover:bg-[#09131e]/50'}
+                    ${tab.disabled ? 'opacity-30 cursor-not-allowed hover:text-[#4a7090] hover:bg-transparent' : 'cursor-pointer'}
+                  `}
+                >
+                  {tab.icon} {tab.label}
+                </button>
+               )
+            })}
+          </div>
 
-                <div className="bg-[#0A1929] rounded-lg p-4 border border-cyan-900/30 space-y-3">
-                  <h3 className="text-lg font-semibold text-white">{selectedCountry}</h3>
-                  
-                  <div className="space-y-2">
-                    <div className="text-sm">
-                      <div className="text-gray-400 mb-1">
-                        {language === 'es' ? 'Tratados Comerciales Detallados' : 'Detailed Trade Agreements'}
-                      </div>
-                      <ul className="text-cyan-100 space-y-1 text-xs">
-                        <li>- {language === 'es' ? 'Reducción arancelaria' : 'Tariff reduction'}</li>
-                        <li>- {language === 'es' ? 'Protocolos sanitarios' : 'Sanitary protocols'}</li>
-                      </ul>
-                    </div>
+          <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-[#203548] scrollbar-track-[#060d16]">
+            
+            {/* Global Context Header (Shows on all tabs except Detalle) */}
+            {activeTab !== 'detalle' && (
+               <div className="p-4 border-b border-[#1a2e42] bg-[#09131e]">
+                  <div className="font-mono text-[9px] text-[#4a7090] tracking-[1.2px] uppercase mb-1">
+                     Análisis de Contexto Global
                   </div>
-                </div>
-              </div>
+                  <div className="font-cond text-[24px] font-bold text-[#f0f8ff] tracking-[0.3px] leading-tight mb-2">
+                     {product || 'Mercado Global'}
+                  </div>
+                  <div className="flex gap-1.5 flex-wrap">
+                     <span className="font-mono text-[9px] font-medium px-2 py-0.5 rounded-[2px] border border-[#203548] text-[#4a7090] bg-[#03080f]">🇦🇷 Origen: AR</span>
+                     <span className="font-mono text-[9px] font-medium px-2 py-0.5 rounded-[2px] border border-[#00e87830] text-[#00b85e] bg-[#00e87810]">↑ {operation === 'export' ? 'EXPORTAR' : 'IMPORTAR'}</span>
+                     <span className="font-mono text-[9px] font-medium px-2 py-0.5 rounded-[2px] border border-[#00a8c830] text-[#00a8c8] bg-[#00d4f010]">HS {code || 'N/A'}</span>
+                  </div>
+               </div>
+            )}
 
-
-
-
-
-// ... inside component ...
-
-              {/* [NEW] Landed Cost Panel */}
-              {(() => {
-                  // Find the selected country data in topBuyers to get the details
-                  const buyerData = topBuyers.find((b: any) => b.country === selectedCountry || b.countryName === selectedCountry);
+            {/* TAB: MERCADO (Top Buyers) */}
+            {activeTab === 'mercado' && (
+               <div className="p-4 animate-in fade-in duration-300">
+                  <div className="flex items-center justify-between py-2 mb-3">
+                     <div className="font-mono text-[9px] font-bold uppercase tracking-[1.2px] text-[#4a7090] flex items-center gap-1.5">
+                        <div className="w-[5px] h-[5px] rounded-full bg-[#00d4f0]"></div>
+                        {language === 'es' ? 'Top Compradores' : 'Top Buyers'}
+                     </div>
+                     <span className="font-mono text-[9px] text-[#2a4a68] bg-[#111f2e] px-1.5 py-[1px] border border-[#1a2e42]">2024</span>
+                  </div>
                   
-                  if (buyerData && buyerData.details) {
-                      return (
-                          <div className="animate-in fade-in slide-in-from-right-4 duration-500">
-                             <LandedCostPanel 
-                                country={selectedCountry}
-                                basePrice={buyerData.avgValue || 20000} // Fallback if missing
-                                landedCost={buyerData.details.landedCost}
-                             />
+                  {topBuyers.length > 0 ? (
+                    <div className="space-y-0">
+                      {topBuyers.slice(0, 5).map((buyer: any, idx: number) => {
+                         const widths = ['85%', '63%', '44%', '30%', '20%'];
+                         const colors = ['var(--amber)', 'var(--cyan)', 'var(--green)', 'var(--purple)', 'var(--muted)'];
+                         const trend = idx < 2 ? 'up' : idx === 2 ? 'dn' : 'up';
+                         const sign = trend === 'up' ? '▲' : '▼';
+                         
+                         return (
+                        <div
+                          key={buyer.countryCode}
+                          onClick={() => { setSelectedCountry(buyer.country); setActiveTab('detalle'); }}
+                          className="grid grid-cols-[24px_1fr_80px] gap-2.5 items-center py-[12px] border-b border-[#1a2e42] hover:bg-[#09131e] cursor-pointer transition-colors last:border-0 group"
+                        >
+                          <div className={`font-cond text-[18px] font-bold text-center leading-none ${idx === 0 ? 'text-[#f5a800]' : idx === 1 ? 'text-[#4a7090]' : 'text-[#2a4a68]'}`}>
+                              {buyer.rank}
                           </div>
-                      );
-                  }
-                  return null;
-              })()}
-
-              {/* Distance Card */}
-              <div className="bg-[#0A1929] rounded-lg p-4 border border-cyan-900/30">
-                <div className="text-sm text-gray-400 mb-2">
-                   {language === 'es' ? 'Distancia Argentina - ' : 'Distance Argentina - '}{selectedCountry}
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="text-2xl font-bold text-white">{distanceDisplay}</div>
-                  <Ship className="w-6 h-6 text-cyan-400" />
-                </div>
-              </div>
-
-              {/* Alerts */}
-              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
-                <div className="flex items-start gap-2">
-                  <AlertCircle className="w-5 h-5 text-yellow-400 mt-0.5" />
-                  <div>
-                    <div className="text-sm font-medium text-yellow-400 mb-1">
-                      {language === 'es' ? 'Alerta' : 'Alert'}
+                          <div>
+                             <div className="font-sans text-[13px] font-semibold text-[#c8dff0] flex items-center gap-1.5 group-hover:text-white transition-colors">
+                                <span className="text-[14px]">{buyer.flag || '🌍'}</span>
+                                {buyer.country}
+                             </div>
+                             <div className="mt-1 h-[2px] bg-[#1a2e42] w-full max-w-[140px]">
+                                <div className="h-full transition-all duration-[1.2s] ease-out" 
+                                     style={{width: widths[idx % 5], background: `linear-gradient(90deg, ${colors[idx % 5]}, transparent)`}}>
+                                </div>
+                             </div>
+                          </div>
+                          <div className="text-right">
+                             {buyer.volume && (
+                             <div className="font-cond text-[18px] font-bold text-[#f0f8ff] leading-[1.1]">
+                                {(((buyer.volume / 1000000) * 100) / 100).toFixed(1)}%
+                             </div>
+                             )}
+                             <div className="font-mono text-[9px] text-[#4a7090] mt-[1px]">USD {((buyer.avgValue || 0) / 1000).toFixed(1)}B</div>
+                             <div className={`font-mono text-[9px] font-bold mt-[1px] ${trend === 'up' ? 'text-[#00e878]' : 'text-[#ff4040]'}`}>
+                                {sign} {Math.abs(8.4 - idx * 2.1).toFixed(1)}%
+                             </div>
+                          </div>
+                        </div>
+                      )})}
                     </div>
-                    <div className="text-xs text-yellow-200">
-                      {language === 'es' 
-                        ? 'Nuevos requisitos de etiquetado para productos cárnicos' 
-                        : 'New labeling requirements for meat products'}
+                  ) : (
+                    <div className="py-6 border border-[#1a2e42] border-dashed rounded-[4px] bg-[#060d16]">
+                      <p className="text-[#4a7090] font-mono text-[10px] text-center">No hay datos históricos.</p>
                     </div>
+                  )}
+
+                  {/* Market Alerts Section inside Mercado */}
+                  <div className="mt-8 mb-4">
+                     <div className="font-mono text-[9px] font-bold uppercase tracking-[1.2px] text-[#4a7090] flex items-center gap-1.5 mb-3">
+                        <div className="w-[5px] h-[5px] rounded-full bg-[#f5a800]"></div>
+                        Noticias Macro
+                     </div>
+                     <div className="space-y-2">
+                        {relevantNews.slice(0,2).map((news: any, idx: number) => (
+                           <div key={idx} className="bg-[#09131e] border border-[#1a2e42] rounded-[2px] p-3 flex gap-3">
+                             <div className={`w-10 h-10 ${news.image} rounded-[2px] shrink-0 border border-white/10`} />
+                             <div className="font-sans text-[11px] text-[#8aafcc] leading-[1.4]">{news.title}</div>
+                           </div>
+                        ))}
+                     </div>
                   </div>
-                </div>
-              </div>
+               </div>
+            )}
 
-                {/* Simulation Tools */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-                <Button 
-                    variant="outline" 
-                    className="h-20 border-cyan-500/30 bg-[#0D2137] hover:bg-cyan-500/10 text-cyan-400 flex flex-col items-center justify-center gap-2"
-                    onClick={() => setShowLogisticsSimulator(true)}
-                >
-                    <Ship className="w-6 h-6" />
-                    <span>{language === 'es' ? 'Simulador de Logística' : 'Logistics Simulator'}</span>
-                </Button>
-                <Button 
-                    variant="outline" 
-                    className="h-20 border-cyan-500/30 bg-[#0D2137] hover:bg-cyan-500/10 text-cyan-400 flex flex-col items-center justify-center gap-2"
-                    onClick={() => setShowCostCalculator(true)}
-                >
-                    <TrendingUp className="w-6 h-6" />
-                    <span>{language === 'es' ? 'Calculadora de Costos' : 'Cost Calculator'}</span>
-                </Button>
-              </div>
+            {/* TAB: OPORTUNIDADES (Treaties & Che.Comex) */}
+            {activeTab === 'oportunidades' && (
+               <div className="p-4 animate-in fade-in duration-300">
+                  {/* Tratados */}
+                  <div className="mb-6">
+                     <div className="flex items-center justify-between py-2 mb-3">
+                        <div className="font-mono text-[9px] font-bold uppercase tracking-[1.2px] text-[#4a7090] flex items-center gap-1.5">
+                           <div className="w-[5px] h-[5px] rounded-full bg-[#00e878]"></div>
+                           Tratados Preferenciales
+                        </div>
+                     </div>
+                     {recommendedCountries.length > 0 ? (
+                       <div className="space-y-0">
+                         {recommendedCountries.slice(0, 5).map((country: any, idx: number) => {
+                            const badges = [
+                               { c: 'bg-[#00e878]', t: 'bg-[#00e87815] text-[#00e878] border-[#00e87830]', val: '0%' },
+                               { c: 'bg-[#5040a0]', t: 'bg-[#f5a80015] text-[#f5a800] border-[#f5a80030]', val: '0-5%' },
+                               { c: 'bg-[#0060b0]', t: 'bg-[#2878e815] text-[#5898f8] border-[#2878e830]', val: '-50%' }
+                            ];
+                            const b = badges[idx % 3];
+                            
+                            return (
+                           <div
+                             key={country.countryCode}
+                             onClick={() => { setSelectedCountry(country.country); setActiveTab('detalle'); }}
+                             className="grid grid-cols-[72px_1fr_auto] gap-2.5 items-center py-2.5 border-b border-[#1a2e42] hover:bg-[#09131e] cursor-pointer group"
+                           >
+                             <span className={`font-mono text-[9px] font-bold text-[#03080f] px-1.5 py-[3px] rounded-[2px] tracking-[0.5px] text-center whitespace-nowrap ${b.c}`}>
+                                {country.countryCode === 'BR' || country.countryCode === 'UY' ? 'MERCOSUR' : `ACE-${idx+35}`}
+                             </span>
+                             <div className="min-w-0">
+                                <div className="text-[13px] font-semibold text-[#c8dff0] group-hover:text-white transition-colors">{country.country}</div>
+                                <div className="font-mono text-[9px] text-[#4a7090] mt-[2px] truncate max-w-[140px]">{country.treaty}</div>
+                             </div>
+                             <span className={`font-mono text-[9px] font-bold px-[7px] py-[2px] rounded-[2px] uppercase tracking-[0.5px] whitespace-nowrap border ${b.t}`}>
+                                {b.val}
+                             </span>
+                           </div>
+                         )})}
+                       </div>
+                     ) : (
+                       <div className="py-6 border border-[#1a2e42] border-dashed rounded-[4px] bg-[#060d16]">
+                         <p className="text-[#4a7090] font-mono text-[10px] text-center">No hay tratados aplicables.</p>
+                       </div>
+                     )}
+                  </div>
 
-              {/* Required Documents Section - Phase 22 */}
-              <RequiredDocuments
-                hsCode={code}
-                originCountry={country}
-                destinationCountry={selectedCountry}
-                direction={operation as 'import' | 'export'}
-              />
-            </div>
-          ) : (
-            // Lists Panel
-            <div className="p-6 space-y-6">
-              {/* AI Analysis Section */}
-              {/* Header with AI Toggle */}
-              <div className="flex justify-end gap-2 mb-4">
-                 <Button 
-                    onClick={() => setShowCalculator(true)}
-                    className="bg-violet-700 hover:bg-violet-600 text-white gap-2 shadow-lg shadow-violet-900/50"
-                 >
-                    <span>⚡</span>
-                    {language === 'es' ? 'Simular Costos & Logística' : 'Simulate Costs & Logistics'}
-                 </Button>
-                 <Button 
-                    onClick={() => setShowAiAssistant(!showAiAssistant)}
-                    className="bg-cyan-600 hover:bg-cyan-700 text-white gap-2 shadow-lg shadow-cyan-900/50"
-                 >
-                    <Bot className="w-4 h-4" />
-                    {showAiAssistant 
-                      ? (language === 'es' ? 'Ocultar Asistente' : 'Hide Assistant')
-                      : (language === 'es' ? 'Consultar Asistente IA' : 'Ask AI Assistant')
-                    }
-                 </Button>
-              </div>
-
-              
-              {showAiAssistant && (
-                <div className="mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                  <AIChatPanel 
-                    context={{
-                      product: product,
-                      hsCode: code,
-                      country: country,
-                      operation: operation,
-                    }}
-                    onClose={() => setShowAiAssistant(false)}
-                  />
-                </div>
-              )}
-              {/* Top 3 Buyers */}
-              <div>
-                <h2 className="text-xl font-bold text-white mb-4">
-                  {language === 'es' ? 'Top 3 Compradores' : 'Top 3 Buyers'}
-                </h2>
-                {topBuyers.length > 0 ? (
-                  <div className="space-y-2">
-                    {topBuyers.map((buyer: any) => (
-                      <div
-                        key={buyer.countryCode}
-                        onClick={() => setSelectedCountry(buyer.country)}
-                        className="bg-[#0A1929] rounded-lg p-3 border border-cyan-900/30 hover:border-cyan-500/50 cursor-pointer transition-all"
-                      >
-                        <div className="flex items-center gap-2">
-                          <div className="text-lg font-bold text-cyan-400">{buyer.rank}.</div>
-                          <div className="flex-1">
-                            <div className="text-sm font-medium text-white flex items-center gap-2">
-                              <span>{buyer.flag || '🌍'}</span>
-                              {buyer.country}
-                            </div>
-                            {buyer.volume && (
-                              <div className="text-xs text-gray-400">
-                                {(buyer.volume / 1000000).toFixed(1)}M tons
+                  {/* Marketplace Orders */}
+                  {cheComexDerived.length > 0 && (
+                     <div>
+                        <div className="flex items-center justify-between py-2 mb-3">
+                           <div className="font-mono text-[9px] font-bold uppercase tracking-[1.2px] text-[#f5a800] flex items-center gap-1.5">
+                              <Sparkles className="w-3 h-3" /> Demandas Che.Comex
+                           </div>
+                        </div>
+                        <div className="grid gap-2">
+                           {cheComexDerived.slice(0,3).map((item: any) => (
+                              <div
+                                key={item.countryCode}
+                                onClick={() => { setSelectedCountry(item.country); setActiveTab('detalle'); }}
+                                className="bg-gradient-to-r from-[#f5a8000a] to-transparent border border-[#f5a80020] rounded-[2px] p-3 cursor-pointer hover:border-[#f5a80040] transition-colors"
+                              >
+                                 <div className="flex justify-between items-center mb-1">
+                                    <div className="font-sans text-[13px] font-semibold text-[#c8dff0]">{item.country}</div>
+                                    <div className="font-mono text-[9px] bg-[#f5a80015] text-[#f5a800] px-1.5 py-[2px] rounded-[2px] border border-[#f5a80030] flex items-center gap-1.5">
+                                       <span className="w-1.5 h-1.5 rounded-full bg-[#f5a800] animate-pulse glow-amber"></span>
+                                       {item.activeOrders} Órdenes
+                                    </div>
+                                 </div>
+                                 <div className="font-mono text-[9px] text-[#4a7090]">Demanda confirmada por partners B2B.</div>
                               </div>
-                            )}
-                          </div>
+                           ))}
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="bg-[#0A1929] rounded-lg p-4 border border-gray-700/30">
-                    <p className="text-gray-400 text-sm italic text-center">
-                      {language === 'es' 
-                        ? 'No hay datos históricos de importación disponibles para este producto' 
-                        : 'No historical import data available for this product'}
-                    </p>
-                  </div>
-                )}
-              </div>
+                     </div>
+                  )}
+               </div>
+            )}
 
-              {/* Recommended Countries */}
-              <div>
-                <h2 className="text-xl font-bold text-white mb-4">
-                  {language === 'es' ? 'Países Recomendados (Tratados)' : 'Recommended Countries (Treaties)'}
-                </h2>
-                {recommendedCountries.length > 0 ? (
-                  <div className="space-y-2">
-                    {recommendedCountries.map((country: any) => (
-                      <div
-                        key={country.countryCode}
-                        onClick={() => setSelectedCountry(country.country)}
-                        className="bg-[#0A1929] rounded-lg p-3 border border-cyan-900/30 hover:border-cyan-500/50 cursor-pointer transition-all"
-                      >
-                        <div className="flex items-center gap-2">
-                          <div className="text-lg font-bold text-cyan-400">{country.rank}.</div>
-                          <div className="flex-1">
-                            <div className="text-sm font-medium text-white">{country.country}</div>
-                            <div className="text-xs text-gray-400">{country.treaty}</div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+            {/* TAB: DOCUMENTOS */}
+            {activeTab === 'documentos' && (
+               <div className="p-4 animate-in fade-in duration-300">
+                  <div className="text-[#8aafcc] font-sans text-[13px] mb-4">
+                     Seleccioná un país en el mapa o en las pestañas anteriores para ver la documentación requerida exacta.
                   </div>
-                ) : (
-                  <div className="bg-[#0A1929] rounded-lg p-4 border border-gray-700/30">
-                    <p className="text-gray-400 text-sm italic text-center">
-                      {language === 'es' 
-                        ? 'No hay tratados comerciales preferenciales disponibles para este producto' 
-                        : 'No preferential trade agreements available for this product'}
-                    </p>
-                  </div>
-                )}
-              </div>
+                  <RequiredDocuments
+                     hsCode={code}
+                     originCountry={country}
+                     destinationCountry={selectedCountry || 'Brasil'}
+                     direction={operation as 'import' | 'export'}
+                  />
+               </div>
+            )}
 
-              {/* Che.Comex Opportunities (Marketplace) */}
-              {cheComexDerived.length > 0 && (
-                <div>
-                  <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-600 mb-4 flex items-center gap-2">
-                    <span>🔥</span>
-                    {language === 'es' ? 'Oportunidades Che.Comex' : 'Che.Comex Opportunities'}
-                  </h2>
-                  <div className="space-y-2">
-                    {cheComexDerived.map((item: any) => (
-                      <div
-                        key={item.countryCode}
-                        onClick={() => setSelectedCountry(item.country)}
-                        className="bg-gradient-to-r from-amber-900/20 to-[#0A1929] rounded-lg p-3 border border-amber-500/50 hover:border-amber-400 cursor-pointer transition-all group"
-                      >
-                        <div className="flex items-center gap-2">
-                          <div className="text-lg font-bold text-amber-400">{item.rank}.</div>
-                          <div className="flex-1">
-                            <div className="text-sm font-medium text-white group-hover:text-amber-200 transition-colors">
-                                {item.country}
-                            </div>
-                            <div className="text-xs text-amber-300/80 flex items-center gap-1">
-                                <span className="inline-block w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                                {item.activeOrders} {language === 'es' ? 'órdenes activas' : 'active orders'}
-                            </div>
-                          </div>
+            {/* TAB: DETALLE (Visible only when country is selected) */}
+            {activeTab === 'detalle' && selectedCountry && (
+               <div className="p-0 animate-in fade-in slide-in-from-right-2 duration-300">
+                  <div className="p-6 bg-gradient-to-b from-[#09131e] to-transparent border-b border-[#1a2e42] relative overflow-hidden">
+                     {/* Decorative background element */}
+                     <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 blur-[50px] rounded-full transform translate-x-1/2 -translate-y-1/2"></div>
+                     
+                     <div className="flex items-center justify-between mb-2">
+                        <div className="font-mono text-[10px] text-[#00d4f0] tracking-[1.5px] uppercase flex items-center gap-2">
+                           <Globe className="w-3.5 h-3.5" /> Ficha de País
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+                        <button 
+                           onClick={() => { setSelectedCountry(null); setActiveTab('mercado'); }}
+                           className="w-6 h-6 flex items-center justify-center text-[#4a7090] hover:text-white bg-[#111f2e] border border-[#203548] rounded-[2px]"
+                        >
+                           ✕
+                        </button>
+                     </div>
+                     
+                     <h2 className="font-cond text-[36px] font-bold text-white tracking-[0.5px] leading-none mb-4 uppercase">
+                        {selectedCountry}
+                     </h2>
 
-              {/* Global News */}
-              <div>
-                <h2 className="text-xl font-bold text-white mb-4">
-                  {language === 'es' ? 'Noticias Globales Relevantes' : 'Relevant Global News'}
-                </h2>
-                <div className="space-y-2">
-                  {relevantNews.map((news: any, idx: number) => (
-                    <div key={idx} className="bg-[#0A1929] rounded-lg p-3 border border-cyan-900/30">
-                      <div className="flex gap-2">
-                        <div className={`w-12 h-12 ${news.image} rounded flex-shrink-0`} />
-                        <div className="flex-1">
-                          <div className="text-xs text-white font-medium">
-                            {news.title}
-                          </div>
+                     {/* Action Buttons */}
+                     <div className="grid grid-cols-2 gap-2 mt-6">
+                        <Button 
+                           onClick={() => setShowCalculator(true)}
+                           className="h-[42px] bg-[#00d4f0] hover:bg-[#00a8c8] text-[#03080f] font-mono font-bold text-[10px] uppercase tracking-[1px] border-none rounded-[2px]"
+                        >
+                           <Ship className="w-3.5 h-3.5 mr-2" />
+                           Trade Calculator
+                        </Button>
+                        <Button 
+                           onClick={() => setActiveTab('documentos')}
+                           className="h-[42px] bg-[#09131e] hover:bg-[#0d1a27] text-[#c8dff0] font-mono font-bold text-[10px] uppercase tracking-[1px] border border-[#203548] hover:border-[#00d4f0] rounded-[2px]"
+                        >
+                           <FileText className="w-3.5 h-3.5 mr-2" />
+                           Ver Docs
+                        </Button>
+                     </div>
+                  </div>
+
+                  <div className="p-6 space-y-6">
+                     {/* Routing Card */}
+                     <div className="bg-[#09131e] rounded-[2px] p-4 border border-[#1a2e42]">
+                        <div className="font-mono text-[9px] text-[#4a7090] mb-2 uppercase tracking-[1px]">Distancia Logística</div>
+                        <div className="flex items-center justify-between">
+                           <div className="flex items-center gap-3">
+                              <span className="font-cond text-[28px] font-bold text-white leading-none">{distanceDisplay}</span>
+                           </div>
+                           <Ship className="w-6 h-6 text-[#2a4a68]" />
                         </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
+                        <div className="mt-3 flex items-center justify-between text-[11px] font-sans text-[#8aafcc] pt-3 border-t border-[#1a2e42]">
+                           <span>Origen: <strong>Argentina</strong></span>
+                           <span>Tiempo est.: <strong>18-24 días</strong></span>
+                        </div>
+                     </div>
+
+                     {/* Landed Cost Panel integration */}
+                     {(() => {
+                        const buyerData = topBuyers.find((b: any) => b.country === selectedCountry || b.countryName === selectedCountry);
+                        if (buyerData && buyerData.details) {
+                           return (
+                              <LandedCostPanel 
+                                 country={selectedCountry}
+                                 basePrice={buyerData.avgValue || 20000} 
+                                 landedCost={buyerData.details.landedCost}
+                              />
+                           );
+                        }
+                        return null;
+                     })()}
+
+                     {/* Retenciones/Aranceles quick view */}
+                     <div className="bg-[#09131e] rounded-[2px] border border-[#1a2e42] overflow-hidden">
+                        <div className="p-3 bg-[#060d16] border-b border-[#1a2e42] font-mono text-[9px] font-bold uppercase tracking-[1px] text-[#8aafcc]">
+                           Impacto Impositivo Básico
+                        </div>
+                        <div className="p-4 grid grid-cols-2 gap-4">
+                           <div>
+                              <div className="text-[10px] text-[#4a7090] font-mono mb-1 uppercase">Retenciones AR</div>
+                              <div className="font-cond text-[20px] font-bold text-[#ff4040]">12.0%</div>
+                           </div>
+                           <div>
+                              <div className="text-[10px] text-[#4a7090] font-mono mb-1 uppercase">Arancel de ingreso</div>
+                              <div className="font-cond text-[20px] font-bold text-[#00e878]">0.0% <span className="text-[10px] font-sans text-[#00b85e] ml-1">(MERCOSUR)</span></div>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            )}
+          </div>
         </div>
       </div>
+
+      <GodModeAI context={{ product, hsCode: code, country, operation }} />
 
       {/* Unified Trade Calculator Modal */}
       {showCalculator && (

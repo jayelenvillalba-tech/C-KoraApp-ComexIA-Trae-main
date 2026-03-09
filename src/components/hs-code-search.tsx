@@ -173,13 +173,13 @@ export default function HsCodeSearch({ onProductSelected, onPartidaSelected }: H
   const allResults = searchResults?.subpartidas || [];
 
   return (
-    <Card className="bg-white/10 backdrop-blur-xl border-white/20 shadow-2xl overflow-hidden relative z-50">
-      <CardHeader className="bg-white/5 border-b border-white/10">
-        <CardTitle className="flex items-center text-lg text-white">
-          <Search className="mr-3 text-blue-400 w-5 h-5" />
+    <Card className="bg-[#060d16] border border-[#203548] rounded-[4px] shadow-2xl overflow-hidden relative z-50">
+      <CardHeader className="bg-[#03080f] border-b border-[#1a2e42] p-[16px_24px]">
+        <CardTitle className="flex items-center text-[13px] font-sans font-semibold text-[#c8dff0]">
+          <Search className="mr-2 text-[#00d4f0] w-4 h-4" />
           {language === 'es' ? 'Buscador de Códigos HS' : 'HS Code Search'}
-          <Badge variant="secondary" className="ml-2 bg-blue-500/20 text-blue-200 border-blue-400/30">
-            <Zap className="w-3 h-3 mr-1" />
+          <Badge variant="secondary" className="ml-2 bg-[#00d4f015] text-[#00d4f0] border border-[#00d4f030] font-mono text-[9px] uppercase tracking-[0.8px] rounded-[2px] hover:bg-[#00d4f015]">
+            <Sparkles className="w-2.5 h-2.5 mr-1" />
             AI Powered
           </Badge>
         </CardTitle>

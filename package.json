@@ -20,6 +20,9 @@
     "migrate:full": "npm run migrate:empresas && npm run seed:companies"
   },
   "dependencies": {
+    "@fontsource/barlow-condensed": "^5.2.8",
+    "@fontsource/jetbrains-mono": "^5.2.8",
+    "@fontsource/space-grotesk": "^5.2.10",
     "@hookform/resolvers": "^3.3.4",
     "@langchain/openai": "^1.2.5",
     "@libsql/client": "^0.15.15",

@@ -402,82 +402,143 @@ export default function TradeCalculator({ defaultDestination = "BR", defaultProd
                 )}
 
                 {/* TAB INCOTERMS — LOS 11 */}
-                {tab === "incoterms" && (
-                  <div>
-                    <div style={{ display:"flex", alignItems:"center", gap:"12px", marginBottom:"16px", flexWrap:"wrap" }}>
-                      <span style={{ fontSize:"12px", color:"var(--mu)" }}>Modo: <strong style={{ color:"var(--ac)" }}>{mode==="sea"?"🚢 Marítimo":mode==="road"?"🚛 Terrestre":"✈️ Aéreo"}</strong></span>
-                      <span style={{ fontSize:"12px", color:"var(--mu)" }}>{availableIncos.length} disponibles — {11-availableIncos.length} solo marítimo (deshabilitados)</span>
+                {tab === "incoterms" && (() => {
+                  const getRecommendation = (cDest: string, cCh: string) => {
+                    const isMercosur = ["BR", "UY", "PY"].includes(cDest);
+                    const isEurope = ["DE", "ES", "NL", "IT", "FR"].includes(cDest);
+                    const isAsia = ["CN", "IN", "ID"].includes(cDest);
+                    
+                    if (["10", "12"].includes(cCh) && isMercosur) {
+                      return { code: "FOB", level: "intermediate", reason: "Para granos hacia MERCOSUR, el comprador suele exigir FOB.", detail: "Con FOB, vos cargás en el buque. El comprador paga el flete y seguro. Es el estándar de la industria granaria argentina.", warning: "Acordate de tener el Permiso de Embarque y certificado SENASA. Certificá el origen MERCOSUR." };
+                    }
+                    if (["10", "12"].includes(cCh) && isAsia) {
+                      return { code: "CFR", level: "intermediate", reason: "Para graneles a Asia, CFR es el estándar (ellos contratan su seguro).", detail: "CFR significa que vos pagás el transporte hasta destino. Los compradores asiáticos prefieren su propio seguro local.", warning: "" };
+                    }
+                    if (cCh === "22" && isEurope) {
+                      return { code: "DAP", level: "intermediate", reason: "Para vino a Europa, DAP te diferencia (entregás puerta a puerta).", detail: "Con DAP llevás el producto hasta la bodega del importador europeo. Ellos solo pagan la aduana. Te permite cobrar más por el servicio premium.", warning: "Verificá el Reglamento de Deforestación UE." };
+                    }
+                    if (cCh === "02" && isMercosur) {
+                      return { code: "CIF", level: "intermediate", reason: "Para carne a Brasil/MERCOSUR, CIF es lo más usado.", detail: "Pagás flete frigorífico y seguro mínimo ICC C hasta puerto destino.", warning: "Considerá contratar seguro ICC A (cobertura máxima) por la cadena de frío." };
+                    }
+                    if (["84", "85", "87"].includes(cCh) && isEurope) {
+                      return { code: "CIP", level: "intermediate", reason: "Para manufacturas a Europa, CIP ofrece cobertura total de seguro obligatoria.", detail: "En CIP se exige seguro ICC A. Tu maquinaria de alto valor viaja protegida y el comprador solo despacha.", warning: "" };
+                    }
+                    return { code: "FCA", level: "beginner", reason: "FCA es el punto de partida más flexible y moderno para contenedores.", detail: "Entregás la mercadería al transportista en Argentina y te olvidás del riesgo internacional. Muy fácil para PyMEs sin experiencia.", warning: "" };
+                  };
+                  
+                  const rec = getRecommendation(dest, ch.padStart(2,"0").substring(0,2));
+                  const recInco = INCOTERMS_2020.find(i => i.code === rec.code);
+
+                  return (
+                  <div style={{ fontFamily:"'Space Grotesk', sans-serif" }}>
+                    {/* RECOMMENDATION BANNER */}
+                    <div style={{ background: "linear-gradient(135deg, var(--bg2, #09131e), var(--bg3, #0d1a27))", border: "1px solid var(--b2, #203548)", borderLeft: "3px solid var(--cyan, #00d4f0)", padding: "14px 16px", marginBottom: "20px", borderRadius: "4px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                        <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"9px", fontWeight:700, color:"var(--cyan, #00d4f0)", letterSpacing:"1px" }}>⚡ RECOMENDACIÓN CONTEXTUAL</span>
+                        <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"9px", border: "1px solid #00e87860", color:"#00e878", padding:"2px 8px", borderRadius:"2px" }}>{rec.level === "beginner" ? "IDEAL PARA PRINCIPIANTES" : "ESTÁNDAR DE INDUSTRIA"}</span>
+                      </div>
+                      <div style={{ display:"flex", gap:"12px" }}>
+                        <div>
+                          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"36px", fontWeight:800, color:"var(--cyan, #00d4f0)", lineHeight:1 }}>{rec.code}</div>
+                          <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"9px", color:"var(--t4, #2a4a68)", textTransform:"uppercase" }}>{recInco?.name}</div>
+                        </div>
+                        <div style={{ flex:1 }}>
+                          <p style={{ fontSize:"12px", color:"var(--t1, #c8dff0)", margin:0 }}>{rec.reason}</p>
+                          <p style={{ fontSize:"11px", color:"var(--t2, #8aafcc)", marginTop:"4px" }}>{rec.detail}</p>
+                        </div>
+                      </div>
+                      {rec.warning && (
+                        <div style={{ background:"#f5a80012", border:"1px solid #f5a80030", padding:"8px", marginTop:"10px", fontSize:"11px", color:"#f5a800", borderRadius:"2px", display:"flex", gap:"8px" }}>
+                          <span>⚠️</span><span>{rec.warning}</span>
+                        </div>
+                      )}
                     </div>
-                    <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:"12px", marginBottom:"24px" }}>
-                      {INCOTERMS_2020.map(inc => {
+
+                    <div style={{ display:"flex", alignItems:"center", gap:"12px", marginBottom:"16px", flexWrap:"wrap" }}>
+                      <span style={{ fontSize:"12px", color:"var(--mu)" }}>Filtro actual: <strong style={{ color:"var(--ac)" }}>{mode==="sea"?"🚢 Transporte Marítimo":mode==="road"?"🚛 Transporte Terrestre":"✈️ Transporte Aéreo"}</strong></span>
+                      <span style={{ fontSize:"12px", color:"var(--mu)", marginLeft:"auto" }}>Mostrando {availableIncos.length} de 11 Incoterms</span>
+                    </div>
+
+                    <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))", gap:"12px", marginBottom:"24px" }}>
+                      {INCOTERMS_2020.map((inc, idx) => {
                         const avail = inc.mode==="any" || inc.mode===mode;
                         const vc = avail ? vendorCostForInco(inc, c) : 0;
                         const bc = avail ? Math.max(c.landed - c.fob - vc + c.dst.derechoImportacion + c.dst.despachoImportacion, 0) : 0;
                         const isSel = selInco === inc.code;
+                        const isRec = rec.code === inc.code;
+                        
+                        // Fake percentages from Incoterm.txt
+                        const vp = inc.code==="EXW"?5:inc.code==="FCA"?20:inc.code==="CPT"?55:inc.code==="CIP"?62:inc.code==="DAP"?80:inc.code==="DPU"?85:inc.code==="DDP"?95:inc.code==="FAS"?12:inc.code==="FOB"?16:inc.code==="CFR"?52:inc.code==="CIF"?58:50;
+                        const bp = 100 - vp;
+
                         return (
                           <div key={inc.code} className="inc" onClick={() => avail && setSelInco(inc.code)}
-                            style={{ background:isSel?`${inc.color}18`:"var(--sf)", border:`1px solid ${isSel?inc.color:avail?"var(--bd)":"#0d1f2f"}`, borderRadius:"12px", padding:"14px", cursor:avail?"pointer":"not-allowed", opacity:avail?1:.35, position:"relative" as const }}>
-                            {!avail && <div style={{ position:"absolute", top:"8px", right:"8px", fontSize:"10px", background:"#1a3a5a", padding:"2px 6px", borderRadius:"4px", color:"var(--mu)" }}>Solo marítimo</div>}
-                            <div style={{ display:"flex", alignItems:"center", gap:"8px", marginBottom:"8px" }}>
-                              <span style={{ fontSize:"20px" }}>{inc.emoji}</span>
-                              <div><span style={{ fontSize:"16px", fontWeight:800, color:inc.color }}>{inc.code}</span><span style={{ fontSize:"11px", color:"var(--mu)", marginLeft:"6px" }}>{inc.name}</span></div>
-                              {isSel && <span style={{ marginLeft:"auto", fontSize:"10px", background:inc.color, color:"#000", padding:"2px 6px", borderRadius:"10px", fontWeight:700 }}>✓ Sel.</span>}
-                            </div>
-                            <div style={{ fontSize:"12px", color:"var(--mu)", marginBottom:"10px", lineHeight:1.5 }}>{inc.desc.substring(0,100)}…</div>
-                            {avail && (
-                              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"8px" }}>
-                                <div style={{ background:"#0b1929", borderRadius:"6px", padding:"8px" }}>
-                                  <div style={{ fontSize:"10px", color:"var(--mu)" }}>🏭 Vendedor</div>
-                                  <div style={{ fontSize:"14px", fontWeight:700, color:inc.color, fontFamily:"'JetBrains Mono',monospace" }}>{fmt(vc)}</div>
+                            style={{ 
+                              background: "var(--bg2, #09131e)", 
+                              border: `1px solid ${isSel ? inc.color : isRec ? inc.color+"80" : "var(--b2, #203548)"}`, 
+                              boxShadow: isSel ? `0 0 20px ${inc.color}30` : isRec ? `0 0 10px ${inc.color}18` : "none",
+                              borderRadius: "4px", padding: "12px", cursor: avail ? "pointer" : "not-allowed", opacity: avail ? 1 : .35, position: "relative" 
+                            }}>
+                            {!avail && <div style={{ position:"absolute", top:"8px", right:"8px", fontSize:"10px", background:"#1a3a5a", padding:"2px 6px", borderRadius:"2px", color:"var(--mu)" }}>Solo marítimo</div>}
+                            
+                            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:"8px" }}>
+                              <div style={{ display:"flex", gap:"8px", alignItems:"center" }}>
+                                <span style={{ fontSize:"18px" }}>{inc.emoji}</span>
+                                <div>
+                                  <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"22px", fontWeight:800, color:"#f0f8ff", lineHeight:1.1 }}>{inc.code}</div>
+                                  <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"9px", color:"#4a7090", textTransform:"uppercase" }}>{inc.name}</div>
                                 </div>
-                                <div style={{ background:"#0b1929", borderRadius:"6px", padding:"8px" }}>
-                                  <div style={{ fontSize:"10px", color:"var(--mu)" }}>🏪 Comprador</div>
-                                  <div style={{ fontSize:"14px", fontWeight:700, color:"var(--wn)", fontFamily:"'JetBrains Mono',monospace" }}>{fmt(bc)}</div>
+                              </div>
+                              <div style={{ display:"flex", flexDirection:"column", gap:"4px", alignItems:"flex-end" }}>
+                                {isRec && <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"8px", fontWeight:700, border:`1px solid ${inc.color}60`, color:inc.color, padding:"2px 6px" }}>★ RECOMENDADO</span>}
+                                {inc.mode==="sea" && <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"8px", background:"#111f2e", border:"1px solid #1a2e42", color:"#4a7090", padding:"2px 6px" }}>⚓ MARÍTIMO</span>}
+                              </div>
+                            </div>
+                            
+                            <p style={{ fontSize:"11px", color:"#8aafcc", lineHeight:1.55, marginBottom:"10px" }}>{inc.desc.substring(0, 110)}...</p>
+
+                            {avail && (
+                              <div style={{ marginBottom:"10px" }}>
+                                <div style={{ display:"flex", alignItems:"center", gap:"6px", marginBottom:"5px" }}>
+                                  <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"9px", color:"#4a7090", width:"80px", textAlign:"right" }}>🏭 Vendedor</span>
+                                  <div style={{ flex:1, height:"4px", background:"#1a2e42" }}><div style={{ height:"100%", width:`${vp}%`, background:inc.color }}></div></div>
+                                  <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"10px", fontWeight:700, color:inc.color, width:"40px", textAlign:"right" }}>{fmt(vc)}</span>
+                                </div>
+                                <div style={{ display:"flex", alignItems:"center", gap:"6px" }}>
+                                  <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"9px", color:"#4a7090", width:"80px", textAlign:"right" }}>🏢 Comprador</span>
+                                  <div style={{ flex:1, height:"4px", background:"#1a2e42" }}><div style={{ height:"100%", width:`${bp}%`, background:"#4a6080" }}></div></div>
+                                  <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"10px", fontWeight:700, color:"#8aafcc", width:"40px", textAlign:"right" }}>{fmt(bc)}</span>
                                 </div>
                               </div>
                             )}
+
+                            {isSel && (
+                              <div style={{ marginTop:"12px", paddingTop:"12px", borderTop:"1px solid #1a2e42", animation:"fd .2s ease" }}>
+                                <div style={{ marginBottom:"10px" }}>
+                                  <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"9px", fontWeight:700, color:inc.color, textTransform:"uppercase", marginBottom:"4px" }}>📍 Transferencia de Riesgo</div>
+                                  <div style={{ fontSize:"11px", color:"#c8dff0" }}>{inc.riskTransfer}</div>
+                                </div>
+                                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"10px" }}>
+                                  <div>
+                                    <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"9px", fontWeight:700, color:inc.color, textTransform:"uppercase", marginBottom:"4px" }}>Vendedor Paga</div>
+                                    {inc.vendorPays.map(v => <div key={v} style={{ fontSize:"10px", color:"#8aafcc", display:"flex", gap:"4px", marginBottom:"2px" }}><span style={{color:inc.color}}>✓</span> {v}</div>)}
+                                  </div>
+                                  <div>
+                                    <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"9px", fontWeight:700, color:"#4a7090", textTransform:"uppercase", marginBottom:"4px" }}>Comprador Paga</div>
+                                    {inc.buyerPays.map(v => <div key={v} style={{ fontSize:"10px", color:"#8aafcc", display:"flex", gap:"4px", marginBottom:"2px" }}><span style={{color:"#4a7090"}}>✓</span> {v}</div>)}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {!isSel && <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"9px", color:"#4a7090", textAlign:"center", marginTop:"6px", paddingTop:"6px", borderTop:"1px solid #1a2e42" }}>▼ clic para expandir detalles</div>}
                           </div>
                         );
                       })}
                     </div>
-
-                    {/* DETALLE DEL SELECCIONADO */}
-                    {selIncoTerm && (
-                      <div style={{ ...cS, border:`1px solid ${selIncoTerm.color}66` }}>
-                        <div style={{ display:"flex", alignItems:"center", gap:"12px", marginBottom:"16px" }}>
-                          <span style={{ fontSize:"28px" }}>{selIncoTerm.emoji}</span>
-                          <div>
-                            <div style={{ fontSize:"20px", fontWeight:800, color:selIncoTerm.color }}>{selIncoTerm.code} — {selIncoTerm.name}</div>
-                            <div style={{ fontSize:"12px", color:"var(--mu)", marginTop:"2px" }}>{selIncoTerm.mode==="sea"?"🚢 Solo marítimo/fluvial":"✅ Todos los modos de transporte"}</div>
-                          </div>
-                        </div>
-                        <div style={{ fontSize:"14px", color:"var(--tx)", lineHeight:1.6, marginBottom:"16px", padding:"12px", background:"#0b1929", borderRadius:"8px" }}>{selIncoTerm.desc}</div>
-                        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"16px", marginBottom:"14px" }}>
-                          <div>
-                            <div style={{ fontSize:"11px", color:"#0090ff", fontWeight:700, marginBottom:"8px", textTransform:"uppercase" as const, letterSpacing:".6px" }}>🏭 Vendedor (Argentina) paga</div>
-                            {selIncoTerm.vendorPays.map(p=><div key={p} style={{ display:"flex", gap:"6px", padding:"4px 0", fontSize:"13px" }}><span style={{ color:"#0090ff", flexShrink:0 }}>✓</span><span style={{ color:"var(--tx)" }}>{p}</span></div>)}
-                          </div>
-                          <div>
-                            <div style={{ fontSize:"11px", color:"var(--wn)", fontWeight:700, marginBottom:"8px", textTransform:"uppercase" as const, letterSpacing:".6px" }}>🏪 Comprador (destino) paga</div>
-                            {selIncoTerm.buyerPays.map(p=><div key={p} style={{ display:"flex", gap:"6px", padding:"4px 0", fontSize:"13px" }}><span style={{ color:"var(--wn)", flexShrink:0 }}>✓</span><span style={{ color:"var(--tx)" }}>{p}</span></div>)}
-                          </div>
-                        </div>
-                        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:"10px" }}>
-                          {[
-                            { l:"Transferencia de riesgo", v:selIncoTerm.riskTransfer },
-                            { l:"Mejor para", v:selIncoTerm.bestFor },
-                            { l:"Tip Che.Comex", v:selIncoTerm.tip },
-                          ].map(({ l,v })=>(
-                            <div key={l} style={{ background:"#0b1929", borderRadius:"8px", padding:"10px" }}>
-                              <div style={{ fontSize:"10px", color:"var(--mu)", textTransform:"uppercase" as const, letterSpacing:".6px", marginBottom:"6px" }}>{l}</div>
-                              <div style={{ fontSize:"12px", color:"var(--tx)", lineHeight:1.5 }}>{v}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
-                )}
+                  );
+                })()}
 
                 {/* TAB RENTABILIDAD */}
                 {tab === "profit" && profit && (

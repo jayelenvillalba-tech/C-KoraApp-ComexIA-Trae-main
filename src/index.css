@@ -3,62 +3,88 @@
 @tailwind utilities;
 
 :root {
-  --background: hsl(0 0% 100%);
-  --foreground: hsl(240 10% 3.9%);
-  --card: hsl(0 0% 100%);
-  --card-foreground: hsl(240 10% 3.9%);
-  --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(240 10% 3.9%);
-  --primary: hsl(203.89 88.28% 53.14%);
-  --primary-foreground: hsl(0 0% 100%);
-  --secondary: hsl(240 4.8% 95.9%);
-  --secondary-foreground: hsl(240 5.9% 10%);
-  --muted: hsl(240 4.8% 95.9%);
-  --muted-foreground: hsl(240 3.8% 46.1%);
-  --accent: hsl(240 4.8% 95.9%);
-  --accent-foreground: hsl(240 5.9% 10%);
-  --destructive: hsl(0 84.2% 60.2%);
-  --destructive-foreground: hsl(0 0% 98%);
-  --border: hsl(240 5.9% 90%);
-  --input: hsl(240 5.9% 90%);
-  --ring: hsl(203.89 88.28% 53.14%);
-  --chart-1: hsl(203.89 88.28% 53.14%);
-  --chart-2: hsl(120 60% 50%);
-  --chart-3: hsl(60 60% 50%);
-  --chart-4: hsl(300 60% 50%);
-  --chart-5: hsl(30 60% 50%);
-  --radius: 0.5rem;
-  --kora-primary: hsl(203.89 88.28% 53.14%);
-  --kora-primary-dark: hsl(210 100% 38%);
-  --kora-primary-light: hsl(203 91% 67%);
-  --kora-secondary: hsl(0 0% 26%);
-  --kora-success: hsl(122 39% 49%);
-  --kora-warning: hsl(36 100% 50%);
-  --kora-error: hsl(4 90% 58%);
-  --kora-surface: hsl(0 0% 98%);
-  --kora-surface-variant: hsl(0 0% 96%);
+  /* CHE.COMEX V2 DESIGN SYSTEM */
+  /* Backgrounds — deep navy hierarchy */
+  --bg0: #03080f;
+  --bg1: #060d16;
+  --bg2: #09131e;
+  --bg3: #0d1a27;
+  --bg4: #111f2e;
+  --bg5: #162535;
+
+  /* Borders */
+  --b1: #1a2e42;
+  --b2: #203548;
+  --b3: #2a4560;
+
+  /* Text hierarchy */
+  --t0: #f0f8ff;
+  --t1: #c8dff0;
+  --t2: #8aafcc;
+  --t3: #4a7090;
+  --t4: #2a4a68;
+
+  /* Accents */
+  --cyan:   #00d4f0;
+  --cyan2:  #00a8c8;
+  --cyan3:  #007899;
+  --green:  #00e878;
+  --green2: #00b85e;
+  --amber:  #f5a800;
+  --amber2: #c88800;
+  --red:    #ff4040;
+  --blue:   #2878e8;
+  --violet: #7060d8;
+
+  /* Fonts */
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Space Grotesk', sans-serif;
+  --cond: 'Barlow Condensed', sans-serif;
+
+  /* Keep shadcn compatibility mapping */
+  --background: var(--bg0);
+  --foreground: var(--t1);
+  --card: var(--bg1);
+  --card-foreground: var(--t1);
+  --popover: var(--bg2);
+  --popover-foreground: var(--t1);
+  --primary: var(--cyan);
+  --primary-foreground: var(--bg0);
+  --secondary: var(--bg2);
+  --secondary-foreground: var(--t2);
+  --muted: var(--bg2);
+  --muted-foreground: var(--t3);
+  --accent: var(--bg2);
+  --accent-foreground: var(--t1);
+  --destructive: var(--red);
+  --destructive-foreground: var(--t0);
+  --border: var(--b1);
+  --input: var(--bg3);
+  --ring: var(--cyan);
+  --radius: 0.25rem;
 }
 
 .dark {
-  --background: hsl(240 10% 3.9%);
-  --foreground: hsl(0 0% 98%);
-  --card: hsl(240 10% 3.9%);
-  --card-foreground: hsl(0 0% 98%);
-  --popover: hsl(240 10% 3.9%);
-  --popover-foreground: hsl(0 0% 98%);
-  --primary: hsl(203.89 88.28% 53.14%);
-  --primary-foreground: hsl(0 0% 100%);
-  --secondary: hsl(240 3.7% 15.9%);
-  --secondary-foreground: hsl(0 0% 98%);
-  --muted: hsl(240 3.7% 15.9%);
-  --muted-foreground: hsl(240 5% 64.9%);
-  --accent: hsl(240 3.7% 15.9%);
-  --accent-foreground: hsl(0 0% 98%);
-  --destructive: hsl(0 62.8% 30.6%);
-  --destructive-foreground: hsl(0 0% 98%);
-  --border: hsl(240 3.7% 15.9%);
-  --input: hsl(240 3.7% 15.9%);
-  --ring: hsl(203.89 88.28% 53.14%);
+  /* Redundant for this design as it's always dark navy but required by shadcn */
+  --background: var(--bg0);
+  --foreground: var(--t1);
+  --card: var(--bg1);
+  --card-foreground: var(--t1);
+  --popover: var(--bg2);
+  --popover-foreground: var(--t1);
+  --primary: var(--cyan);
+  --primary-foreground: var(--bg0);
+  --secondary: var(--bg2);
+  --secondary-foreground: var(--t2);
+  --muted: var(--bg2);
+  --muted-foreground: var(--t3);
+  --accent: var(--bg2);
+  --accent-foreground: var(--t1);
+  --destructive: var(--red);
+  --destructive-foreground: var(--t0);
+  --border: var(--b1);
+  --input: var(--bg3);
+  --ring: var(--cyan);
 }
 
 @layer base {

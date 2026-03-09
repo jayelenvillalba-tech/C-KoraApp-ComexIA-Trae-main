@@ -29,6 +29,7 @@ import AuthPage from "@/pages/auth";
 import CheckoutSuccessPage from "@/pages/checkout-success";
 import OnboardingPage from "@/pages/onboarding";
 import { AlertsTicker } from "@/components/alerts-ticker";
+import GodModeAI from "@/components/GodModeAI";
 
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -97,6 +98,7 @@ function Router() {
       <Route path="/join-chat/:token" component={JoinChat} />
       <Route path="/landing" component={Landing} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/auth" component={AuthPage} />
       <Route path="/onboarding" component={OnboardingPage} />
       <Route path="/checkout/success" component={CheckoutSuccessPage} />
       <Route component={NotFound} />
@@ -115,6 +117,7 @@ function App() {
               <ErrorBoundary>
                 <AlertsTicker />
                 <Router />
+                <GodModeAI />
               </ErrorBoundary>
             </TooltipProvider>
           </MarketplaceProvider>
