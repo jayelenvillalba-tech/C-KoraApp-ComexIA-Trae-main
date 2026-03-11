@@ -10,6 +10,7 @@ import AuthGuardModal from "@/components/auth/auth-guard-modal";
 import { useUser } from "@/context/user-context";
 import { useMarketplace } from "@/context/marketplace-context";
 import ReputationBadge from "@/components/ui/reputation-badge";
+import ComplianceBadge from "@/components/marketplace/compliance-badge";
 import { getRequiredDocuments } from "@shared/documents-data";
 import {
   Carousel,
@@ -185,6 +186,18 @@ export default function PostCard({ post }: PostCardProps) {
               </Badge>
             )}
           </div>
+          {/* Compliance Badge — AI document gap analysis */}
+          {post.destinationCountry && post.hsCode && (
+            <div className="mt-2">
+              <ComplianceBadge
+                destinationCountry={post.destinationCountry}
+                ncmCode={post.hsCode}
+                incoterm={post.incoterm || 'FOB'}
+                direction={post.type === 'buy' ? 'import' : 'export'}
+                userDocIds={[]} // TODO: connect real user doc IDs from profile/onboarding store
+              />
+            </div>
+          )}
         </div>
 
         {/* Phase 21: Large Title */}

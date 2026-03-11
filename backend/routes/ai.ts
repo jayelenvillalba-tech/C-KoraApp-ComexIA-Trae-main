@@ -317,4 +317,95 @@ Formato requerido de salida (DEBE SER UN JSON ARRAY VÁLIDO, SIN TEXTO ANTES NI 
   }
 });
 
+// ─── POST /api/ai/compliance-check ────────────────────────────────────────────
+// Compara los documentos del usuario con los requeridos para una ruta comercial
+// y devuelve un análisis de gaps con explicación en IA.
+router.post("/compliance-check", async (req: Request, res: Response) => {
+  try {
+    const {
+      userDocIds = [] as string[],
+      destinationCountry = "",
+      ncmCode = "",
+      incoterm = "",
+      direction = "export",
+    } = req.body;
+
+    if (!destinationCountry || !ncmCode) {
+      return res.status(400).json({ error: "destinationCountry y ncmCode son requeridos" });
+    }
+
+    // 1. Obtener documentos requeridos para esa ruta usando la base de datos local
+    // Importamos dinámicamente para evitar problemas con rutas shared en backend
+    const { getRequiredDocuments } = await import("../../shared/documents-data.js");
+    const requiredDocs = getRequiredDocuments({
+      hsCode: ncmCode,
+      destinationCountry,
+      incoterm: incoterm || undefined,
+      direction: direction as "import" | "export",
+    });
+
+    // 2. Separar presentes vs faltantes
+    const present: typeof requiredDocs = [];
+    const missing: typeof requiredDocs = [];
+
+    for (const doc of requiredDocs) {
+      if (userDocIds.includes(doc.id)) {
+        present.push(doc);
+      } else if (doc.mandatory || doc.status === "mandatory") {
+        missing.push(doc);
+      }
+    }
+
+    // 3. Calcular score (0-100) basado en docs mandatorios cubiertos
+    const mandatoryTotal = requiredDocs.filter(d => d.mandatory || d.status === "mandatory").length;
+    const mandatoryPresent = present.filter(d => d.mandatory || d.status === "mandatory").length;
+    const score = mandatoryTotal > 0 ? Math.round((mandatoryPresent / mandatoryTotal) * 100) : 100;
+
+    const status: "ok" | "gap" | "blocked" =
+      missing.length === 0 ? "ok" : score < 50 ? "blocked" : "gap";
+
+    // 4. Generar explicación IA solo si hay gaps (cacheamos en memoria simple por sesión)
+    let aiExplanation: string | null = null;
+
+    if (missing.length > 0 && process.env.GROQ_API_KEY) {
+      const missingNames = missing.map(d => d.nameEs).join(", ");
+      const prompt = `Una empresa argentina quiere exportar el producto con NCM ${ncmCode} a ${destinationCountry} usando Incoterm ${incoterm || "FOB"}.
+Le faltan estos documentos: ${missingNames}.
+En 2-3 oraciones breves y directas, explicá por qué son necesarios y cómo puede conseguirlos.
+Usá lenguaje simple sin jerga técnica. Respondé en español rioplatense.`;
+
+      try {
+        aiExplanation = await callGroq(
+          [{ role: "user", content: prompt }],
+          COMEX_SYSTEM_PROMPT,
+          300
+        );
+      } catch (e) {
+        console.error("Groq falló en compliance-check, continuando sin IA:", e);
+      }
+    }
+
+    return res.json({
+      status,
+      score,
+      present: present.map(d => ({ id: d.id, name: d.nameEs, category: d.category })),
+      missing: missing.map(d => ({
+        id: d.id,
+        name: d.nameEs,
+        category: d.category,
+        processingDays: d.processingDays,
+        hint: d.descriptionEs,
+        link: d.managementLinks[destinationCountry]?.url || d.managementLinks["DEFAULT"]?.url || null,
+        authority: d.managementLinks[destinationCountry]?.authorityEs || d.managementLinks["DEFAULT"]?.authorityEs || null,
+      })),
+      aiExplanation,
+      meta: { destinationCountry, ncmCode, incoterm, direction, checkedAt: new Date().toISOString() },
+    });
+  } catch (error: any) {
+    console.error("Error en /compliance-check:", error);
+    res.status(500).json({ error: "Error interno", detail: error.message });
+  }
+});
+
 export default router;
+
