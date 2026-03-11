@@ -77,7 +77,12 @@ class ErrorBoundary extends React.Component<
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      {/* 
+        Home is now the main Analysis page.
+        The Bloomberg dashboard is moved to /dashboard.
+      */}
+      <Route path="/" component={Analysis} />
+      <Route path="/dashboard" component={Home} />
       <Route path="/landing" component={Landing} />
       <Route path="/trade-flow" component={TradeFlow} />
       <Route path="/map" component={CompanyMap} />

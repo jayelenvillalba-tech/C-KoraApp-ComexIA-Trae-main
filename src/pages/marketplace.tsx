@@ -93,7 +93,7 @@ export default function Marketplace() {
   };
 
   // Fetch posts from API
-  const { data: posts = [], isLoading } = useQuery({
+  const { data: rawData = [], isLoading } = useQuery({
     queryKey: ['/api/marketplace/posts', filters],
     queryFn: async () => {
       const queryString = buildQueryString();
@@ -101,9 +101,18 @@ export default function Marketplace() {
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch posts');
       const data = await response.json();
-      return data;
+      
+      // Some API versions wrap arrays in { data: [] } or { posts: [] }
+      if (data && Array.isArray(data)) return data;
+      if (data && Array.isArray(data.data)) return data.data;
+      if (data && Array.isArray(data.posts)) return data.posts;
+      
+      // If none match, return empty array to prevent filter crashes
+      return [];
     }
   });
+
+  const posts = Array.isArray(rawData) ? rawData : [];
 
   // Filter posts based on search term
   const filteredPosts = posts.filter((post: any) => {

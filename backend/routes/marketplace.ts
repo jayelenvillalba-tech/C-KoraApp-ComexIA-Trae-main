@@ -10,48 +10,54 @@ export async function getPosts(req: Request, res: Response) {
     if (type && type !== 'all') {
         filter.type = type;
     }
-    // TODO: Filter by country if needed (requires joining or denormalization if filtering by company country)
-    // Post has originCountry, we can filter by that
     if (country) {
         filter.originCountry = country;
     }
 
     const posts = await MarketplacePost.find(filter)
       .sort({ createdAt: -1 })
-      .populate('companyId', 'name country') // Populate company name and country
-      .populate('userId', 'name verified'); // Populate user name and verified status
+      .populate('companyId', 'name country verificationLevel') 
+      .populate('userId', 'name role verified');
 
-    // Format for frontend (flatten structure slightly if needed to match previous response)
+    // Format for frontend
     const formattedPosts = posts.map(p => {
-        const company = p.companyId as any;
-        const user = p.userId as any;
-        
-        // Ensure requirements/details are handled. 
-        // In Mongoose model we rely on schema fields. The previous SQLite code parsed 'details' JSON.
-        // Our Mongoose schema has specific fields like 'productName', 'price', etc.
-        // We should return them directly.
+        // Handle nulls gracefully if refs are broken
+        const company = p.companyId || {};
+        const user = p.userId || {};
         
         return {
-            id: p._id, // Frontend expects 'id'
+            id: p._id,
             type: p.type,
-            productName: p.productName,
-            hsCode: p.hsCode,
+            productName: p.productName || 'Producto sin nombre',
+            hsCode: p.hsCode || '',
             quantity: p.quantity,
             originCountry: p.originCountry,
-            description: p.descriptionLong || (p.requirements && p.requirements[0]), // Fallback
+            destinationCountry: p.destinationCountry,
+            descriptionLong: p.descriptionLong || (p.requirements && p.requirements[0]),
             createdAt: p.createdAt,
-            companyName: company?.name || 'Unknown',
-            companyCountry: company?.country || 'Unknown',
-            userName: user?.name || 'Unknown',
-            verified: user?.verified || false,
-            // Add other fields needed by frontend
+            
+            // Reconstruct nested objects expected by Frontend
+            company: {
+               id: (company as any)._id,
+               name: (company as any).name || 'Empresa Anónima',
+               country: (company as any).country || 'AR',
+               verificationLevel: (company as any).verificationLevel || 'unverified',
+               verified: (company as any).verificationLevel === 'verified' || (company as any).verificationLevel === 'premium'
+            },
+            user: {
+               id: (user as any)._id,
+               name: (user as any).name || 'Usuario',
+               role: (user as any).role || 'Trader',
+               verified: (user as any).verified || false
+            },
+            
             price: p.price,
             currency: p.currency,
-            photos: p.photos,
+            photos: p.photos || [],
             incoterm: p.incoterm,
-            postType: p.postType, // for social/trade distinction
-            requirements: p.requirements,
-            certifications: p.certifications,
+            postType: p.postType,
+            requirements: p.requirements || [],
+            certifications: p.certifications || [],
             isEcological: p.isEcological
         };
     });
@@ -60,9 +66,11 @@ export async function getPosts(req: Request, res: Response) {
 
   } catch (error: any) {
     console.error('Error fetching marketplace posts:', error);
-    res.status(500).json({ error: error.message });
+    // Even on error, return an empty array format so frontend doesn't crash on filter
+    res.status(500).json({ success: false, error: error.message, data: [] });
   }
 }
+
 
 export async function createPost(req: Request, res: Response) {
     try {
