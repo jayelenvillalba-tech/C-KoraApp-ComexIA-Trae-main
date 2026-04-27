@@ -105,18 +105,10 @@ export default function SouthAmericaAnalysis() {
   const [aiAnalysis, setAiAnalysis] = useState<any>(null);
 
   // Mutation for AI market intelligence
-  const marketIntelligenceMutation = useMutation({
-    mutationFn: async (params: {
-      targetCountry: string;
-      originCountry: string;
-      operation: 'import' | 'export';
-      product: string;
-    }) => {
-      const response = await apiRequest('/api/south-america/market-intelligence', {
-        method: 'POST',
-        body: JSON.stringify(params)
-      });
-      return response;
+  const marketIntelligenceMutation = useMutation<MarketIntelligence, Error, { targetCountry: string; originCountry: string; operation: 'import' | 'export'; product: string }>({
+    mutationFn: async (params) => {
+      const response = await apiRequest('POST', '/api/south-america/market-intelligence', params);
+      return response.json();
     },
     onSuccess: (data) => {
       setAiAnalysis(data);
@@ -135,20 +127,18 @@ export default function SouthAmericaAnalysis() {
     setAiAnalysis(null);
 
     try {
-      const response = await apiRequest('/api/south-america-analysis', {
-        method: 'POST',
-        body: JSON.stringify({
-          originCountry,
-          operation,
-          product
-        })
+      const response = await apiRequest('POST', '/api/south-america-analysis', {
+        originCountry,
+        operation,
+        product
       });
+      const data = await response.json();
 
-      if (response.success && response.topCountries) {
-        setTopCountriesData(response);
-        console.log('Analysis completed:', response);
-        console.log(`Found ${response.totalCompanies} companies across ${Object.keys(response.companiesPerCountry || {}).length} countries`);
-        console.log('Companies per country:', response.companiesPerCountry);
+      if (data.success && data.topCountries) {
+        setTopCountriesData(data);
+        console.log('Analysis completed:', data);
+        console.log(`Found ${data.totalCompanies} companies across ${Object.keys(data.companiesPerCountry || {}).length} countries`);
+        console.log('Companies per country:', data.companiesPerCountry);
         
         // Auto-scroll to map section after analysis completes
         setTimeout(() => {
@@ -158,7 +148,7 @@ export default function SouthAmericaAnalysis() {
           }
         }, 500);
       } else {
-        console.error('Analysis failed:', response);
+        console.error('Analysis failed:', data);
       }
     } catch (error) {
       console.error('Error performing analysis:', error);
@@ -198,7 +188,7 @@ export default function SouthAmericaAnalysis() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6 space-y-6">
+    <div className="container mx-auto px-4 py-6 space-y-6 pt-[var(--ds-offset-top)]">
       {/* Header */}
       <div className="text-center space-y-4">
         <h1 className="text-3xl font-bold text-gray-900">

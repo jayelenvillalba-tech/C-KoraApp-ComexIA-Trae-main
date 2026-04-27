@@ -339,6 +339,11 @@ export const users = sqliteTable("users", {
   phone: text("phone"),
   createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
   lastActive: integer("last_active", { mode: "timestamp" }),
+  // Phase 27 Compliance
+  termsAcceptedAt: integer("terms_accepted_at", { mode: "timestamp" }),
+  termsVersion: text("terms_version"),
+  acceptanceIp: text("acceptance_ip"),
+  deletedAt: integer("deleted_at", { mode: "timestamp" }),
 });
 
 // Conversation Participants
@@ -520,6 +525,16 @@ export const regulatoryRules = sqliteTable("regulatory_rules", {
   createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });
 
+// Compliance Log (GDPR / Sanctions)
+export const complianceLog = sqliteTable("compliance_log", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  action: text("action").notNull(),
+  userId: text("user_id"),
+  details: text("details"),
+  ip: text("ip"),
+  timestamp: integer("timestamp", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
+
 export const sanctionsList = sqliteTable("sanctions_list", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   countryCode: text("country_code"), // "RU", "IR", or "GLOBAL"
@@ -548,3 +563,64 @@ export const syncStatus = sqliteTable("sync_status", {
   errorMessage: text("error_message"),
   createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date())
 });
+
+// Phase 2: Global Expansion Tables
+export const tradeBlocs = sqliteTable("trade_blocs", {
+  code: text("code").primaryKey(), // e.g. "USMCA", "EU", "MERCOSUR"
+  name: text("name").notNull(),
+  nameEn: text("name_en").notNull(),
+  memberCountries: text("member_countries").notNull(), // JSON string array of ISO-2 codes
+  description: text("description"),
+  descriptionEn: text("description_en"),
+});
+
+export const tradeNews = sqliteTable("trade_news", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  title: text("title").notNull(),
+  titleEn: text("title_en"), // Translated via Groq
+  summary: text("summary"), 
+  summaryEn: text("summary_en"), 
+  content: text("content"), 
+  contentEn: text("content_en"), 
+  source: text("source").notNull(), // Name of the official source
+  sourceUrl: text("source_url").notNull(), // Exact URL of the release
+  publishDate: integer("publish_date", { mode: "timestamp" }).notNull(),
+  type: text("type").notNull(), // 'regulation', 'warning', 'critical', 'treaty', 'opportunity'
+  severity: text("severity").default("low"), // 'low', 'medium', 'high', 'critical'
+  affectedHsCodes: text("affected_hs_codes"), // JSON string array of HS Codes ("85", "1001", etc)
+  affectedCountries: text("affected_countries"), // JSON string array of ISO-2 codes
+  isRouteAlert: integer("is_route_alert", { mode: "boolean" }).default(false), // true if this restricts a route
+  routeOrigin: text("route_origin"),
+  routeDestination: text("route_destination"),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
+
+// Phase 2 Types
+export type TradeBloc = typeof tradeBlocs.$inferSelect;
+export type TradeNews = typeof tradeNews.$inferSelect;
+export const insertTradeBlocSchema = createInsertSchema(tradeBlocs);
+export const insertTradeNewsSchema = createInsertSchema(tradeNews);
+export type InsertTradeBloc = z.infer<typeof insertTradeBlocSchema>;
+export type InsertTradeNews = z.infer<typeof insertTradeNewsSchema>;
+
+// Phase X: Feedback Hub (Quality Control)
+export const feedbackReports = sqliteTable("feedback_reports", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  reportId: text("report_id").notNull().unique(), // e.g. REP-123456
+  type: text("type").notNull(), // 'bug' | 'data_error' | 'suggestion' | 'other'
+  module: text("module").notNull(),
+  description: text("description").notNull(),
+  severity: text("severity").notNull(), // 'critical' | 'high' | 'medium' | 'low'
+  screenshotData: text("screenshot_data"), // Base64 string for MVP
+  metadata: text("metadata"), // JSON string { pageUrl, userAgent, timestamp }
+  userId: text("user_id").notNull().references(() => users.id),
+  companyId: text("company_id").references(() => companies.id), // Can be null if profile incomplete
+  status: text("status").default("received"), // 'received' | 'in_review' | 'resolved' | 'needs_info'
+  adminNotes: text("admin_notes"),
+  resolvedAt: integer("resolved_at", { mode: "timestamp" }),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
+
+export type FeedbackReport = typeof feedbackReports.$inferSelect;
+export const insertFeedbackReportSchema = createInsertSchema(feedbackReports);
+export type InsertFeedbackReport = z.infer<typeof insertFeedbackReportSchema>;

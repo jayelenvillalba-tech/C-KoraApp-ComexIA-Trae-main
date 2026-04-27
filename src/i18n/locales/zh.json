@@ -1,0 +1,81 @@
+{
+  "nav": {
+    "home": "首页",
+    "news": "新闻",
+    "hsCode": "海关编码",
+    "marketplace": "市场",
+    "chats": "聊天",
+    "login": "登录",
+    "register": "注册",
+    "dashboard": "我的面板",
+    "incoterms": "贸易术语"
+  },
+  "marketplace": {
+    "searchPlaceholder": "搜索产品、海关编码、公司...",
+    "filters": "智能过滤器",
+    "type": "操作类型",
+    "buy": "买",
+    "sell": "卖",
+    "sector": "行业",
+    "country": "国家/地区",
+    "onlyVerified": "仅已验证 ✓",
+    "advanced": "高级",
+    "docFilter": "文件状态",
+    "canOperateNow": "今天可以操作",
+    "canOperateSoon": "再需要1-2个文件",
+    "showAll": "显示全部",
+    "aiFilter": "AI 智能过滤",
+    "aiFilterPlaceholder": "例如：本季度出口到欧洲的兼容报价",
+    "compatibility": "兼容性",
+    "contact": "联系",
+    "viewCosts": "查看成本 →",
+    "missingDocs": "⚠ 缺少文件",
+    "canOperate": "✓ 可以操作",
+    "verifying": "⏳ 验证中..."
+  },
+  "news": {
+    "title": "全球贸易脉动",
+    "subtitle": "官方监管更新、合规警报和贸易机会。",
+    "searchPlaceholder": "按海关编码、国家或条约搜索...",
+    "allTypes": "所有类型",
+    "customizeFeed": "自定义订阅",
+    "viewSource": "查看官方来源 →",
+    "types": {
+      "warning": "警告",
+      "critical": "严重",
+      "treaty": "条约",
+      "regulation": "法规",
+      "opportunity": "机会"
+    },
+    "filters": {
+      "country": "国家/地区",
+      "hsCode": "海关编码",
+      "period": "期间",
+      "source": "官方来源",
+      "lastWeek": "上周",
+      "lastMonth": "上个月",
+      "last3months": "近三个月"
+    },
+    "routeAlert": "此路线有 {{count}} 个活动警报"
+  },
+  "chatbot": {
+    "placeholder": "请输入您的国际贸易查询...",
+    "thinking": "思考中...",
+    "proactive": {
+      "lowScore": "根据您当前的分数，您只能操作 {{pct}}% 的报价。我们要从第一个文件开始吗？",
+      "missingDocs": "此操作您缺少 {{count}} 份文件。需要我指导您吗？",
+      "routeAlert": "此路线有有效的监管警报。需要我分析吗？",
+      "newsTranslation": "此新闻是其他语言。需要我为您翻译和总结吗？"
+    }
+  },
+  "godmode": {
+    "autoMessage": {
+      "routeAlert": "我检测到{{count}}个针对{{product}}（{{origin}}→{{destination}}）的活跃监管警报：\"{{alertTitle}}\"。需要我分析对此操作的影响吗？",
+      "scoreBlock": "您与此报价的兼容性为{{compatibility}}%。您需要的第一份文件是{{firstMissingDoc}}。需要我逐步解释如何获取吗？"
+    },
+    "orbTooltip": {
+      "alert": "我有关于此操作的重要信息",
+      "idle": "对外贸易助手"
+    }
+  }
+}

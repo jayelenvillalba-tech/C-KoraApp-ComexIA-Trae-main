@@ -1,13 +1,13 @@
-
 import { useState, useEffect } from 'react';
-import PremiumGlobe3D from '@/components/premium-globe-3d'; // Premium 3D globe with Three.js
+import { useQuery } from '@tanstack/react-query';
+import PremiumGlobe3D from '@/components/premium-globe-3d';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { FeatureCard } from '@/components/feature-card';
 import { useLanguage } from '@/hooks/use-language';
 import { 
   Globe, Search, TrendingUp, Ship, MapPin, ChevronRight, Sparkles, 
-  Anchor, BarChart3, Users, ShieldAlert, FileText, Zap, Box
+  Anchor, BarChart3, Users, ShieldAlert, FileText, Zap, Box, Newspaper
 } from 'lucide-react';
 import HsCodeSearch from '@/components/hs-code-search';
 import { AlertsTicker } from '@/components/alerts-ticker';
@@ -15,6 +15,119 @@ import { motion } from 'framer-motion';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import Header from '@/components/header';
+
+const ALERT_TYPE_STYLE: Record<string, { label: string; color: string }> = {
+  warning: { label: 'WARNING', color: 'text-orange-400' },
+  regulation: { label: 'REG', color: 'text-blue-400' },
+  treaty: { label: 'TRATADO', color: 'text-cyan-400' },
+  market: { label: 'MERCADO', color: 'text-green-400' },
+  info: { label: 'INFO', color: 'text-gray-400' },
+};
+
+function timeAgo(ts: number): string {
+  const diff = Math.floor((Date.now() / 1000) - ts);
+  if (diff < 3600) return `Hace ${Math.floor(diff / 60)}m`;
+  if (diff < 86400) return `Hace ${Math.floor(diff / 3600)}h`;
+  return `Hace ${Math.floor(diff / 86400)}d`;
+}
+
+function LandingNewsPanel({ navigate }: { navigate: (path: string) => void }) {
+  const { language } = useLanguage();
+  const { data, isLoading } = useQuery({
+    queryKey: ['landing-news', language],
+    queryFn: () => fetch(`/api/news?limit=3&period=30&lang=${language}`).then(r => r.json()),
+    staleTime: 1000 * 60 * 30,
+  });
+
+  const items: any[] = data?.news || [];
+
+  return (
+    <div className="glass-premium rounded-2xl p-6 border border-white/5 h-full">
+      <h3 className="text-white font-bold mb-4 flex items-center gap-2">
+        <Newspaper className="w-5 h-5 text-cyan-400" />
+        Alertas y Novedades Globales
+      </h3>
+      <div className="space-y-3">
+        {isLoading && (
+          <div className="animate-pulse space-y-3">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-16 rounded-xl bg-white/5" />
+            ))}
+          </div>
+        )}
+        {!isLoading && items.length === 0 && (
+          <p className="text-sm text-gray-500 italic">Cargando actualizaciones regulatorias...</p>
+        )}
+        {items.map((item: any, i: number) => {
+          const style = ALERT_TYPE_STYLE[item.alert_type] || ALERT_TYPE_STYLE.info;
+          return (
+            <div key={i} className="p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors cursor-pointer" onClick={() => navigate('/news')}>
+              <div className="flex justify-between items-start mb-1">
+                <span className={`text-xs font-bold uppercase ${style.color}`}>{style.label}</span>
+                <span className="text-xs text-gray-500">{timeAgo(item.published_at)}</span>
+              </div>
+              <p className="text-sm text-gray-300 font-medium leading-snug line-clamp-2">
+                {item.title}
+              </p>
+              {item.source_name && (
+                <p className="text-xs text-gray-600 mt-1">{item.source_name}</p>
+              )}
+            </div>
+          );
+        })}
+        <Button
+          variant="ghost"
+          className="w-full text-cyan-400 text-xs hover:text-cyan-300 hover:bg-white/5"
+          onClick={() => navigate('/news')}
+        >
+          Ver todas las noticias <ChevronRight className="w-3 h-3 ml-1" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// Footer Component with Real News
+function FooterNews() {
+  const { language } = useLanguage();
+  const [, navigate] = useLocation();
+  
+  const { data: newsItems } = useQuery({
+    queryKey: ['landing-news-footer', language],
+    queryFn: async () => {
+      const res = await fetch(`/api/news?limit=1&lang=${language}`);
+      if (!res.ok) return { news: [] };
+      return res.json();
+    }
+  });
+
+  const latestNews = newsItems?.news?.[0];
+  const newsText = latestNews 
+    ? latestNews.title
+    : (language === 'es' ? 'Última actualización: Nueva regulación de exportación para granos en el MERCOSUR.' : 'Latest update: New grain export regulations for MERCOSUR region.');
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 border-t border-white/10 bg-black/80 backdrop-blur-xl p-4 flex items-center justify-between z-50">
+      <div className="flex items-center gap-6 flex-1 min-w-0">
+        <div className="flex items-center gap-2 text-cyan-400 shrink-0">
+          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_10px_rgba(6,182,212,0.8)]" />
+          <span className="text-xs font-bold tracking-widest">LIVE TRADE FEED</span>
+        </div>
+        <div className="text-white text-xs font-medium truncate flex-1 opacity-90">
+          {newsText}
+        </div>
+      </div>
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-400/10 text-xs shrink-0 ml-4 border border-cyan-400/20"
+        onClick={() => navigate('/news')}
+      >
+        {language === 'es' ? 'Ver Alertas' : 'View Alerts'} <ChevronRight className="w-3 h-3 ml-1" />
+      </Button>
+    </div>
+  );
+}
 
 export default function Home() {
   const { language, setLanguage } = useLanguage();
@@ -32,11 +145,13 @@ export default function Home() {
   }, []);
 
   const handleProductSelected = (product: any, country: string, operation: string, productName: string) => {
-    navigate(`/analysis?code=${product.code}&country=${country}&operation=${operation}&product=${encodeURIComponent(productName)}`);
+    const code = product.primaryCode || product.hs6 || product.code || '';
+    navigate(`/analysis?code=${code}&country=${country}&operation=${operation}&product=${encodeURIComponent(productName)}`);
   };
 
   const handlePartidaSelected = (partida: any, country: string, operation: string, productName: string) => {
-    navigate(`/analysis?code=${partida.code}&country=${country}&operation=${operation}&product=${encodeURIComponent(productName)}`);
+    const code = partida.primaryCode || partida.hs6 || partida.code || '';
+    navigate(`/analysis?code=${code}&country=${country}&operation=${operation}&product=${encodeURIComponent(productName)}`);
   };
 
   const quickAccesItems = [
@@ -47,7 +162,7 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#050B14] overflow-x-hidden selection:bg-cyan-500/30 relative">
+    <div className="min-h-screen bg-[#050B14] overflow-x-hidden selection:bg-cyan-500/30 relative" style={{ paddingTop: 26 }}>
       {/* GLOBAL 3D BACKGROUND */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <PremiumGlobe3D className="w-full h-full opacity-60 mix-blend-screen" />
@@ -70,9 +185,9 @@ export default function Home() {
                 Sistema Operativo de Comercio Exterior
               </div>
               
-              <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight leading-tight drop-shadow-2xl">
+              <h1 className="text-5xl md:text-7xl font-black text-[var(--ds-text-primary,#eef6ff)] tracking-tight leading-tight drop-shadow-2xl font-[var(--ds-font-display,'Barlow_Condensed',sans-serif)]">
                 Ecosistema Integral <br/>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-400 to-purple-400">
+                <span className="text-[var(--ds-cyan,#00d4f0)]">
                   Che.Comex AI
                 </span>
               </h1>
@@ -112,33 +227,8 @@ export default function Home() {
           {/* New Dashboard Grid */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
             
-            {/* Left Column: Stats & Alerts */}
             <div className="md:col-span-4 space-y-6" data-aos="fade-up" data-aos-delay="400">
-              <div className="glass-premium rounded-2xl p-6 border border-white/5 h-full">
-                <h3 className="text-white font-bold mb-4 flex items-center gap-2">
-                  <ShieldAlert className="w-5 h-5 text-yellow-500" />
-                  Alertas Globales
-                </h3>
-                <div className="space-y-4">
-                  <div className="p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors cursor-pointer">
-                    <div className="flex justify-between items-start mb-2">
-                        <span className="text-xs font-bold text-red-400">CRITICAL</span>
-                        <span className="text-xs text-gray-500">Hace 2h</span>
-                    </div>
-                    <p className="text-sm text-gray-300 font-medium">Nuevas sanciones a exportación de tecnología dual-use a Rusia.</p>
-                  </div>
-                  <div className="p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors cursor-pointer">
-                    <div className="flex justify-between items-start mb-2">
-                        <span className="text-xs font-bold text-orange-400">WARNING</span>
-                        <span className="text-xs text-gray-500">Hace 5h</span>
-                    </div>
-                    <p className="text-sm text-gray-300 font-medium">Congestión portuaria en Shanghai aumenta tiempos de tránsito (+7 días).</p>
-                  </div>
-                  <Button variant="ghost" className="w-full text-cyan-400 text-xs hover:text-cyan-300 hover:bg-white/5" onClick={() => navigate('/alerts')}>
-                    Ver todas las alertas <ChevronRight className="w-3 h-3 ml-1" />
-                  </Button>
-                </div>
-              </div>
+              <LandingNewsPanel navigate={navigate} />
             </div>
 
             {/* Right Column: Main Modules */}
@@ -184,11 +274,7 @@ export default function Home() {
         </div>
       </main>
       
-      <footer className="border-t border-white/5 py-12 bg-[#02060C]">
-        <div className="container mx-auto px-6 text-center">
-             <p className="text-gray-600 text-sm">© 2026 Che.Comex Inc. - Sistema Operativo de Comercio Exterior</p>
-        </div>
-      </footer>
+      <FooterNews />
     </div>
   );
 }

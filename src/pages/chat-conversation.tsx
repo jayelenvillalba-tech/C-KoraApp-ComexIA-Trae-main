@@ -4,8 +4,8 @@ import ChatWindow from "@/components/chat/chat-window";
 import ChatSidebar from "@/components/chat/chat-sidebar";
 
 export default function ChatConversationPage() {
-  const [, params] = useRoute("/chat/:id");
-  const conversationId = params?.id || "";
+  const [matched, params] = useRoute("/chat/:id");
+  const conversationId = matched && params ? params.id : "";
   
   return (
     <div className="min-h-screen flex flex-col bg-[#0A1929]">
@@ -15,7 +15,7 @@ export default function ChatConversationPage() {
           <ChatWindow conversationId={conversationId} />
         </div>
         <div className="hidden lg:block h-full">
-          <ChatSidebar conversationId={conversationId} />
+          <ChatSidebar deal={null} />
         </div>
       </div>
     </div>

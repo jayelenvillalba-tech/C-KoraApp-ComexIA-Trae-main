@@ -55,7 +55,7 @@ export default function OnboardingWizard({ open, onOpenChange }: OnboardingWizar
         {/* Header with Progress */}
         <div className="bg-slate-950 p-6 border-b border-slate-800">
            <div className="flex justify-between items-center mb-4">
-              <span className="text-sm font-mono text-blue-400">PASO {step} DE {totalSteps}</span>
+              <span className="text-sm font-data text-blue-400">PASO {step} DE {totalSteps}</span>
               <span className="text-sm text-slate-500 font-medium">
                 {step === 1 ? 'Selección de Rol' : step === totalSteps ? 'Verificación' : 'Configuración'}
               </span>

@@ -1,4 +1,4 @@
-﻿import express from 'express';
+import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -6,28 +6,63 @@ import { db, sqliteDb, initDatabase } from '../database/db-sqlite';
 import { companies, hsSubpartidas, hsPartidas, hsChapters, hsSections, news, regulatoryRules, users, marketplacePosts, conversations, messages, conversationParticipants, subscriptions, verifications, chatInvites } from '../shared/schema-sqlite';
 import { eq, like, or, and, sql, desc } from 'drizzle-orm';
 import { countries, getCountryTreaties, getTariffReduction } from '../shared/countries-data';
-import { getCountryCoordinates } from '../shared/continental-coordinates';
+import { getCountryCoordinates as getCountryCoordsFromContinental } from '../shared/continental-coordinates';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import userRouter from './routes/user.js';
+import * as authRouter from './routes/auth';
+import helmet from 'helmet';
+import { apiLimiter, authLimiter, aiLimiter, postLimiter, adminLimiter, complianceLimiter } from './middleware/rateLimiter';
+import { additionalSecurityHeaders } from './middleware/securityHeaders';
+import { sanitizeBody } from './middleware/sanitize';
+import { requestLogger, securityLogger } from './services/logger';
+import { handleCountryRecommendations } from './routes/country-recommendations';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-
-import { handleCountryRecommendations } from './routes/country-recommendations';
-
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = parseInt(process.env.PORT || '3001', 10);
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ limit: '5mb', extended: true }));
+
+// ── Phase 36: Security middleware ─────────────────────────────────────
+try {
+  app.use(helmet({
+    contentSecurityPolicy: false,       // Vite dev needs inline scripts/eval
+    crossOriginEmbedderPolicy: false,   // Leaflet maps need cross-origin resources
+  }));
+  app.use(additionalSecurityHeaders);
+  app.use(requestLogger);
+  // Sanitize all bodies except webhook routes (they need raw Buffer)
+  app.use((req, res, next) => {
+    if (req.path.includes('/webhook')) return next();
+    sanitizeBody(req, res, next);
+  });
+  // Rate limiting — specific routes first, then general API
+  app.use('/api/auth/login', authLimiter);
+  app.use('/api/auth/register', authLimiter);
+  app.use('/api/ai/', aiLimiter);
+  app.use('/api/admin/', adminLimiter);
+  app.use('/api/', apiLimiter);
+  console.log('🛡️  Security middleware activo: Helmet, Rate Limiting, Sanitización, Logger');
+} catch (err: any) {
+  console.warn('⚠️  Security middleware parcialmente cargado:', err.message);
+}
+
 app.use(express.static(path.join(__dirname, '..')));
 app.use(express.static(path.join(__dirname, '../public')));
 
 // Phase 21: Photo Upload Route
 import photoUploadRouter from './routes/photo-upload';
 app.use('/api/marketplace', photoUploadRouter);
+
+// News Route (SQLite native)
+import newsRouter from './routes/news';
+app.use('/api/news', newsRouter);
 
 // Phase 22: Documents Route
 import documentsRouter from './routes/documents';
@@ -37,161 +72,105 @@ app.use('/api/documents', documentsRouter);
 import aiRouter from './routes/ai';
 app.use('/api/ai', aiRouter);
 
-// ========== Auth API ==========
+// Phase 31+32: Trade Agreements Routes
+import agreementsRouterSync from './routes/agreements';
+app.use('/api/agreements', agreementsRouterSync);
 
-const JWT_SECRET = process.env.JWT_SECRET || 'development_secret_key_123';
+// Phase 33B: Maritime Risk Routes
+import maritimeRouter from './routes/maritime.js';
+app.use('/api/maritime', maritimeRouter);
 
-// Auth Middleware
-const authenticateToken = (req: any, res: any, next: any) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+// Phase 36+: Geolocation Route (IP-based + GPS fallback)
+import geoRouter from './routes/geo.js';
+app.use('/api/geo', geoRouter);
 
-  if (!token) return res.sendStatus(401);
+import alertsRouter from './routes/alerts.js';
+app.use('/api/alerts', alertsRouter);
 
-  jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
-    if (err) return res.sendStatus(403);
-    req.user = user;
-    next();
-  });
-};
 
-app.post('/api/auth/register', async (req, res) => {
-  try {
-    const { name, email, password, companyName, companyType } = req.body;
-    
-    // Check if user exists
-    const existingUser = await db.select().from(users).where(eq(users.email, email));
-    
-    if (existingUser && existingUser.length > 0) {
-       return res.status(400).json({ status: 'error', message: 'User already exists' });
-    }
-
-    let companyId = null;
-    
-    // Create company if provided
-    if (companyName) {
-       const [newCompany] = await db.insert(companies).values({
-          name: companyName,
-          country: 'AR', // Default or from request
-          type: companyType || 'exporter', // Use provided type or default
-          verified: false
-       }).returning();
-       companyId = newCompany.id;
-    }
-
-    // Hash Password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create User
-    const [newUser] = await db.insert(users).values({
-      name,
-      email,
-      password: hashedPassword, 
-      companyId,
-      role: 'admin', // Creator is admin
-      verified: false
-    }).returning();
-
-    // Return user without password
-    const { password: _, ...userWithoutPassword } = newUser;
-    
-    // Generate Token
-    const token = jwt.sign({ userId: newUser.id, email: newUser.email }, JWT_SECRET, { expiresIn: '24h' });
-
-    res.json({
-        user: userWithoutPassword,
-        token
-    });
-
-  } catch (error: any) {
-    console.error('Registration error:', error);
-    res.status(500).json({ status: 'error', error: error.message });
-  }
-});
-
-app.post('/api/auth/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    console.log(`[LOGIN ATTEMPT] Email: ${email}, Password length: ${password?.length}`);
-    
-    // Find user by email only
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    
-    if (!user) {
-      console.log('[LOGIN FAIL] User not found in DB');
-      return res.status(401).json({ status: 'error', message: 'Invalid credentials (User not found)' });
-    }
-
-    console.log(`[LOGIN] User found: ${user.email}, Hash starts with: ${user.password?.substring(0, 10)}...`);
-
-    // Compare password
-    let validPassword = false;
-    if (user.password && user.password.startsWith('$2b$')) {
-      // It's a proper bcrypt hash
-      validPassword = await bcrypt.compare(password, user.password);
-      console.log(`[LOGIN] Bcrypt compare result: ${validPassword}`);
-    } else {
-      // Fallback for legacy/seed users with plain text passwords or demo
-      validPassword = (user.password === password) || (password === 'demo123');
-      console.log(`[LOGIN] Plaintext/Demo compare result: ${validPassword}`);
-    }
-
-    if (!validPassword) {
-      console.log('[LOGIN FAIL] Invalid password');
-      return res.status(401).json({ status: 'error', message: 'Invalid credentials (Wrong password)' });
-    }
-
-    // Get company info if exists
-    let company = null;
-    if (user.companyId) {
-       const [comp] = await db.select().from(companies).where(eq(companies.id, user.companyId));
-       company = comp;
-    }
-
-    const { password: _, ...userWithoutPassword } = user;
-    
-    // Generate Token
-    const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '24h' });
-
-    res.json({
-       user: {
-           ...userWithoutPassword,
-           companyName: company?.name || "", 
-           company: company || null
-       },
-       token
-    });
-
-  } catch (error: any) {
-    console.error('Login error:', error);
-    res.status(500).json({ status: 'error', error: error.message });
-  }
-});
-
-app.get('/api/auth/me', authenticateToken, async (req: any, res) => {
+// Phase 35: Stripe Webhook — MUST be registered BEFORE express.json() for raw body
+import { handleStripeWebhook } from './services/stripeService';
+app.post(
+  '/api/payments/stripe/webhook',
+  express.raw({ type: 'application/json' }),
+  async (req, res) => {
+    const sig = req.headers['stripe-signature'] as string;
     try {
-        const userId = req.user.userId;
-        const [user] = await db.select().from(users).where(eq(users.id, userId));
-
-        if (!user) return res.status(404).json({ error: 'User not found' });
-
-        const { password: _, ...userWithoutPassword } = user;
-        
-        let company = null;
-        if (user.companyId) {
-            const [comp] = await db.select().from(companies).where(eq(companies.id, user.companyId));
-            company = comp;
-        }
-
-        res.json({
-            ...userWithoutPassword,
-            companyName: company?.name || "",
-            companyId: company?.id
-        });
-    } catch (error: any) {
-        res.status(500).json({ error: error.message });
+      await handleStripeWebhook(req.body, sig);
+      res.json({ received: true });
+    } catch {
+      res.status(400).json({ error: 'Webhook inválido' });
     }
-});
+  }
+);
+
+// Phase 35: Payments Routes (Stripe + MP + info module)
+import paymentsRouter from './routes/payments';
+app.use('/api/payments', paymentsRouter);
+
+// Exchange Rate Routes (ticker de commodities — DolarAPI + ExchangeRate-API)
+import exchangeRouter from './routes/exchange.js';
+app.use('/api/exchange', exchangeRouter);
+
+// Market Analysis Routes (top-buyers, trade-flow, seed-cache — UN Comtrade)
+import marketRouter from './routes/market.js';
+app.use('/api/market', marketRouter);
+
+// (news already mounted above)
+
+// Chat Routes (HTTP polling — SQLite native)
+import { createChatRouter } from './routes/chat.js';
+app.use('/api/chat', createChatRouter());
+
+// Deals Routes (SQLite native)
+import { createDealsRouter } from './routes/deals.js';
+app.use('/api/deals', createDealsRouter());
+
+// User Profile Routes (SQLite native)
+import userRouter from './routes/user.js';
+app.use('/api/user', userRouter);
+
+// Auth Routes (SQLite native)
+app.post('/api/auth/register', authRouter.register);
+app.post('/api/auth/login', authRouter.login);
+app.get('/api/auth/me', authRouter.isAuthenticated, authRouter.getMe);
+
+setTimeout(async () => {
+  try {
+    const { loadAgreements } = await import('./jobs/loadAgreements.js');
+    await loadAgreements();
+    const { loadRouteDocuments } = await import('./jobs/loadDocuments.js');
+    await loadRouteDocuments();
+    console.log('[Phase 31+32] Trade agreements and route documents loaded.');
+  } catch (err) {
+    console.error('[Phase 31+32] Error seeding agreements/documents:', err);
+  }
+}, 5000);
+
+// Phase 33: Start publication expiry cron job
+import { startPublicationExpiryJob } from './jobs/expirePublications';
+startPublicationExpiryJob();
+
+// Phase 33B: Maritime alert sync (every 6 hours)
+import { syncMaritimeAlerts } from './services/maritimeRisk';
+setTimeout(async () => {
+  try { await syncMaritimeAlerts(); } catch { /* non-blocking */ }
+}, 15000);
+setInterval(async () => {
+  try { await syncMaritimeAlerts(); } catch { /* non-blocking */ }
+}, 6 * 60 * 60 * 1000);
+
+// Fix 1: Automated News Sync (every 6 hours)
+import { newsService } from './services/news-service';
+setTimeout(async () => {
+  try { await newsService.fetchAllSources(); } catch { /* non-blocking */ }
+}, 20000); // 20s after start
+setInterval(async () => {
+  try { await newsService.fetchAllSources(); } catch { /* non-blocking */ }
+}, 6 * 60 * 60 * 1000); // every 6 hours
+
+// ========== Health & API Routes ==========
+
 
 // ========== API Routes ==========
 
@@ -200,15 +179,25 @@ app.get('/api/health', async (req, res) => {
   try {
     const hsCodesCount = await db.select({ count: sql<number>`count(*)` }).from(hsSubpartidas);
     const companiesCount = await db.select({ count: sql<number>`count(*)` }).from(companies);
-    
-    res.json({ 
+
+    res.json({
       status: 'ok',
       timestamp: new Date().toISOString(),
-      services: {
+      version: '2.0.0',
+      database: {
         hsCodes: hsCodesCount[0].count,
         companies: companiesCount[0].count,
-        countries: countries.length
-      }
+        countries: countries.length,
+      },
+      services: {
+        groq:         process.env.GROQ_API_KEY                          ? 'ok' : 'missing',
+        exchangeRate: process.env.EXCHANGE_RATE_API_KEY                 ? 'ok' : 'missing',
+        sendgrid:     process.env.SENDGRID_API_KEY                      ? 'ok' : 'not_configured',
+        ably:         process.env.ABLY_API_KEY                          ? 'ok' : 'not_configured',
+        stripe:       process.env.STRIPE_SECRET_KEY                     ? 'ok' : 'not_configured',
+        mercadopago:  process.env.MP_ACCESS_TOKEN                       ? 'ok' : 'not_configured',
+        r2:           process.env.R2_ACCESS_KEY_ID                      ? 'ok' : 'not_configured',
+      },
     });
   } catch (error: any) {
     res.status(500).json({ status: 'error', error: error.message });
@@ -229,9 +218,22 @@ app.get('/api/market-analysis', async (req, res) => {
       { year: 2024, value: 150, volume: 600 },
     ];
 
-    const relevantNews = [
+    let relevantNews = [
       { title: 'Aumento de demanda global', image: 'bg-gradient-to-br from-blue-500 to-cyan-500' }
     ];
+    try {
+      if (sqliteDb) {
+        const newsRows = sqliteDb.prepare(`SELECT * FROM trade_news ORDER BY published_at DESC LIMIT 2`).all() as any[];
+        if (newsRows.length > 0) {
+          relevantNews = newsRows.map((n: any) => ({
+             title: n.title_es || n.title_original || n.title_en || n.title || 'Noticia de mercado',
+             image: 'bg-gradient-to-br from-blue-500 to-cyan-500'
+          }));
+        }
+      }
+    } catch(e) {
+       console.error('[MarketAnalysis] Error fetching news:', e);
+    }
 
     res.json({
       analysis: {
@@ -254,7 +256,8 @@ app.get('/api/market-analysis', async (req, res) => {
   }
 });
 
-app.get('/api/market-analysis/:code', async (req, res) => {
+app.get('/api/market-analysis/:code', async (req, res, next) => {
+  if (req.params.code === 'recommendations') return next();
   res.json({
     opportunities: [
       { title: 'Alta Demanda', description: 'Mercado en crecimiento continuo.' },
@@ -970,12 +973,12 @@ app.get('/api/market-analysis/recommendations', async (req, res) => {
 
     // Map to frontend format
     // Enriched with names/coords
-    let cheComexRecommended = activePosts.map((p, idx) => ({
+    let cheComexRecommended = activePosts.map((p: any, idx: number) => ({
       rank: idx + 1,
       country: p.country, 
       countryCode: getCountryCode(p.country || 'China'), 
       activeOrders: p.count,
-      coordinates: getCountryCoordinates(getCountryCode(p.country || 'China'))
+      coordinates: getCountryCoordsFromContinental(getCountryCode(p.country || 'China'))
     }));
     
     // Fallback if no posts (mock data to ensure UI shows something as per user "it disappeared")
@@ -1235,10 +1238,10 @@ app.get('/api/chat/conversations', async (req, res) => {
     if (!userId) return res.status(400).json({ error: 'UserId required' });
     
     // Get conversations where user is a participant
-    const userConvs = await db.select().from(conversationParticipants)
+    const userConversations = await db.select().from(conversationParticipants)
       .where(eq(conversationParticipants.userId, userId as string));
       
-    const convIds = userConvs.map(uc => uc.conversationId);
+    const convIds = userConversations.map((uc: any) => uc.conversationId);
     
     if (convIds.length === 0) return res.json([]);
     
@@ -1769,20 +1772,22 @@ app.get('/api/marketplace/posts/enhanced', async (req, res) => {
 
     // Filter by company name if provided
     if (companyName) {
-      posts = posts.filter(p => 
+      posts = posts.filter((p: any) => 
         p.company?.name.toLowerCase().includes((companyName as string).toLowerCase())
       );
     }
 
     // Filter by verified companies only
     if (verifiedOnly === 'true') {
-      posts = posts.filter(p => p.company?.verificationLevel === 'verified' || p.company?.verificationLevel === 'premium');
+      posts = posts.filter((p: any) => p.company?.verificationLevel === 'verified' || p.company?.verificationLevel === 'premium');
     }
 
     // Enrich with trade preferences
     const { calculateTradePreferences } = await import('../shared/trade-blocks');
-    const enrichedPosts = posts.map(({ post, company }) => {
+    const formattedPosts = posts.map((postItem: any) => {
       let tradePreferences: any[] = [];
+      const post = postItem.post;
+      const company = postItem.company;
       
       if (post.originCountry && post.destinationCountry) {
         tradePreferences = calculateTradePreferences(
@@ -1809,6 +1814,25 @@ app.get('/api/marketplace/posts/enhanced', async (req, res) => {
   }
 });
 
+import { loadTaricCodes } from './services/taricService.js';
+import { loadHtsCodes } from './services/htsService.js';
+import { loadNcmCodes } from './jobs/loadHsCodes.js';
+import logisticsV2Router from './routes/logistics-v2.js';
+import hsRouter from './routes/hs.js';
+import agreementsRouter from './routes/agreements.js';
+import { createFeedbackRouter } from './routes/feedback.js';
+import { createChatRouter } from './routes/chat.js';
+import { createDealsRouter } from './routes/deals.js';
+import userRouter from './routes/user.js';
+
+app.use('/api/logistics', logisticsV2Router);
+app.use('/api/hs', hsRouter);
+app.use('/api/agreements', agreementsRouter);
+app.use('/api/feedback', createFeedbackRouter());
+app.use('/api/chat', createChatRouter());
+app.use('/api/deals', createDealsRouter());
+app.use('/api/user', userRouter);
+
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../index.html'));
 });
@@ -1818,12 +1842,94 @@ app.get('*', (req, res) => {
   try {
     await initDatabase();
     
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 ComexIA Server running on http://0.0.0.0:${PORT}`);
-      console.log(`📡 SQLite Database connected`);
+    // Ensure chat and deals tables exist (Fix 9)
+    sqliteDb.prepare(`
+      CREATE TABLE IF NOT EXISTS deals (
+        id TEXT PRIMARY KEY,
+        publication_id TEXT,
+        initiator_id TEXT NOT NULL,
+        vendor_id TEXT NOT NULL,
+        product TEXT NOT NULL,
+        hs_code TEXT,
+        origin TEXT,
+        destination TEXT,
+        incoterm TEXT,
+        quantity REAL,
+        unit TEXT,
+        price_usd REAL,
+        status TEXT DEFAULT 'contact',
+        created_at INTEGER DEFAULT (strftime('%s','now')),
+        updated_at INTEGER DEFAULT (strftime('%s','now'))
+      )
+    `).run();
+    sqliteDb.prepare(`
+      CREATE TABLE IF NOT EXISTS chat_messages (
+        id TEXT PRIMARY KEY,
+        deal_id TEXT NOT NULL,
+        sender_id TEXT NOT NULL,
+        sender_name TEXT NOT NULL,
+        sender_role TEXT,
+        content TEXT NOT NULL,
+        message_type TEXT DEFAULT 'text',
+        metadata TEXT,
+        created_at INTEGER DEFAULT (strftime('%s','now'))
+      )
+    `).run();
+    console.log('[startup] ✅ Tablas chat_messages y deals verificadas.');
+    
+    // Phase 30: Load global nomenclatures in background
+    setTimeout(async () => {
+      try {
+        await loadNcmCodes();
+        await loadTaricCodes();
+        await loadHtsCodes();
+        
+        // Phase 31+32: Incorporar acuerdos y documentación
+        const { loadAgreements } = await import('./jobs/loadAgreements.js');
+        const { loadRouteDocuments } = await import('./jobs/loadDocuments.js');
+        await loadAgreements();
+        await loadRouteDocuments();
+        
+        // Seed News for Fix 1
+        const { seedNews } = await import('./jobs/seedNews.js');
+        await seedNews();
+
+        console.log('[startup] HS Codes, Tratados, Docs y Noticias cargados exitosos');
+      } catch (err) {
+        console.error('[startup] Initial loads Error', err);
+      }
+    }, 5000);
+
+    const server = app.listen(PORT, '127.0.0.1', () => {
+      console.log(`\n✅ ComexIA Backend corriendo en http://127.0.0.1:${PORT}`);
+      console.log(`📊 Health check: http://127.0.0.1:${PORT}/api/health`);
+      console.log(`📡 SQLite Database conectada\n`);
     });
+
+    server.on('error', (err: any) => {
+      if (err.code === 'EADDRINUSE') {
+        console.error(`\n❌ Puerto ${PORT} ya está en uso.`);
+        console.error(`   Ejecuta DETENER.bat o cierra el proceso que usa el puerto.\n`);
+        process.exit(1);
+      }
+      console.error('Error del servidor:', err);
+    });
+
+    process.on('SIGINT', () => {
+      console.log('\n🛑 Cerrando servidor...');
+      server.close(() => process.exit(0));
+    });
+
+    process.on('uncaughtException', (err) => {
+      console.error('[Error no capturado — servidor continúa]:', err.message);
+    });
+
+    process.on('unhandledRejection', (reason) => {
+      console.warn('[Promise rechazada sin manejar — servidor continúa]:', reason);
+    });
+
   } catch (error) {
-    console.error('Failed to initialize database:', error);
+    console.error('❌ Error al inicializar la base de datos:', error);
     process.exit(1);
   }
 })();
@@ -1854,3 +1960,6 @@ function getCountryCoordinates(countryCode: string): [number, number] {
     };
     return coords[countryCode] || [0, 0];
 }
+
+// Export app for Vercel serverless handler
+export default app;

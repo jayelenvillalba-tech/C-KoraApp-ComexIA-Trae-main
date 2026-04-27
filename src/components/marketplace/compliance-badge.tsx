@@ -30,7 +30,6 @@ interface ComplianceBadgeProps {
   ncmCode: string;
   incoterm?: string;
   direction?: 'import' | 'export';
-  /** IDs de los documentos que el usuario ya tiene cargados */
   userDocIds?: string[];
   className?: string;
 }
@@ -43,30 +42,37 @@ const CATEGORY_LABEL: Record<string, string> = {
   financial: 'Financiero',
 };
 
+// DS-token-driven status config
 const STATUS_CONFIG = {
   ok: {
     icon: CheckCircle2,
-    color: 'text-[#00e878]',
-    bg: 'bg-[#00e878]/10',
-    border: 'border-[#00e878]/25',
+    color: 'text-[var(--ds-green)]',
+    bg: 'bg-[var(--ds-green-dim)]',
+    border: 'border-[var(--ds-green)]/25',
+    barColor: 'var(--ds-green)',
     label: 'Cumplís los requisitos',
-    dot: 'bg-[#00e878]',
+    dot: 'bg-[var(--ds-green)]',
+    dotTokenSolid: 'var(--ds-green)',
   },
   gap: {
     icon: AlertTriangle,
-    color: 'text-[#f5a800]',
-    bg: 'bg-[#f5a800]/10',
-    border: 'border-[#f5a800]/25',
+    color: 'text-[var(--ds-amber)]',
+    bg: 'bg-[var(--ds-amber-dim)]',
+    border: 'border-[var(--ds-amber)]/25',
+    barColor: 'var(--ds-amber)',
     label: 'Faltan documentos',
-    dot: 'bg-[#f5a800]',
+    dot: 'bg-[var(--ds-amber)]',
+    dotTokenSolid: 'var(--ds-amber)',
   },
   blocked: {
     icon: XCircle,
-    color: 'text-[#ff3e5a]',
-    bg: 'bg-[#ff3e5a]/10',
-    border: 'border-[#ff3e5a]/25',
+    color: 'text-[var(--ds-red)]',
+    bg: 'bg-[var(--ds-red-dim)]',
+    border: 'border-[var(--ds-red)]/25',
+    barColor: 'var(--ds-red)',
     label: 'No podés operar esta ruta',
-    dot: 'bg-[#ff3e5a]',
+    dot: 'bg-[var(--ds-red)]',
+    dotTokenSolid: 'var(--ds-red)',
   },
 };
 
@@ -86,7 +92,7 @@ export default function ComplianceBadge({
 
   useEffect(() => {
     if (!destinationCountry || !ncmCode) return;
-    
+
     const controller = new AbortController();
     setLoading(true);
     setError(null);
@@ -105,7 +111,6 @@ export default function ComplianceBadge({
     return () => controller.abort();
   }, [destinationCountry, ncmCode, incoterm, direction, userDocIds.join(',')]);
 
-  // Click outside closes drawer
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (drawerRef.current && !drawerRef.current.contains(e.target as Node)) {
@@ -118,18 +123,18 @@ export default function ComplianceBadge({
 
   if (loading) {
     return (
-      <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#1a2e42]/50 border border-[#1a2e42] ${className}`}>
-        <Loader2 className="w-3 h-3 text-[#4a7898] animate-spin" />
-        <span className="font-mono text-[9px] text-[#4a7898] uppercase tracking-wider">Verificando</span>
+      <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[var(--ds-radius-sm)] bg-[var(--ds-bg-overlay)] border border-[var(--ds-border-default)] ${className}`}>
+        <Loader2 className="w-3 h-3 text-[var(--ds-text-tertiary)] animate-spin" />
+        <span className="font-data text-[var(--ds-text-xs)] text-[var(--ds-text-tertiary)] uppercase tracking-[var(--ds-tracking-data)]">Verificando</span>
       </div>
     );
   }
 
   if (error || !result) {
     return (
-      <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#1a2e42]/30 border border-[#1a2e42]/50 ${className}`}>
-        <Shield className="w-3 h-3 text-[#4a7898]" />
-        <span className="font-mono text-[9px] text-[#4a7898] uppercase tracking-wider">Sin verificar</span>
+      <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[var(--ds-radius-sm)] bg-[var(--ds-bg-overlay)] border border-[var(--ds-border-subtle)] ${className}`}>
+        <Shield className="w-3 h-3 text-[var(--ds-text-tertiary)]" />
+        <span className="font-data text-[var(--ds-text-xs)] text-[var(--ds-text-tertiary)] uppercase tracking-[var(--ds-tracking-data)]">Sin verificar</span>
       </div>
     );
   }
@@ -142,50 +147,49 @@ export default function ComplianceBadge({
       {/* Badge trigger */}
       <button
         onClick={() => setOpen(v => !v)}
-        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md ${cfg.bg} border ${cfg.border} hover:opacity-80 transition-all cursor-pointer`}
+        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[var(--ds-radius-sm)] ${cfg.bg} border ${cfg.border} hover:opacity-80 transition-all cursor-pointer`}
       >
         <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${cfg.dot}`} />
         <Icon className={`w-3 h-3 flex-shrink-0 ${cfg.color}`} />
-        <span className={`font-mono text-[9px] font-semibold uppercase tracking-wider ${cfg.color}`}>
+        <span className={`font-data text-[var(--ds-text-xs)] font-semibold uppercase tracking-[var(--ds-tracking-data)] ${cfg.color}`}>
           {cfg.label}
         </span>
-        <span className={`font-mono text-[9px] ${cfg.color} opacity-60`}>{result.score}%</span>
+        <span className={`font-data text-[var(--ds-text-xs)] ${cfg.color} opacity-60`}>{result.score}%</span>
         <ChevronDown className={`w-3 h-3 ${cfg.color} transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {/* Drawer */}
       {open && (
-        <div className="absolute left-0 top-full mt-2 w-80 z-50 bg-[#09131e] border border-[#1a2e42] rounded-xl shadow-[0_16px_48px_rgba(0,0,0,0.6)] overflow-hidden">
+        <div className="absolute left-0 top-full mt-2 w-80 z-50 bg-[var(--ds-bg-surface)] border border-[var(--ds-border-default)] rounded-[var(--ds-radius-lg)] shadow-[var(--ds-shadow-modal)] overflow-hidden">
           {/* Header */}
-          <div className="px-4 py-3 border-b border-[#1a2e42] flex items-center justify-between">
+          <div className="px-[var(--ds-space-4)] py-[var(--ds-space-3)] border-b border-[var(--ds-border-default)] flex items-center justify-between">
             <div>
-              <div className="font-mono text-[10px] text-[#4a7898] uppercase tracking-wider">Análisis de Compatibilidad</div>
-              <div className="text-[12px] font-semibold text-[#cce0f5] mt-0.5">
+              <div className="font-data text-[var(--ds-text-xs)] text-[var(--ds-text-tertiary)] uppercase tracking-[var(--ds-tracking-data)]">Análisis de Compatibilidad</div>
+              <div className="text-[var(--ds-text-sm)] font-semibold text-[var(--ds-text-primary)] mt-0.5">
                 NCM {ncmCode} → {destinationCountry} · {incoterm}
               </div>
             </div>
-            <div className={`font-mono text-xl font-black ${cfg.color}`}>{result.score}<span className="text-[10px] text-[#4a7898]">/100</span></div>
+            <div className={`font-data text-[var(--ds-text-xl)] font-black ${cfg.color}`}>
+              {result.score}<span className="text-[var(--ds-text-xs)] text-[var(--ds-text-tertiary)]">/100</span>
+            </div>
           </div>
 
           {/* Score bar */}
-          <div className="px-4 py-2 border-b border-[#1a2e42]/50">
-            <div className="h-1.5 bg-[#1a2e42] rounded-full overflow-hidden">
+          <div className="px-[var(--ds-space-4)] py-[var(--ds-space-2)] border-b border-[var(--ds-border-subtle)]">
+            <div className="h-1.5 bg-[var(--ds-bg-overlay)] rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-700"
-                style={{
-                  width: `${result.score}%`,
-                  background: result.status === 'ok' ? '#00e878' : result.status === 'gap' ? '#f5a800' : '#ff3e5a',
-                }}
+                style={{ width: `${result.score}%`, background: cfg.barColor }}
               />
             </div>
           </div>
 
           {/* AI explanation */}
           {result.aiExplanation && (
-            <div className="px-4 py-3 border-b border-[#1a2e42]/50 bg-[#0d1a27]">
+            <div className="px-[var(--ds-space-4)] py-[var(--ds-space-3)] border-b border-[var(--ds-border-subtle)] bg-[var(--ds-bg-raised)]">
               <div className="flex items-start gap-2">
-                <span className="text-[9px] font-mono text-[#00d4f0] bg-[#00d4f0]/10 border border-[#00d4f0]/20 px-1.5 py-0.5 rounded flex-shrink-0 mt-0.5">IA</span>
-                <p className="text-[11px] text-[#8ab8d8] leading-relaxed">{result.aiExplanation}</p>
+                <span className="text-[var(--ds-text-xs)] font-data text-[var(--ds-cyan)] bg-[var(--ds-cyan-dim)] border border-[var(--ds-cyan)]/20 px-1.5 py-0.5 rounded flex-shrink-0 mt-0.5 uppercase tracking-[var(--ds-tracking-data)]">IA</span>
+                <p className="text-[var(--ds-text-sm)] text-[var(--ds-text-secondary)] leading-relaxed">{result.aiExplanation}</p>
               </div>
             </div>
           )}
@@ -193,30 +197,30 @@ export default function ComplianceBadge({
           {/* Missing docs */}
           {result.missing.length > 0 && (
             <div>
-              <div className="px-4 py-2 flex items-center gap-2 border-b border-[#1a2e42]/50">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#ff3e5a]" />
-                <span className="font-mono text-[9px] text-[#ff3e5a] uppercase tracking-wider">Documentos faltantes ({result.missing.length})</span>
+              <div className="px-[var(--ds-space-4)] py-[var(--ds-space-2)] flex items-center gap-2 border-b border-[var(--ds-border-subtle)]">
+                <div className="w-1.5 h-1.5 rounded-full bg-[var(--ds-red)]" />
+                <span className="font-data text-[var(--ds-text-xs)] text-[var(--ds-red)] uppercase tracking-[var(--ds-tracking-data)]">Documentos faltantes ({result.missing.length})</span>
               </div>
-              <div className="divide-y divide-[#1a2e42]/30 max-h-48 overflow-y-auto">
+              <div className="divide-y divide-[var(--ds-border-subtle)] max-h-48 overflow-y-auto">
                 {result.missing.map(doc => (
-                  <div key={doc.id} className="px-4 py-2.5 flex items-start gap-2.5 hover:bg-[#0d1a27] transition-colors">
-                    <AlertTriangle className="w-3.5 h-3.5 text-[#f5a800] flex-shrink-0 mt-0.5" />
+                  <div key={doc.id} className="px-[var(--ds-space-4)] py-[var(--ds-space-3)] flex items-start gap-2.5 hover:bg-[var(--ds-bg-raised)] transition-colors">
+                    <AlertTriangle className="w-3.5 h-3.5 text-[var(--ds-amber)] flex-shrink-0 mt-0.5" />
                     <div className="flex-1 min-w-0">
-                      <div className="text-[11px] font-medium text-[#cce0f5]">{doc.name}</div>
+                      <div className="text-[var(--ds-text-sm)] font-medium text-[var(--ds-text-primary)]">{doc.name}</div>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className="font-mono text-[8px] text-[#4a7898] uppercase">{CATEGORY_LABEL[doc.category] || doc.category}</span>
+                        <span className="font-data text-[var(--ds-text-xs)] text-[var(--ds-text-tertiary)] uppercase">{CATEGORY_LABEL[doc.category] || doc.category}</span>
                         {doc.processingDays && (
-                          <span className="font-mono text-[8px] text-[#4a7898]">~{doc.processingDays}d tramitación</span>
+                          <span className="font-data text-[var(--ds-text-xs)] text-[var(--ds-text-tertiary)]">~{doc.processingDays}d tramitación</span>
                         )}
                       </div>
-                      {doc.authority && <div className="text-[9px] text-[#4a7898] mt-0.5">{doc.authority}</div>}
+                      {doc.authority && <div className="text-[var(--ds-text-xs)] text-[var(--ds-text-tertiary)] mt-0.5">{doc.authority}</div>}
                     </div>
                     {doc.link && (
                       <a
                         href={doc.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-shrink-0 p-1 rounded hover:bg-[#00d4f0]/10 text-[#4a7898] hover:text-[#00d4f0] transition-colors"
+                        className="flex-shrink-0 p-1 rounded hover:bg-[var(--ds-cyan-dim)] text-[var(--ds-text-tertiary)] hover:text-[var(--ds-cyan)] transition-colors"
                         title="Ir al organismo"
                       >
                         <ExternalLink className="w-3 h-3" />
@@ -231,13 +235,13 @@ export default function ComplianceBadge({
           {/* Present docs */}
           {result.present.length > 0 && (
             <div>
-              <div className="px-4 py-2 flex items-center gap-2 border-t border-[#1a2e42]/50">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#00e878]" />
-                <span className="font-mono text-[9px] text-[#00e878] uppercase tracking-wider">Documentos en regla ({result.present.length})</span>
+              <div className="px-[var(--ds-space-4)] py-[var(--ds-space-2)] flex items-center gap-2 border-t border-[var(--ds-border-subtle)]">
+                <div className="w-1.5 h-1.5 rounded-full bg-[var(--ds-green)]" />
+                <span className="font-data text-[var(--ds-text-xs)] text-[var(--ds-green)] uppercase tracking-[var(--ds-tracking-data)]">Documentos en regla ({result.present.length})</span>
               </div>
-              <div className="px-4 pb-3 flex flex-wrap gap-1.5">
+              <div className="px-[var(--ds-space-4)] pb-[var(--ds-space-3)] flex flex-wrap gap-1.5">
                 {result.present.map(doc => (
-                  <span key={doc.id} className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#00e878]/8 border border-[#00e878]/20 rounded text-[9px] font-mono text-[#00e878]">
+                  <span key={doc.id} className="inline-flex items-center gap-1 px-2 py-0.5 bg-[var(--ds-green-dim)] border border-[var(--ds-green)]/20 rounded text-[var(--ds-text-xs)] font-data text-[var(--ds-green)]">
                     ✓ {doc.name}
                   </span>
                 ))}
@@ -247,10 +251,10 @@ export default function ComplianceBadge({
 
           {/* Footer CTA for blocked */}
           {result.status === 'blocked' && (
-            <div className="px-4 py-3 border-t border-[#1a2e42] bg-[#ff3e5a]/5">
+            <div className="px-[var(--ds-space-4)] py-[var(--ds-space-3)] border-t border-[var(--ds-border-default)] bg-[var(--ds-red-dim)]">
               <a
                 href="/onboarding"
-                className="block w-full text-center py-2 bg-[#ff3e5a]/15 border border-[#ff3e5a]/30 rounded-lg text-[#ff3e5a] font-mono text-[10px] font-bold uppercase tracking-wider hover:bg-[#ff3e5a]/25 transition-all"
+                className="block w-full text-center py-2 bg-[var(--ds-red-dim)] border border-[var(--ds-red)]/30 rounded-[var(--ds-radius-md)] text-[var(--ds-red)] font-data text-[var(--ds-text-xs)] font-bold uppercase tracking-[var(--ds-tracking-data)] hover:opacity-80 transition-all"
               >
                 Completar verificación →
               </a>

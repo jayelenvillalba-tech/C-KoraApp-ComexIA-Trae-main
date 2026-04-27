@@ -285,7 +285,7 @@ export default function WorldMap4D({ className = '' }: WorldMap4DProps) {
   }, []);
 
   return (
-    <div className={`relative w-full h-full ${className} overflow-hidden font-sans bg-slate-950`}>
+    <div className={`relative w-full h-full ${className} overflow-hidden font-body bg-slate-950`}>
       <canvas ref={canvasRef} className="w-full h-full" />
       {/* Vignette para integrar con el resto de la UI */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,#020617_100%)] pointer-events-none"></div>

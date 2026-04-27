@@ -28,10 +28,9 @@ async function main() {
 
     for (const section of sections) {
       try {
-        sqliteDb.run(
-          'INSERT OR IGNORE INTO hs_sections (id, code, number, description, description_en, chapter_range) VALUES (?, ?, ?, ?, ?, ?)',
-          [section.id, section.code, section.number, section.description, section.descriptionEn, section.chapterRange]
-        );
+        sqliteDb.prepare(
+          'INSERT OR IGNORE INTO hs_sections (id, code, number, description, description_en, chapter_range) VALUES (?, ?, ?, ?, ?, ?)'
+        ).run(section.id, section.code, section.number, section.description, section.descriptionEn, section.chapterRange);
       } catch (e) {}
     }
 
@@ -54,10 +53,9 @@ async function main() {
 
     for (const chapter of chapters) {
       try {
-        sqliteDb.run(
-          'INSERT OR IGNORE INTO hs_chapters (id, code, description, description_en, section_code) VALUES (?, ?, ?, ?, ?)',
-          [chapter.id, chapter.code, chapter.description, chapter.description || '', chapter.sectionCode]
-        );
+        sqliteDb.prepare(
+          'INSERT OR IGNORE INTO hs_chapters (id, code, description, description_en, section_code) VALUES (?, ?, ?, ?, ?)'
+        ).run(chapter.id, chapter.code, chapter.description, chapter.description || '', chapter.sectionCode);
       } catch (e) {}
     }
 
@@ -71,19 +69,17 @@ async function main() {
       
       // Si el código tiene 4 dígitos, es una Partida
       if (hs.code.length === 4) {
-        sqliteDb.run(
-          'INSERT OR IGNORE INTO hs_partidas (id, code, description, description_en, chapter_code, tariff_rate, keywords) VALUES (?, ?, ?, ?, ?, ?, ?)',
-          [crypto.randomUUID(), hs.code, hs.description, hs.descriptionEn, chapterCode, hs.baseTariff, JSON.stringify(hs.keywords || [])]
-        );
+        sqliteDb.prepare(
+          'INSERT OR IGNORE INTO hs_partidas (id, code, description, description_en, chapter_code, tariff_rate, keywords) VALUES (?, ?, ?, ?, ?, ?, ?)'
+        ).run(crypto.randomUUID(), hs.code, hs.description, hs.descriptionEn, chapterCode, hs.baseTariff, JSON.stringify(hs.keywords || []));
         partidaCount++;
       } 
       // Si el código tiene más de 4 dígitos, es una Subpartida
       else if (hs.code.length > 4) {
         const partidaCode = hs.code.substring(0, 4);
-        sqliteDb.run(
-          'INSERT OR IGNORE INTO hs_subpartidas (id, code, description, description_en, partida_code, chapter_code, tariff_rate, keywords, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-          [crypto.randomUUID(), hs.code, hs.description, hs.descriptionEn, partidaCode, chapterCode, hs.baseTariff, JSON.stringify(hs.keywords || []), 1]
-        );
+        sqliteDb.prepare(
+          'INSERT OR IGNORE INTO hs_subpartidas (id, code, description, description_en, partida_code, chapter_code, tariff_rate, keywords, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        ).run(crypto.randomUUID(), hs.code, hs.description, hs.descriptionEn, partidaCode, chapterCode, hs.baseTariff, JSON.stringify(hs.keywords || []), 1);
         subpartidaCount++;
       }
     }

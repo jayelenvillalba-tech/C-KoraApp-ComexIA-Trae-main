@@ -1,6 +1,6 @@
 
 import { Request, Response } from 'express';
-import { db, getSqliteDb } from '../../database/db-sqlite';
+import { getDb, getSqliteDb } from '../../database/db-sqlite';
 import { marketplacePosts } from '../../shared/schema-sqlite';
 import { OpportunityEngineService } from '../services/opportunity-engine';
 
@@ -33,15 +33,20 @@ function getCountryCoordinates(countryCode: string): [number, number] {
 
 export async function handleCountryRecommendations(req: Request, res: Response) {
   try {
-    const { hsCode, product, originCountry } = req.query;
+    // Accept both naming conventions from different parts of the frontend
+    const hsCode        = (req.query.hsCode || req.query.code) as string;
+    const product       = req.query.product as string;
+    const originCountry = (req.query.originCountry || req.query.origin) as string;
     
     // 🧠 AI-Driven Opportunity Engine
-    // Puede recibir hsCode directo O producto ("Vino")
-    const input = (hsCode as string) || (product as string);
+    // Can receive hsCode directly OR product name ("Vino")
+    // Normalize: remove dots from HS code
+    const rawInput = (hsCode as string) || (product as string);
+    const input = rawInput?.replace(/\./g, '') || rawInput;
     const origin = (originCountry as string) || 'Argentina';
 
     if (!input) {
-      return res.status(400).json({ error: 'HsCode or Product name is required' });
+      return res.status(400).json({ error: 'hsCode, code, or product parameter is required' });
     }
 
     console.log(`[OPPORTUNITY ENGINE] Analyzing for "${input}" from ${origin}`);

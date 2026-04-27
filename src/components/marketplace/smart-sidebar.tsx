@@ -120,7 +120,9 @@ export default function SmartSidebar({ onFilterChange, currentFilters }: SmartSi
   };
 
   return (
-    <div className="bg-[#0D2137] border border-cyan-900/30 rounded-lg p-4 sticky top-20">
+    <div className="glass p-5 rounded-2xl sticky top-20 border-0 shadow-[0_8px_32px_rgba(0,0,0,0.4)] relative overflow-hidden">
+      {/* Subtle background glow for the sidebar */}
+      <div className="absolute -top-10 -left-10 w-32 h-32 bg-[var(--ds-cyan)]/5 rounded-full blur-[40px] pointer-events-none" />
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-white font-bold flex items-center gap-2">
           <span className="text-cyan-400">🔍</span>
@@ -272,7 +274,8 @@ export default function SmartSidebar({ onFilterChange, currentFilters }: SmartSi
           placeholder={language === 'es' ? 'Buscar empresa...' : 'Search company...'}
           value={currentFilters.companyName || ''}
           onChange={(e) => onFilterChange({ ...currentFilters, companyName: e.target.value })}
-          className="bg-white/5 border-gray-700 text-white text-sm mb-2"
+          className="bg-black/50 border-transparent text-white text-sm mb-2 focus:border-[var(--ds-cyan)] focus:ring-1 focus:ring-[var(--ds-cyan)] transition-all shadow-inner placeholder:text-gray-600"
+          style={{ fontFamily: 'var(--ds-font-body)' }}
         />
         <div className="flex items-center gap-2">
           <Checkbox
@@ -325,17 +328,15 @@ export default function SmartSidebar({ onFilterChange, currentFilters }: SmartSi
         )}
       </div>
 
-      {/* Phase 21: AI Suggestions with Trade Blocks */}
-      <div className="mt-4 p-3 bg-gradient-to-br from-cyan-900/20 to-blue-900/20 border border-cyan-500/20 rounded-lg">
-        <p className="text-xs text-cyan-300 mb-2 flex items-center gap-1">
-          <Sparkles className="w-3 h-3" />
-          {language === 'es' ? 'Sugerencia IA' : 'AI Suggestion'}
-        </p>
-        <p className="text-xs text-gray-300 leading-relaxed">
-          {language === 'es' 
-            ? 'Para soja, prueba MERCOSUR con 0% arancel (AR, BR, UY, PY)' 
-            : 'For soybeans, try MERCOSUR with 0% tariff (AR, BR, UY, PY)'}
-        </p>
+      {/* AI Smart Search Button */}
+      <div className="mt-8 relative group">
+        <div className="absolute -inset-0.5 bg-gradient-to-r from-[var(--ds-cyan)] to-blue-500 rounded-xl blur opacity-30 group-hover:opacity-70 transition duration-500 animate-pulse" />
+        <button className="relative w-full flex items-center justify-center gap-2 py-3 px-4 bg-black rounded-xl leading-none text-white border border-white/10 font-bold transition-all hover:border-[var(--ds-cyan)]/50">
+          <Sparkles className="w-4 h-4 text-[var(--ds-cyan)]" />
+          <span style={{ fontFamily: 'Inter', letterSpacing: '0.05em' }} className="text-[13px] uppercase">
+            {language === 'es' ? 'AI Smart Search' : 'AI Smart Search'}
+          </span>
+        </button>
       </div>
     </div>
   );

@@ -74,6 +74,12 @@ export async function getPosts(req: Request, res: Response) {
 
 export async function createPost(req: Request, res: Response) {
     try {
+        const { validateMarketplacePost } = await import('../middleware/sanitize.js');
+        const validation = validateMarketplacePost(req.body);
+        if (!validation.valid) {
+            return res.status(400).json({ success: false, errors: validation.errors });
+        }
+
         const body = req.body;
         
         // In a real app we'd get userId from session/token (req.user)

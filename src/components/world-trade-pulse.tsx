@@ -10,16 +10,16 @@ import { Globe, AlertTriangle, Info, Zap, Search, Filter, ExternalLink } from "l
 import { format } from 'date-fns';
 
 interface NewsItem {
-  _id: string;
+  id: string;
   title: string;
   summary: string;
   source: string;
-  publishedDate: string;
-  type: 'critical' | 'warning' | 'info' | 'opportunity';
-  hsCodes: string[];
-  countries: string[];
-  treaties: string[];
-  fullUrl: string;
+  publishDate: number;
+  type: string;
+  severity: string;
+  affectedHsCodes: string;
+  affectedCountries: string;
+  sourceUrl: string;
 }
 
 export function WorldTradePulse() {
@@ -36,15 +36,34 @@ export function WorldTradePulse() {
   const fetchNews = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
+      const params = new URLSearchParams({ limit: '20', period: '30' });
       if (filterType !== 'all') params.append('type', filterType);
       if (search) params.append('search', search);
-      // Region/Country filter logic would ideally be backend supported, 
-      // for now we fetch generally or pass param if backend supports.
       
       const res = await fetch(`/api/news?${params}`);
       const data = await res.json();
-      setNews(data.news || []);
+
+      // Map SQLite trade_news columns to component's interface
+      const rawItems = data.news || data.data || [];
+      const mapped: NewsItem[] = rawItems.map((item: any) => ({
+        id: String(item.id),
+        title: item.title_en || item.title_original || 'Sin título',
+        summary: item.body_en || '',
+        source: item.source_name || 'Desconocida',
+        publishDate: (item.published_at || 0) * 1000,
+        type: item.alert_type || 'info',
+        severity: item.alert_type || 'info',
+        affectedHsCodes: item.hs_codes || '[]',
+        affectedCountries: item.countries || '[]',
+        sourceUrl: item.source_url || '#',
+      }));
+
+      setNews(mapped);
+
+      // Auto-trigger sync if empty
+      if (mapped.length === 0) {
+        fetch('/api/news/sync', { method: 'POST' }).catch(() => {});
+      }
     } catch (error) {
       console.error('Failed to fetch news', error);
     } finally {
@@ -124,19 +143,22 @@ export function WorldTradePulse() {
             ) : news.length === 0 ? (
                <div className="text-center py-10 text-slate-400">No news found for current filters.</div>
             ) : (
-               news.map((item) => (
-                 <div key={item._id} className="group relative bg-white/5 hover:bg-white/10 transition-all duration-300 rounded-lg p-5 border border-white/10">
+               news.map((item) => {
+                 const hsCodes = item.affectedHsCodes ? JSON.parse(item.affectedHsCodes) : [];
+                 const countries = item.affectedCountries ? JSON.parse(item.affectedCountries) : [];
+                 return (
+                 <div key={item.id} className="group relative bg-white/5 hover:bg-white/10 transition-all duration-300 rounded-lg p-5 border border-white/10">
                     <div className="flex justify-between items-start mb-2">
                        <div className="flex items-center gap-3">
-                          {getIcon(item.type)}
-                          <Badge variant="outline" className={getBadgeColor(item.type)}>
+                          {getIcon(item.severity)}
+                          <Badge variant="outline" className={getBadgeColor(item.severity)}>
                             {item.type.toUpperCase()}
                           </Badge>
                           <span className="text-xs text-slate-400 flex items-center gap-1">
-                            {format(new Date(item.publishedDate), 'MMM dd, yyyy')} • {item.source}
+                            {format(new Date(item.publishDate), 'MMM dd, yyyy')} • {item.source}
                           </span>
                        </div>
-                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-white" onClick={() => window.open(item.fullUrl, '_blank')}>
+                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-white" onClick={() => window.open(item.sourceUrl, '_blank')}>
                           <ExternalLink className="w-4 h-4" />
                        </Button>
                     </div>
@@ -149,24 +171,20 @@ export function WorldTradePulse() {
                     </p>
                     
                     <div className="flex flex-wrap gap-2 mt-auto">
-                       {item.treaties?.map(t => (
-                         <Badge key={t} variant="outline" className="bg-purple-500/10 text-purple-300 border-purple-500/20 text-xs">
-                           {t}
-                         </Badge>
-                       ))}
-                       {item.countries?.map(c => (
+                       {countries?.map((c: string) => (
                          <Badge key={c} variant="outline" className="bg-blue-500/10 text-blue-300 border-blue-500/20 text-xs">
                            {c}
                          </Badge>
                        ))}
-                       {item.hsCodes?.map(hs => (
+                       {hsCodes?.map((hs: string) => (
                          <Badge key={hs} variant="outline" className="bg-emerald-500/10 text-emerald-300 border-emerald-500/20 text-xs">
                            HS {hs}
                          </Badge>
                        ))}
                     </div>
                  </div>
-               ))
+                 );
+               })
             )}
           </div>
         </CardContent>

@@ -57,8 +57,25 @@ export default function Footer() {
           </div>
         </div>
         
-        <div className="border-t border-gray-200 mt-8 pt-8 text-center text-sm text-gray-600">
-          <p>{t("footer.copyright")}</p>
+        <div className="border-t border-gray-200 mt-8 pt-6 flex flex-wrap items-center justify-between gap-4 text-sm text-gray-500">
+          <p>{t("footer.copyright", "© 2026 Che.Comex — ComexIA. Todos los derechos reservados.")}</p>
+          <div className="flex flex-wrap items-center gap-4">
+            {[
+              { label: 'Términos', href: '/legal/terms' },
+              { label: 'Privacidad', href: '/legal/privacy' },
+              { label: 'Uso Aceptable', href: '/legal/acceptable-use' },
+              { label: 'Cookies', href: '/legal/cookies' }, // can be handled later or linked to banner popup
+              { label: 'Contacto', href: 'mailto:legal@checomex.com' },
+            ].map(link => (
+              <a 
+                key={link.href} 
+                href={link.href}
+                className="hover:text-kora-primary transition-colors text-xs font-data"
+              >
+                {link.label}
+              </a>
+            ))}
+          </div>
         </div>
       </div>
     </footer>

@@ -195,7 +195,7 @@ function vendorCostForInco(inc: typeof INCOTERMS_2020[0], c: ReturnType<typeof c
 const fmt = (n: number) => "$" + Math.round(n).toLocaleString("en-US");
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;700;800&display=swap');
-  .tc{font-family:'Syne',sans-serif;--bg:#07111d;--sf:#0d2035;--bd:#1a3a5a;--ac:#00d4ff;--wn:#f59e0b;--ok:#22c55e;--tx:#cce8ff;--mu:#5a8aaa}
+  .tc{font-family:'Syne',sans-serif;--bg:#07111d;--sf:#0d2035;--bd:#1a3a5a;--ac:#00d4ff;--wn:#f59e0b;--ok:#22c55e;--tx:#ffffff;--mu:#c8dff0}
   .tc *{box-sizing:border-box}
   .tc input:focus,.tc select:focus{border-color:var(--ac)!important;outline:none}
   .btn{transition:all .15s}.btn:hover:not(:disabled){opacity:.85;transform:translateY(-1px)}.btn:active:not(:disabled){transform:none}
@@ -432,14 +432,14 @@ export default function TradeCalculator({ defaultDestination = "BR", defaultProd
                   return (
                   <div style={{ fontFamily:"'Space Grotesk', sans-serif" }}>
                     {/* RECOMMENDATION BANNER */}
-                    <div style={{ background: "linear-gradient(135deg, var(--bg2, #09131e), var(--bg3, #0d1a27))", border: "1px solid var(--b2, #203548)", borderLeft: "3px solid var(--cyan, #00d4f0)", padding: "14px 16px", marginBottom: "20px", borderRadius: "4px" }}>
+                    <div style={{ background: "linear-gradient(135deg, var(--bg2, var(--ds-bg-surface)), var(--bg3, var(--ds-bg-raised)))", border: "1px solid var(--b2, #203548)", borderLeft: "3px solid var(--cyan, var(--ds-cyan))", padding: "14px 16px", marginBottom: "20px", borderRadius: "4px" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                        <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"9px", fontWeight:700, color:"var(--cyan, #00d4f0)", letterSpacing:"1px" }}>⚡ RECOMENDACIÓN CONTEXTUAL</span>
-                        <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"9px", border: "1px solid #00e87860", color:"#00e878", padding:"2px 8px", borderRadius:"2px" }}>{rec.level === "beginner" ? "IDEAL PARA PRINCIPIANTES" : "ESTÁNDAR DE INDUSTRIA"}</span>
+                        <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"9px", fontWeight:700, color:"var(--cyan, var(--ds-cyan))", letterSpacing:"1px" }}>⚡ RECOMENDACIÓN CONTEXTUAL</span>
+                        <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"9px", border: "1px solid var(--ds-green)60", color:"var(--ds-green)", padding:"2px 8px", borderRadius:"2px" }}>{rec.level === "beginner" ? "IDEAL PARA PRINCIPIANTES" : "ESTÁNDAR DE INDUSTRIA"}</span>
                       </div>
                       <div style={{ display:"flex", gap:"12px" }}>
                         <div>
-                          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"36px", fontWeight:800, color:"var(--cyan, #00d4f0)", lineHeight:1 }}>{rec.code}</div>
+                          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"36px", fontWeight:800, color:"var(--cyan, var(--ds-cyan))", lineHeight:1 }}>{rec.code}</div>
                           <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"9px", color:"var(--t4, #2a4a68)", textTransform:"uppercase" }}>{recInco?.name}</div>
                         </div>
                         <div style={{ flex:1 }}>
@@ -448,7 +448,7 @@ export default function TradeCalculator({ defaultDestination = "BR", defaultProd
                         </div>
                       </div>
                       {rec.warning && (
-                        <div style={{ background:"#f5a80012", border:"1px solid #f5a80030", padding:"8px", marginTop:"10px", fontSize:"11px", color:"#f5a800", borderRadius:"2px", display:"flex", gap:"8px" }}>
+                        <div style={{ background:"var(--ds-amber)12", border:"1px solid var(--ds-amber)30", padding:"8px", marginTop:"10px", fontSize:"11px", color:"var(--ds-amber)", borderRadius:"2px", display:"flex", gap:"8px" }}>
                           <span>⚠️</span><span>{rec.warning}</span>
                         </div>
                       )}
@@ -474,7 +474,7 @@ export default function TradeCalculator({ defaultDestination = "BR", defaultProd
                         return (
                           <div key={inc.code} className="inc" onClick={() => avail && setSelInco(inc.code)}
                             style={{ 
-                              background: "var(--bg2, #09131e)", 
+                              background: "var(--bg2, var(--ds-bg-surface))", 
                               border: `1px solid ${isSel ? inc.color : isRec ? inc.color+"80" : "var(--b2, #203548)"}`, 
                               boxShadow: isSel ? `0 0 20px ${inc.color}30` : isRec ? `0 0 10px ${inc.color}18` : "none",
                               borderRadius: "4px", padding: "12px", cursor: avail ? "pointer" : "not-allowed", opacity: avail ? 1 : .35, position: "relative" 
@@ -485,13 +485,13 @@ export default function TradeCalculator({ defaultDestination = "BR", defaultProd
                               <div style={{ display:"flex", gap:"8px", alignItems:"center" }}>
                                 <span style={{ fontSize:"18px" }}>{inc.emoji}</span>
                                 <div>
-                                  <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"22px", fontWeight:800, color:"#f0f8ff", lineHeight:1.1 }}>{inc.code}</div>
-                                  <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"9px", color:"#4a7090", textTransform:"uppercase" }}>{inc.name}</div>
+                                  <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"22px", fontWeight:800, color:"#ffffff", lineHeight:1.1 }}>{inc.code}</div>
+                                  <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"9px", color:"var(--mu)", textTransform:"uppercase" }}>{inc.name}</div>
                                 </div>
                               </div>
                               <div style={{ display:"flex", flexDirection:"column", gap:"4px", alignItems:"flex-end" }}>
                                 {isRec && <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"8px", fontWeight:700, border:`1px solid ${inc.color}60`, color:inc.color, padding:"2px 6px" }}>★ RECOMENDADO</span>}
-                                {inc.mode==="sea" && <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"8px", background:"#111f2e", border:"1px solid #1a2e42", color:"#4a7090", padding:"2px 6px" }}>⚓ MARÍTIMO</span>}
+                                {inc.mode==="sea" && <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"8px", background:"#111f2e", border:"1px solid var(--ds-border-default)", color:"#4a7090", padding:"2px 6px" }}>⚓ MARÍTIMO</span>}
                               </div>
                             </div>
                             
@@ -501,19 +501,19 @@ export default function TradeCalculator({ defaultDestination = "BR", defaultProd
                               <div style={{ marginBottom:"10px" }}>
                                 <div style={{ display:"flex", alignItems:"center", gap:"6px", marginBottom:"5px" }}>
                                   <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"9px", color:"#4a7090", width:"80px", textAlign:"right" }}>🏭 Vendedor</span>
-                                  <div style={{ flex:1, height:"4px", background:"#1a2e42" }}><div style={{ height:"100%", width:`${vp}%`, background:inc.color }}></div></div>
+                                  <div style={{ flex:1, height:"4px", background:"var(--ds-border-default)" }}><div style={{ height:"100%", width:`${vp}%`, background:inc.color }}></div></div>
                                   <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"10px", fontWeight:700, color:inc.color, width:"40px", textAlign:"right" }}>{fmt(vc)}</span>
                                 </div>
                                 <div style={{ display:"flex", alignItems:"center", gap:"6px" }}>
                                   <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"9px", color:"#4a7090", width:"80px", textAlign:"right" }}>🏢 Comprador</span>
-                                  <div style={{ flex:1, height:"4px", background:"#1a2e42" }}><div style={{ height:"100%", width:`${bp}%`, background:"#4a6080" }}></div></div>
-                                  <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"10px", fontWeight:700, color:"#8aafcc", width:"40px", textAlign:"right" }}>{fmt(bc)}</span>
+                                  <div style={{ flex:1, height:"4px", background:"var(--ds-border-default)" }}><div style={{ height:"100%", width:`${bp}%`, background:"#4a6080" }}></div></div>
+                                  <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"10px", fontWeight:700, color:"var(--mu)", width:"40px", textAlign:"right" }}>{fmt(bc)}</span>
                                 </div>
                               </div>
                             )}
 
                             {isSel && (
-                              <div style={{ marginTop:"12px", paddingTop:"12px", borderTop:"1px solid #1a2e42", animation:"fd .2s ease" }}>
+                              <div style={{ marginTop:"12px", paddingTop:"12px", borderTop:"1px solid var(--ds-border-default)", animation:"fd .2s ease" }}>
                                 <div style={{ marginBottom:"10px" }}>
                                   <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"9px", fontWeight:700, color:inc.color, textTransform:"uppercase", marginBottom:"4px" }}>📍 Transferencia de Riesgo</div>
                                   <div style={{ fontSize:"11px", color:"#c8dff0" }}>{inc.riskTransfer}</div>
@@ -531,7 +531,7 @@ export default function TradeCalculator({ defaultDestination = "BR", defaultProd
                               </div>
                             )}
                             
-                            {!isSel && <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"9px", color:"#4a7090", textAlign:"center", marginTop:"6px", paddingTop:"6px", borderTop:"1px solid #1a2e42" }}>▼ clic para expandir detalles</div>}
+                            {!isSel && <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"9px", color:"var(--mu)", textAlign:"center", marginTop:"6px", paddingTop:"6px", borderTop:"1px solid var(--ds-border-default)" }}>▼ clic para expandir detalles</div>}
                           </div>
                         );
                       })}

@@ -1,136 +1,156 @@
-import { User, Home, Package, MessageCircle, LogOut } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { User, Home, Package, MessageCircle, LogOut, LayoutDashboard, Target, HelpCircle } from "lucide-react";
 import { useLanguage } from "@/hooks/use-language";
 import { useUser } from "@/context/user-context";
 import { useLocation } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/design-system/components";
 
 export default function Header() {
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const { user, logout } = useUser();
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
+
+  const getNavClass = (path: string, currentLoc: string) => {
+    const isActive = currentLoc === path || (path !== '/' && currentLoc.startsWith(path));
+    if (isActive) {
+      return "text-white bg-[var(--ds-cyan-dim)] border-b-[2px] border-[var(--ds-cyan)]";
+    }
+    return "text-blue-200 hover:text-white hover:bg-[var(--ds-bg-overlay)] border-b-[2px] border-transparent";
+  };
 
   return (
-    <header className="bg-[#0D2137] border-b border-cyan-900/30 sticky top-0 z-50">
-      <div className="container mx-auto px-6 py-4">
-        <div className="flex items-center justify-between">
+    <header className="topbar bg-[rgba(2,8,16,0.95)] backdrop-blur-[16px] border-b border-[var(--ds-border-subtle)] flex items-center transition-colors">
+      <div className="container mx-auto px-6 h-full">
+        <div className="flex items-center justify-between h-full">
           {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div 
-              className="w-12 h-12 bg-white rounded-lg flex items-center justify-center p-1 overflow-hidden shadow-lg border border-cyan-400/30 cursor-pointer hover:opacity-90 transition-opacity"
-              onClick={() => navigate('/')}
-            >
-              <img src="/logo.png" alt="Che.Comex Logo" className="w-full h-full object-contain" />
-            </div>
-            <div className="cursor-pointer" onClick={() => navigate('/')}>
-              <h1 className="text-2xl font-black text-white tracking-tighter">
-                CHE.<span className="text-cyan-400">COMEX</span>
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
+            <div className="flex items-baseline">
+              <h1 className="font-display font-[900] text-[20px] text-[var(--ds-text-primary)] tracking-tight leading-none">
+                CHE.<span className="text-[var(--ds-cyan)]">COMEX</span>
               </h1>
-              <p className="text-[10px] uppercase tracking-widest text-cyan-500 font-bold opacity-80">
-                {language === 'es' ? 'Inteligencia de Comercio Global' : 'Global Trade Intelligence'}
-              </p>
+              <span className="font-data text-[var(--ds-text-xs)] text-[var(--ds-text-muted)] ml-1 leading-none align-bottom">
+                v2
+              </span>
             </div>
           </div>
 
           {/* Navigation - Hidden on Auth Page */}
           {location !== '/auth' && (
-            <nav className="hidden md:flex items-center gap-6">
-              <a 
-                onClick={() => navigate('/')}
-                className="text-gray-300 hover:text-cyan-400 transition-colors text-sm cursor-pointer flex items-center gap-1"
-              >
-                <Home className="w-4 h-4" />
-                {language === 'es' ? 'INICIO' : 'HOME'}
-              </a>
-              <a href="/news" className="text-gray-300 hover:text-cyan-400 transition-colors text-sm">
-                {language === 'es' ? 'NOTICIAS' : 'NEWS'}
-              </a>
-              <a href="#" className="text-gray-300 hover:text-cyan-400 transition-colors text-sm">
-                HS CODE
-              </a>
-              <a 
-                onClick={() => navigate('/marketplace')}
-                className="text-gray-300 hover:text-cyan-400 transition-colors text-sm cursor-pointer flex items-center gap-1"
-              >
-                <Package className="w-4 h-4" />
-                MARKETPLACE
-              </a>
-              
-              {user && (
-                <a href="/chat" className="text-gray-300 hover:text-cyan-400 transition-colors text-sm font-medium flex items-center gap-1">
-                  <MessageCircle className="w-4 h-4 text-cyan-400" />
-                  CHATS
+            <nav className="hidden md:flex items-center h-full px-4">
+              <div className="flex items-center h-full space-x-1 mr-6">
+                <a 
+                  onClick={() => navigate('/')}
+                  className={`h-full flex items-center px-4 font-body text-[var(--ds-text-sm)] font-medium cursor-pointer transition-colors ${getNavClass('/', location)}`}
+                >
+                  {t('nav.home') || 'INICIO'}
                 </a>
-              )}
-
-              {/* Language Toggle */}
-              <div className="flex items-center gap-1 border border-cyan-900/30 rounded-md overflow-hidden bg-[#0A1929]">
-                <button
-                  onClick={() => setLanguage('es')}
-                  className={`px-3 py-1 text-xs transition-colors ${
-                    language === 'es' 
-                      ? 'bg-cyan-600 text-white' 
-                      : 'text-gray-400 hover:text-white'
-                  }`}
+                <a 
+                  onClick={() => navigate('/marketplace')}
+                  className={`h-full flex items-center px-4 font-body text-[var(--ds-text-sm)] font-medium cursor-pointer transition-colors ${getNavClass('/marketplace', location)}`}
                 >
-                  ESP
-                </button>
-                <button
-                  onClick={() => setLanguage('en')}
-                  className={`px-3 py-1 text-xs transition-colors ${
-                    language === 'en' 
-                      ? 'bg-cyan-600 text-white' 
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  ENG
-                </button>
+                  {t('nav.marketplace') || 'MARKETPLACE'}
+                </a>
+                
+                {user && (
+                  <>
+                    <a 
+                      onClick={() => navigate('/chat')} 
+                      className={`h-full flex items-center px-4 font-body text-[var(--ds-text-sm)] font-medium cursor-pointer transition-colors ${getNavClass('/chat', location)}`}
+                    >
+                      {t('nav.chats') || 'CHATS'}
+                    </a>
+                    <a 
+                      onClick={() => navigate('/marketplace/dashboard')} 
+                      className={`h-full flex items-center px-4 font-body text-[var(--ds-text-sm)] font-medium cursor-pointer transition-colors ${getNavClass('/marketplace/dashboard', location)}`}
+                    >
+                      {t('nav.dashboard') || 'DASHBOARD'}
+                    </a>
+                  </>
+                )}
               </div>
 
-              {user ? (
-                <div className="flex items-center gap-1">
-                   <Button 
-                    onClick={() => navigate('/profile')}
-                    variant="ghost" 
-                    className="flex items-center gap-2 hover:bg-slate-800 text-white px-2"
-                  >
-                     <Avatar className="w-8 h-8 border border-cyan-500/50">
-                        <AvatarImage src={user.avatar || "/placeholder-user.jpg"} />
-                        <AvatarFallback className="bg-cyan-900 text-cyan-200">{user.name?.substring(0,2)?.toUpperCase() || "U"}</AvatarFallback>
-                     </Avatar>
-                     <span className="hidden lg:inline text-sm max-w-[100px] truncate">{user.name || "Usuario"}</span>
-                  </Button>
-                  <Button
-                     variant="ghost"
-                     size="icon"
-                     onClick={() => logout()}
-                     className="text-slate-400 hover:text-red-400 hover:bg-red-500/10"
-                     title="Cerrar Sesión"
-                   >
-                     <LogOut className="w-5 h-5" />
-                   </Button>
+              {/* Action Controls */}
+              <div className="flex items-center gap-4">
+                
+                {/* Score Pill Placeholder */}
+                {user && (
+                   <div className="flex items-center gap-2 bg-[var(--ds-bg-surface)] border border-[var(--ds-border-default)] rounded-[var(--ds-radius-full)] px-3 py-1 mr-2">
+                     <Target className="w-3 h-3 text-[var(--ds-text-muted)]" />
+                     <span className="font-data text-[var(--ds-text-xs)] text-[var(--ds-text-muted)] tracking-[var(--ds-tracking-data)] uppercase">SCORE</span>
+                     <span className="font-data text-[var(--ds-text-sm)] font-medium text-[var(--ds-cyan)]">85</span>
+                   </div>
+                )}
+
+                {user ? (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate('/control-panel')}
+                      className="text-[var(--ds-text-muted)] hover:text-[var(--ds-cyan)] p-2 transition-colors relative"
+                      title="Control de Calidad y Feedback"
+                    >
+                      <HelpCircle className="w-4 h-4" />
+                      {/* Optional notification dot for needs_info could go here */}
+                    </Button>
+                     <div 
+                      onClick={() => navigate('/profile')}
+                      className="flex items-center gap-2 cursor-pointer hover:bg-[var(--ds-bg-overlay)] p-1 pr-3 rounded-[var(--ds-radius-full)] transition-colors border border-transparent hover:border-[var(--ds-border-default)]"
+                    >
+                       <Avatar className="w-6 h-6 border no-border">
+                          <AvatarFallback className="bg-[var(--ds-cyan-dim)] text-[var(--ds-cyan)] font-data text-xs border border-[var(--ds-cyan)]">
+                            {user.name?.substring(0,2)?.toUpperCase() || "U"}
+                          </AvatarFallback>
+                       </Avatar>
+                       <span className="hidden lg:inline font-body text-[var(--ds-text-sm)] text-[var(--ds-text-primary)] max-w-[100px] truncate">{user.name || "Usuario"}</span>
+                    </div>
+                    <Button
+                       variant="ghost"
+                       size="sm"
+                       onClick={() => logout()}
+                       className="text-[var(--ds-text-muted)] hover:text-[var(--ds-red)] p-2"
+                     >
+                       <LogOut className="w-4 h-4" />
+                     </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3 h-full">
+                    <Button 
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate('/auth')}
+                      className="bg-transparent border border-[rgba(255,255,255,0.16)] text-[var(--ds-text-primary)] hover:bg-[var(--ds-bg-overlay)]"
+                    >
+                      {t('nav.login') || 'LOGIN'}
+                    </Button>
+                    <Button 
+                      size="sm"
+                      onClick={() => navigate('/auth?view=register')}
+                      className="bg-gradient-to-br from-[var(--ds-cyan)] to-[var(--ds-blue)] text-[var(--ds-bg-void)] font-bold border-none"
+                    >
+                      {t('nav.register') || 'REGISTER'}
+                    </Button>
+                  </div>
+                )}
+                
+                {/* Language Toggle */}
+                <div className="flex items-center bg-[var(--ds-bg-overlay)] rounded-[var(--ds-radius-sm)] border border-[var(--ds-border-default)] p-0.5 ml-2">
+                  {['es', 'en'].map(l => (
+                    <button
+                      key={l}
+                      onClick={() => setLanguage(l as any)}
+                      className={`font-data text-[10px] uppercase px-2 py-0.5 rounded-[var(--ds-radius-sm)] transition-colors ${
+                        language === l ? 'bg-[var(--ds-cyan-dim)] text-[var(--ds-cyan)] font-bold' : 'text-[var(--ds-text-muted)] hover:text-[var(--ds-text-primary)]'
+                      }`}
+                    >
+                      {l}
+                    </button>
+                  ))}
                 </div>
-              ) : (
-                <div className="flex items-center gap-3">
-                  <Button 
-                    variant="ghost"
-                    className="text-gray-300 hover:text-white"
-                    onClick={() => navigate('/auth')}
-                  >
-                    {language === 'es' ? 'Ingresar' : 'Login'}
-                  </Button>
-                  <Button 
-                    className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/20 border-0"
-                    onClick={() => navigate('/auth?view=register')}
-                  >
-                    {language === 'es' ? 'Crear Cuenta' : 'Register'}
-                  </Button>
-                </div>
-              )}
+              </div>
             </nav>
           )}
         </div>
-
       </div>
     </header>
   );

@@ -98,6 +98,34 @@
 }
 
 @layer components {
+  /* FIX 2 Y 5: Layout para Ticker y Navbar */
+  .main-content {
+    padding-top: var(--ds-offset-top, 72px);
+    min-height: calc(100vh - var(--ds-offset-top, 72px));
+  }
+
+  .ticker-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--ds-ticker-height, 26px);
+    z-index: 300;
+  }
+
+  .topbar {
+    position: fixed;
+    top: var(--ds-ticker-height, 26px);
+    left: 0;
+    right: 0;
+    height: var(--ds-topbar-height, 46px);
+    z-index: 200;
+  }
+
+  .page-content {
+    padding-top: var(--ds-offset-top, 72px);
+  }
+
   .world-map-bg {
     /* Cyber/Tech Grid Background - Enhanced Visibility */
     background-color: #0A1929;

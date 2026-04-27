@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { LanguageProvider } from "@/hooks/use-language";
 import { UserProvider } from "@/context/user-context";
 import { MarketplaceProvider } from "@/context/marketplace-context";
+import { GodModeProvider } from "@/context/godmode-context";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import Landing from "@/pages/landing";
@@ -18,9 +19,15 @@ import SouthAmericaAnalysis from "@/pages/south-america-analysis";
 import ExpansionDashboard from "@/pages/expansion-dashboard";
 import CoverageDashboard from "@/pages/dashboard-coverage";
 import Marketplace from "@/pages/marketplace";
-import AdminDashboard from "@/pages/admin-dashboard";
+import MarketplacePage from "@/pages/MarketplacePage";
+import AdminGuard from "@/guards/AdminGuard";
+import AuthGuard from "@/guards/AuthGuard";
+import AdminLayout from "@/pages/admin/AdminLayout";
+import CommandCenterPage from "@/pages/admin/CommandCenterPage";
+import AnalyticsPage from "@/pages/admin/AnalyticsPage";
 import CompanyProfile from "@/pages/company-profile";
 import ChatPage from "@/pages/chat";
+import ChatPageNew from "@/pages/ChatPage";
 import ChatConversationPage from "@/pages/chat-conversation";
 import JoinChat from "@/pages/join-chat";
 import ProfilePage from "@/pages/profile";
@@ -28,8 +35,20 @@ import NewsPage from "@/pages/news";
 import AuthPage from "@/pages/auth";
 import CheckoutSuccessPage from "@/pages/checkout-success";
 import OnboardingPage from "@/pages/onboarding";
+import SubscriptionPage from "@/pages/SubscriptionPage";
+import VendorDashboardPage from "@/pages/VendorDashboardPage";
+import ControlPanel from "@/pages/ControlPanel";
+import FeedbackHistory from "@/pages/FeedbackHistory";
 import { AlertsTicker } from "@/components/alerts-ticker";
-import GodModeAI from "@/components/GodModeAI";
+import GodModeOrb from "@/components/godmode/GodModeOrb";
+import IncotermsPage from "@/pages/IncotermsPage";
+import { useLocation } from "wouter";
+import { RouteBackground } from "@/design-system/RouteBackground";
+import CookieBanner from "@/components/legal/CookieBanner";
+
+import TermsPage from "@/pages/legal/TermsPage";
+import PrivacyPage from "@/pages/legal/PrivacyPage";
+import AcceptableUsePage from "@/pages/legal/AcceptableUsePage";
 
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -74,40 +93,88 @@ class ErrorBoundary extends React.Component<
   }
 }
 
+import DesignSystemPage from '@/pages/DesignSystemPage';
+
 function Router() {
   return (
     <Switch>
-      {/* 
-        Home is now the main Analysis page.
-        The Bloomberg dashboard is moved to /dashboard.
-      */}
-      <Route path="/" component={Analysis} />
-      <Route path="/dashboard" component={Home} />
-      <Route path="/landing" component={Landing} />
+      <Route path="/" component={Landing} />
+      <Route path="/dashboard">
+        <AuthGuard>
+          <Home />
+        </AuthGuard>
+      </Route>
+      <Route path="/analysis" component={Analysis} />
       <Route path="/trade-flow" component={TradeFlow} />
       <Route path="/map" component={CompanyMap} />
       <Route path="/company-map" component={CompanyMap} />
-      <Route path="/analysis" component={Analysis} />
       <Route path="/south-america" component={SouthAmericaAnalysis} />
       <Route path="/alerts" component={AlertsCenter} />
       <Route path="/expansion-dashboard" component={ExpansionDashboard} />
       <Route path="/coverage" component={CoverageDashboard} />
-      <Route path="/marketplace" component={Marketplace} />
-      <Route path="/market" component={Marketplace} />
-      <Route path="/admin" component={AdminDashboard} />
+      <Route path="/marketplace" component={MarketplacePage} />
+      <Route path="/marketplace/dashboard" component={VendorDashboardPage} />
+      <Route path="/incoterms" component={IncotermsPage} />
+      <Route path="/market-legacy" component={Marketplace} />
+      
+      {/* Admin Panel V2 Routing */}
+      <Route path="/admin">
+        <AdminGuard>
+          <AdminLayout>
+            <CommandCenterPage />
+          </AdminLayout>
+        </AdminGuard>
+      </Route>
+      <Route path="/admin/analytics">
+        <AdminGuard>
+          <AdminLayout>
+            <AnalyticsPage />
+          </AdminLayout>
+        </AdminGuard>
+      </Route>
+
       <Route path="/profile" component={ProfilePage} />
       <Route path="/news" component={NewsPage} />
       <Route path="/company/:id" component={CompanyProfile} />
-      <Route path="/chat" component={ChatPage} />
-      <Route path="/chat/:id" component={ChatConversationPage} />
+      <Route path="/chat" component={ChatPageNew} />
+      <Route path="/chat/:id" component={ChatPageNew} />
       <Route path="/join-chat/:token" component={JoinChat} />
       <Route path="/landing" component={Landing} />
       <Route path="/auth" component={AuthPage} />
-      <Route path="/auth" component={AuthPage} />
       <Route path="/onboarding" component={OnboardingPage} />
       <Route path="/checkout/success" component={CheckoutSuccessPage} />
+      <Route path="/subscription" component={SubscriptionPage} />
+      <Route path="/control-panel" component={ControlPanel} />
+      <Route path="/control-panel/historial" component={FeedbackHistory} />
+      <Route path="/subscription/success" component={CheckoutSuccessPage} />
+      <Route path="/subscription/cancel" component={SubscriptionPage} />
+      
+      {/* Legal Pages */}
+      <Route path="/legal/terms" component={TermsPage} />
+      <Route path="/legal/privacy" component={PrivacyPage} />
+      <Route path="/legal/acceptable-use" component={AcceptableUsePage} />
+
+      {/* Design System Reference Page - Only for Figma export & Dev */}
+      {import.meta.env.DEV && <Route path="/design-system" component={DesignSystemPage} />}
       <Route component={NotFound} />
     </Switch>
+  );
+}
+
+function AppContent() {
+  const [location] = useLocation();
+  const isAdminRoute = location.startsWith('/admin');
+  
+  return (
+    <ErrorBoundary>
+      <div className="main-content">
+        {!isAdminRoute && <RouteBackground />}
+        {!isAdminRoute && <CookieBanner />}
+        <AlertsTicker />
+        <Router />
+        <GodModeOrb />
+      </div>
+    </ErrorBoundary>
   );
 }
 
@@ -117,14 +184,12 @@ function App() {
       <LanguageProvider>
         <UserProvider>
           <MarketplaceProvider>
-            <TooltipProvider>
-              <Toaster />
-              <ErrorBoundary>
-                <AlertsTicker />
-                <Router />
-                <GodModeAI />
-              </ErrorBoundary>
-            </TooltipProvider>
+            <GodModeProvider>
+              <TooltipProvider>
+                <Toaster />
+                <AppContent />
+              </TooltipProvider>
+            </GodModeProvider>
           </MarketplaceProvider>
         </UserProvider>
       </LanguageProvider>

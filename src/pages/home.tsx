@@ -29,12 +29,12 @@ const VERIFY_DOCS = [
 ];
 
 const FEATURES = [
-  { icon: Search, title: 'HS Code + Mapa', path: '/analysis', threshold: 0, color: '#00d4f0' },
-  { icon: FileText, title: 'Docs IA', path: '/analysis?tab=documentation', threshold: 20, color: '#f5a800' },
+  { icon: Search, title: 'HS Code + Mapa', path: '/analysis', threshold: 0, color: 'var(--ds-cyan)' },
+  { icon: FileText, title: 'Docs IA', path: '/analysis?tab=documentation', threshold: 20, color: 'var(--ds-amber)' },
   { icon: Users, title: 'Marketplace B2B', path: '/marketplace', threshold: 40, color: '#8f40ff' },
-  { icon: MessageSquare, title: 'Chat Seguro', path: '/chat', threshold: 60, color: '#00e878' },
-  { icon: Bell, title: 'Alertas', path: '/alerts', threshold: 0, color: '#ff3e5a' },
-  { icon: Zap, title: 'Blockchain', path: '#', threshold: 100, color: '#f0c040' },
+  { icon: MessageSquare, title: 'Chat Seguro', path: '/chat', threshold: 60, color: 'var(--ds-green)' },
+  { icon: Bell, title: 'Alertas', path: '/alerts', threshold: 0, color: 'var(--ds-red)' },
+  { icon: Zap, title: 'Blockchain', path: '#', threshold: 100, color: 'var(--ds-gold)' },
 ];
 
 const BUYERS = [
@@ -44,9 +44,9 @@ const BUYERS = [
 ];
 
 const OPPS = [
-  { country: '🇧🇬 Bulgaria → UE', val: '$48.200 USD', product: 'Aceite de soja refinado · NCM 1507.90', incoterm: 'DAP', treaty: 'SGP UE', color: '#00d4f0' },
-  { country: '🇲🇾 Malasia', val: '$31.800 USD', product: 'Carne bovina congelada · NCM 0202.30', incoterm: 'CIF', treaty: 'ACE-58', color: '#f5a800' },
-  { country: '🇧🇷 Brasil (MERCOSUR)', val: '$22.500 USD', product: 'Vino Malbec bot. 0.75L · NCM 2204.21', incoterm: 'FOB', treaty: 'MERCOSUR', color: '#00e878' },
+  { country: '🇧🇬 Bulgaria → UE', val: '$48.200 USD', product: 'Aceite de soja refinado · NCM 1507.90', incoterm: 'DAP', treaty: 'SGP UE', color: 'var(--ds-cyan)' },
+  { country: '🇲🇾 Malasia', val: '$31.800 USD', product: 'Carne bovina congelada · NCM 0202.30', incoterm: 'CIF', treaty: 'ACE-58', color: 'var(--ds-amber)' },
+  { country: '🇧🇷 Brasil (MERCOSUR)', val: '$22.500 USD', product: 'Vino Malbec bot. 0.75L · NCM 2204.21', incoterm: 'FOB', treaty: 'MERCOSUR', color: 'var(--ds-green)' },
 ];
 
 const ALERTS = [
@@ -55,34 +55,13 @@ const ALERTS = [
   { text: 'Tipo de cambio exportador unificado: BCRA Com. A7280 · 11/03/2026.', level: 'lo', time: 'Hace 6h' },
 ];
 
-// ─── Ticker Bar ───────────────────────────────────────────────────────────────
-function TickerBar() {
-  const doubled = [...TICKER_ITEMS, ...TICKER_ITEMS];
-  return (
-    <div className="fixed top-0 left-0 right-0 z-[200] h-[26px] bg-[#020810] border-b border-[#152637] overflow-hidden flex items-center">
-      <div className="flex-shrink-0 px-3 h-full flex items-center border-r border-[#152637] bg-[#03101c]">
-        <span className="font-mono text-[9px] font-semibold text-[#00d4f0] tracking-[2px] uppercase">Live</span>
-      </div>
-      <div className="flex items-center gap-0 animate-[ticker_40s_linear_infinite] whitespace-nowrap hover:[animation-play-state:paused]">
-        {doubled.map((item, i) => (
-          <div key={i} className="inline-flex items-center gap-1.5 px-5 h-[26px] border-r border-[#152637]">
-            <span className="font-mono text-[9px] text-[#3d6e92] tracking-[0.5px]">{item.name}</span>
-            <span className="font-mono text-[10px] text-[#c4dcf4]">{item.val}</span>
-            <span className={`font-mono text-[9px] ${item.up ? 'text-[#00e878]' : 'text-[#ff3e5a]'}`}>{item.chg}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // ─── Nav Topbar ───────────────────────────────────────────────────────────────
 function Topbar({ score, onScoreClick }: { score: number; onScoreClick: () => void }) {
   const [, navigate] = useLocation();
   const pct = Math.min(100, score);
   const circumference = 2 * Math.PI * 9;
   const offset = circumference - (pct / 100) * circumference;
-  const color = pct >= 100 ? '#00e878' : pct >= 50 ? '#00d4f0' : '#f5a800';
+  const color = pct >= 100 ? 'var(--ds-green)' : pct >= 50 ? 'var(--ds-cyan)' : 'var(--ds-amber)';
 
   const navItems = [
     { label: 'Dashboard', path: '/', icon: <Box className="w-3.5 h-3.5" />, active: true },
@@ -94,10 +73,10 @@ function Topbar({ score, onScoreClick }: { score: number; onScoreClick: () => vo
   ];
 
   return (
-    <div className="fixed top-[26px] left-0 right-0 z-[100] h-[46px] bg-[rgba(2,8,16,0.96)] backdrop-blur-[16px] border-b border-[#152637] flex items-center px-4 gap-0">
-      <div className="font-['Barlow_Condensed',sans-serif] text-[19px] font-black tracking-[1.5px] text-[#eef6ff] flex items-baseline mr-6 flex-shrink-0">
-        CHE.<span className="text-[#00d4f0]">COMEX</span>
-        <sub className="font-mono text-[8px] text-[#1e3d56] tracking-[2px] ml-1 mb-0">v2</sub>
+    <div className="topbar bg-[rgba(2,8,16,0.96)] backdrop-blur-[16px] border-b border-[#152637] flex items-center px-4 gap-0">
+      <div className="font-['Inter',sans-serif] text-[19px] font-black tracking-[1.5px] text-[#eef6ff] flex items-baseline mr-6 flex-shrink-0">
+        CHE.<span className="text-[var(--ds-cyan)]">COMEX</span>
+        <sub className="font-data text-[8px] text-[#1e3d56] tracking-[2px] ml-1 mb-0">v2</sub>
       </div>
 
       <div className="flex items-center gap-0.5 flex-1">
@@ -107,14 +86,14 @@ function Topbar({ score, onScoreClick }: { score: number; onScoreClick: () => vo
             onClick={() => navigate(item.path)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-[12px] font-medium transition-all ${
               item.active
-                ? 'bg-[#00d4f0]/10 text-[#00d4f0]'
+                ? 'bg-[var(--ds-cyan)]/10 text-[var(--ds-cyan)]'
                 : 'text-[#3d6e92] hover:bg-[#071525] hover:text-[#c4dcf4]'
             }`}
           >
             {item.icon}
             {item.label}
             {item.badge && (
-              <span className="font-mono text-[8px] bg-[#ff3e5a] text-white px-1 py-0.5 rounded-full">{item.badge}</span>
+              <span className="font-data text-[8px] bg-[var(--ds-red)] text-white px-1 py-0.5 rounded-full">{item.badge}</span>
             )}
           </button>
         ))}
@@ -139,16 +118,16 @@ function Topbar({ score, onScoreClick }: { score: number; onScoreClick: () => vo
               />
             </svg>
           </div>
-          <span className="font-mono text-[9px] text-[#3d6e92]">SCORE</span>
-          <span className="font-mono text-[11px] font-semibold" style={{ color }}>{pct}</span>
+          <span className="font-data text-[9px] text-[#3d6e92]">SCORE</span>
+          <span className="font-data text-[11px] font-semibold" style={{ color }}>{pct}</span>
         </button>
 
         <button className="relative w-[30px] h-[30px] flex items-center justify-center rounded text-[#3d6e92] hover:bg-[#071525] hover:text-[#c4dcf4] transition-all">
           <Bell className="w-4 h-4" />
-          <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-[#ff3e5a] shadow-[0_0_6px_#ff3e5a] animate-pulse" />
+          <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-[var(--ds-red)] shadow-[0_0_6px_var(--ds-red)] animate-pulse" />
         </button>
 
-        <div className="w-[30px] h-[30px] rounded-full bg-gradient-to-br from-[#00d4f0] to-[#1a8aff] flex items-center justify-center font-mono text-[12px] font-black text-[#020810] cursor-pointer">
+        <div className="w-[30px] h-[30px] rounded-full bg-gradient-to-br from-[var(--ds-cyan)] to-[var(--ds-blue)] flex items-center justify-center font-data text-[12px] font-black text-[#020810] cursor-pointer">
           JV
         </div>
       </div>
@@ -164,10 +143,10 @@ function Sidebar({ score }: { score: number }) {
     { icon: <Box className="w-3.5 h-3.5" />, label: 'Dashboard', path: '/', active: true },
     { icon: <Map className="w-3.5 h-3.5" />, label: 'Análisis de Mercado', path: '/analysis' },
     { icon: <Search className="w-3.5 h-3.5" />, label: 'HS Code', path: '/analysis' },
-    { icon: <Users className="w-3.5 h-3.5" />, label: 'Marketplace', path: '/marketplace', badge: { val: 3, color: 'bg-[#ff3e5a]' } },
+    { icon: <Users className="w-3.5 h-3.5" />, label: 'Marketplace', path: '/marketplace', badge: { val: 3, color: 'bg-[var(--ds-red)]' } },
     { icon: <Anchor className="w-3.5 h-3.5" />, label: 'Incoterms 2020', path: '/analysis?tab=calculator' },
     { section: 'Información' },
-    { icon: <Bell className="w-3.5 h-3.5" />, label: 'Alertas', path: '/alerts', badge: { val: 2, color: 'bg-[#f5a800]' } },
+    { icon: <Bell className="w-3.5 h-3.5" />, label: 'Alertas', path: '/alerts', badge: { val: 2, color: 'bg-[var(--ds-amber)]' } },
     { icon: <MessageSquare className="w-3.5 h-3.5" />, label: 'Chat Seguro', path: '/chat' },
     { section: 'Mi cuenta' },
     { icon: <Shield className="w-3.5 h-3.5" />, label: 'Perfil B2B', path: '/onboarding' },
@@ -178,7 +157,7 @@ function Sidebar({ score }: { score: number }) {
     <div className="flex flex-col h-full pt-2 pb-4 px-2 gap-0.5 overflow-y-auto">
       {items.map((item, i) => {
         if ('section' in item) return (
-          <div key={i} className="font-mono text-[8px] font-semibold text-[#1e3d56] tracking-[1.5px] uppercase px-2 pt-4 pb-1.5 mt-2 first:mt-0">
+          <div key={i} className="font-data text-[8px] font-semibold text-[#1e3d56] tracking-[1.5px] uppercase px-2 pt-4 pb-1.5 mt-2 first:mt-0">
             {item.section}
           </div>
         );
@@ -188,23 +167,23 @@ function Sidebar({ score }: { score: number }) {
             onClick={() => navigate(item.path!)}
             className={`flex items-center gap-2 px-2.5 py-2 rounded text-[12px] transition-all ${
               item.active
-                ? 'bg-[#00d4f0]/10 text-[#00d4f0]'
+                ? 'bg-[var(--ds-cyan)]/10 text-[var(--ds-cyan)]'
                 : 'text-[#3d6e92] hover:bg-[#071525] hover:text-[#c4dcf4]'
             }`}
           >
             <span className="text-[14px] w-4 text-center flex-shrink-0">{item.icon}</span>
             <span className="flex-1 text-left">{item.label}</span>
             {item.badge && (
-              <span className={`font-mono text-[8px] ${item.badge.color} text-white px-1.5 py-0.5 rounded-full`}>{item.badge.val}</span>
+              <span className={`font-data text-[8px] ${item.badge.color} text-white px-1.5 py-0.5 rounded-full`}>{item.badge.val}</span>
             )}
           </button>
         );
       })}
 
       <div className="mt-auto pt-4 border-t border-[#0f1e2c] mx-2">
-        <div className="font-mono text-[8px] text-[#1e3d56] leading-[1.8]">
+        <div className="font-data text-[8px] text-[#1e3d56] leading-[1.8]">
           🇦🇷 Exportadora del Sur S.A.<br />
-          <span className="text-[#1e3d56]">Plan:</span> <span className="text-[#00d4f0]">Pro PyME</span><br />
+          <span className="text-[#1e3d56]">Plan:</span> <span className="text-[var(--ds-cyan)]">Pro PyME</span><br />
           CUIT: 30-12345678-9
         </div>
       </div>
@@ -215,26 +194,26 @@ function Sidebar({ score }: { score: number }) {
 // ─── Verify Score Widget ──────────────────────────────────────────────────────
 function VerifyWidget({ score, done, onToggle }: { score: number; done: string[]; onToggle: (id: string, pts: number) => void }) {
   const pct = Math.min(100, score);
-  const color = pct >= 100 ? '#00e878' : '#00d4f0';
+  const color = pct >= 100 ? 'var(--ds-green)' : 'var(--ds-cyan)';
   return (
     <div className="bg-[#03101c] border border-[#152637] rounded-xl p-5">
       <div className="flex items-start justify-between mb-4">
         <div>
-          <div className="font-mono text-[10px] font-semibold text-[#3d6e92] uppercase tracking-wider">Verificación de Perfil</div>
+          <div className="font-data text-[10px] font-semibold text-[#3d6e92] uppercase tracking-wider">Verificación de Perfil</div>
           <div className="text-[11px] text-[#3d6e92] mt-1">Completá documentos → desbloqueás features</div>
         </div>
         <div className="flex items-baseline gap-1">
-          <span className="font-['Barlow_Condensed'] text-[48px] font-black leading-none transition-all" style={{ color }}>{pct}</span>
-          <span className="font-mono text-[14px] text-[#3d6e92]">/100</span>
+          <span className="font-['Inter'] text-[48px] font-black leading-none transition-all" style={{ color }}>{pct}</span>
+          <span className="font-data text-[14px] text-[#3d6e92]">/100</span>
         </div>
       </div>
       <div className="h-[5px] bg-[#0f1e2c] rounded-full overflow-hidden mb-1">
         <div className="h-full rounded-full transition-all duration-700"
-          style={{ width: `${pct}%`, background: `linear-gradient(90deg, #00d4f0, ${color})` }} />
+          style={{ width: `${pct}%`, background: `linear-gradient(90deg, var(--ds-cyan), ${color})` }} />
       </div>
       <div className="flex justify-between mb-4">
-        <span className="font-mono text-[9px] text-[#3d6e92]">{done.length} de {VERIFY_DOCS.length} documentos</span>
-        <span className="font-mono text-[9px] text-[#00d4f0] cursor-pointer hover:underline">Ver guía →</span>
+        <span className="font-data text-[9px] text-[#3d6e92]">{done.length} de {VERIFY_DOCS.length} documentos</span>
+        <span className="font-data text-[9px] text-[var(--ds-cyan)] cursor-pointer hover:underline">Ver guía →</span>
       </div>
       <div className="flex flex-col gap-1.5">
         {VERIFY_DOCS.map(doc => {
@@ -245,12 +224,12 @@ function VerifyWidget({ score, done, onToggle }: { score: number; done: string[]
               onClick={() => !isDone && onToggle(doc.id, doc.pts)}
               className={`flex items-center gap-2.5 p-2.5 border rounded cursor-pointer transition-all ${
                 isDone
-                  ? 'bg-[#00e878]/5 border-[#00e878]/20'
+                  ? 'bg-[var(--ds-green)]/5 border-[var(--ds-green)]/20'
                   : 'bg-[#071525] border-[#0f1e2c] hover:border-[#1c3448]'
               }`}
             >
               <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-[11px] ${
-                isDone ? 'bg-[#00e878]/15 text-[#00e878]' : 'bg-[#f5a800]/10 text-[#f5a800]'
+                isDone ? 'bg-[var(--ds-green)]/15 text-[var(--ds-green)]' : 'bg-[var(--ds-amber)]/10 text-[var(--ds-amber)]'
               }`}>
                 {isDone ? '✓' : '⏳'}
               </div>
@@ -258,8 +237,8 @@ function VerifyWidget({ score, done, onToggle }: { score: number; done: string[]
                 <div className="text-[11px] font-medium text-[#c4dcf4]">{doc.name}</div>
                 <div className="text-[9px] text-[#3d6e92] truncate">{doc.hint}</div>
               </div>
-              <div className={`font-mono text-[9px] px-2 py-0.5 rounded border flex-shrink-0 ${
-                isDone ? 'text-[#00e878] bg-[#00e878]/7 border-[#00e878]/20' : 'text-[#f5a800] bg-[#f5a800]/7 border-[#f5a800]/20'
+              <div className={`font-data text-[9px] px-2 py-0.5 rounded border flex-shrink-0 ${
+                isDone ? 'text-[var(--ds-green)] bg-[var(--ds-green)]/7 border-[var(--ds-green)]/20' : 'text-[var(--ds-amber)] bg-[var(--ds-amber)]/7 border-[var(--ds-amber)]/20'
               }`}>
                 {isDone ? 'OK' : `+${doc.pts}`}
               </div>
@@ -274,20 +253,20 @@ function VerifyWidget({ score, done, onToggle }: { score: number; done: string[]
 // ─── KPI Grid ─────────────────────────────────────────────────────────────────
 function KpiGrid({ docsPending }: { docsPending: number }) {
   const kpis = [
-    { label: 'Búsquedas hoy', val: '7', sub: 'de 5 incluidas · Pro', trend: '+2 ↑', up: true, bar: '#00d4f0' },
-    { label: 'Matches Marketplace', val: '3', sub: 'compradores interesados', trend: 'NEW ↑', up: true, bar: '#00e878' },
-    { label: 'Alertas activas', val: '2', sub: 'regulatorias · AFIP + UE', trend: '⚠ LEER', up: null, bar: '#f5a800' },
-    { label: 'Docs pendientes', val: String(docsPending), sub: 'para badge Verificado', trend: `${docsPending}/5 ↓`, up: false, bar: '#ff3e5a' },
+    { label: 'Búsquedas hoy', val: '7', sub: 'de 5 incluidas · Pro', trend: '+2 ↑', up: true, bar: 'var(--ds-cyan)' },
+    { label: 'Matches Marketplace', val: '3', sub: 'compradores interesados', trend: 'NEW ↑', up: true, bar: 'var(--ds-green)' },
+    { label: 'Alertas activas', val: '2', sub: 'regulatorias · AFIP + UE', trend: '⚠ LEER', up: null, bar: 'var(--ds-amber)' },
+    { label: 'Docs pendientes', val: String(docsPending), sub: 'para badge Verificado', trend: `${docsPending}/5 ↓`, up: false, bar: 'var(--ds-red)' },
   ];
   return (
     <div className="grid grid-cols-4 gap-2.5">
       {kpis.map((k, i) => (
         <div key={i} className="bg-[#03101c] border border-[#152637] rounded-xl p-4 relative overflow-hidden hover:border-[#264a68] transition-all">
-          <div className="font-mono text-[8px] text-[#1e3d56] uppercase tracking-[1px] mb-1.5">{k.label}</div>
-          <div className="font-['Barlow_Condensed'] text-[26px] font-black text-[#eef6ff] leading-none">{k.val}</div>
+          <div className="font-data text-[8px] text-[#1e3d56] uppercase tracking-[1px] mb-1.5">{k.label}</div>
+          <div className="font-['Inter'] text-[26px] font-black text-[#eef6ff] leading-none">{k.val}</div>
           <div className="text-[10px] text-[#3d6e92] mt-1">{k.sub}</div>
-          <div className={`absolute bottom-3 right-3 font-mono text-[10px] font-semibold ${
-            k.up === true ? 'text-[#00e878]' : k.up === false ? 'text-[#ff3e5a]' : 'text-[#f5a800]'
+          <div className={`absolute bottom-3 right-3 font-data text-[10px] font-semibold ${
+            k.up === true ? 'text-[var(--ds-green)]' : k.up === false ? 'text-[var(--ds-red)]' : 'text-[var(--ds-amber)]'
           }`}>{k.trend}</div>
           <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: `linear-gradient(90deg, ${k.bar}, transparent)` }} />
         </div>
@@ -301,36 +280,36 @@ function TopMercados() {
   return (
     <div className="bg-[#03101c] border border-[#152637] rounded-xl p-5">
       <div className="flex items-center justify-between mb-4">
-        <span className="font-mono text-[10px] font-semibold text-[#3d6e92] uppercase tracking-wider">Top Mercados · Soja 1201.90</span>
-        <span className="font-mono text-[9px] text-[#00d4f0] cursor-pointer hover:underline">Ver análisis →</span>
+        <span className="font-data text-[10px] font-semibold text-[#3d6e92] uppercase tracking-wider">Top Mercados · Soja 1201.90</span>
+        <span className="font-data text-[9px] text-[var(--ds-cyan)] cursor-pointer hover:underline">Ver análisis →</span>
       </div>
       <svg viewBox="0 0 260 36" preserveAspectRatio="none" className="w-full h-9 mb-3">
         <defs>
           <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#00d4f0" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#00d4f0" stopOpacity="0" />
+            <stop offset="0%" stopColor="var(--ds-cyan)" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="var(--ds-cyan)" stopOpacity="0" />
           </linearGradient>
         </defs>
-        <path d="M0,28 L28,22 L56,25 L84,18 L112,20 L140,14 L168,16 L196,10 L224,8 L260,6" fill="none" stroke="#00d4f0" strokeWidth="1.5" />
+        <path d="M0,28 L28,22 L56,25 L84,18 L112,20 L140,14 L168,16 L196,10 L224,8 L260,6" fill="none" stroke="var(--ds-cyan)" strokeWidth="1.5" />
         <path d="M0,28 L28,22 L56,25 L84,18 L112,20 L140,14 L168,16 L196,10 L224,8 L260,6 L260,36 L0,36Z" fill="url(#sg)" />
-        <circle cx="260" cy="6" r="3" fill="#00d4f0" />
+        <circle cx="260" cy="6" r="3" fill="var(--ds-cyan)" />
       </svg>
       <div className="divide-y divide-[#0f1e2c]">
         {BUYERS.map((b, i) => (
           <div key={i} className="flex items-center gap-2.5 py-2">
-            <span className="font-mono text-[11px] text-[#3d6e92] w-4 text-right flex-shrink-0">{i + 1}</span>
+            <span className="font-data text-[11px] text-[#3d6e92] w-4 text-right flex-shrink-0">{i + 1}</span>
             <span className="text-[16px] flex-shrink-0">{b.flag}</span>
             <div className="flex-1 min-w-0">
               <div className="text-[11px] font-medium text-[#c4dcf4]">{b.name}</div>
-              <div className="font-mono text-[9px] text-[#3d6e92]">{b.hs}</div>
+              <div className="font-data text-[9px] text-[#3d6e92]">{b.hs}</div>
             </div>
             <div className="w-[70px] flex-shrink-0">
               <div className="h-1 bg-[#0f1e2c] rounded-full overflow-hidden mb-1">
-                <div className="h-full bg-[#00d4f0] rounded-full" style={{ width: `${b.share}%` }} />
+                <div className="h-full bg-[var(--ds-cyan)] rounded-full" style={{ width: `${b.share}%` }} />
               </div>
-              <div className="font-mono text-[9px] text-[#3d6e92] text-right">{b.val}</div>
+              <div className="font-data text-[9px] text-[#3d6e92] text-right">{b.val}</div>
             </div>
-            {b.up ? <TrendingUp className="w-3.5 h-3.5 text-[#00e878] flex-shrink-0" /> : <TrendingDown className="w-3.5 h-3.5 text-[#ff3e5a] flex-shrink-0" />}
+            {b.up ? <TrendingUp className="w-3.5 h-3.5 text-[var(--ds-green)] flex-shrink-0" /> : <TrendingDown className="w-3.5 h-3.5 text-[var(--ds-red)] flex-shrink-0" />}
           </div>
         ))}
       </div>
@@ -344,8 +323,8 @@ function Oportunidades() {
   return (
     <div className="bg-[#03101c] border border-[#152637] rounded-xl p-5">
       <div className="flex items-center justify-between mb-4">
-        <span className="font-mono text-[10px] font-semibold text-[#3d6e92] uppercase tracking-wider">Oportunidades detectadas</span>
-        <span className="font-mono text-[8px] bg-[#00e878]/10 text-[#00e878] border border-[#00e878]/20 px-2 py-0.5 rounded-full">3 activas</span>
+        <span className="font-data text-[10px] font-semibold text-[#3d6e92] uppercase tracking-wider">Oportunidades detectadas</span>
+        <span className="font-data text-[8px] bg-[var(--ds-green)]/10 text-[var(--ds-green)] border border-[var(--ds-green)]/20 px-2 py-0.5 rounded-full">3 activas</span>
       </div>
       <div className="flex flex-col gap-2">
         {OPPS.map((opp, i) => (
@@ -356,13 +335,13 @@ function Oportunidades() {
           >
             <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-lg" style={{ background: opp.color }} />
             <div className="flex items-center justify-between pl-2">
-              <span className="font-mono text-[9px] text-[#3d6e92]">{opp.country}</span>
-              <span className="font-['Barlow_Condensed'] text-[14px] font-black text-[#eef6ff]">{opp.val}</span>
+              <span className="font-data text-[9px] text-[#3d6e92]">{opp.country}</span>
+              <span className="font-['Inter'] text-[14px] font-black text-[#eef6ff]">{opp.val}</span>
             </div>
             <div className="text-[11px] text-[#7fb0d0] pl-2">{opp.product}</div>
             <div className="flex gap-1.5 pl-2">
-              <span className="font-mono text-[8px] bg-[#00d4f0]/10 text-[#00d4f0] border border-[#00d4f0]/20 px-1.5 py-0.5 rounded-full">{opp.incoterm}</span>
-              <span className="font-mono text-[8px] bg-[#00e878]/10 text-[#00e878] border border-[#00e878]/20 px-1.5 py-0.5 rounded-full">{opp.treaty}</span>
+              <span className="font-data text-[8px] bg-[var(--ds-cyan)]/10 text-[var(--ds-cyan)] border border-[var(--ds-cyan)]/20 px-1.5 py-0.5 rounded-full">{opp.incoterm}</span>
+              <span className="font-data text-[8px] bg-[var(--ds-green)]/10 text-[var(--ds-green)] border border-[var(--ds-green)]/20 px-1.5 py-0.5 rounded-full">{opp.treaty}</span>
             </div>
           </div>
         ))}
@@ -377,15 +356,15 @@ function IncotermQuick() {
   return (
     <div className="bg-[#03101c] border border-[#152637] rounded-xl p-5">
       <div className="flex items-center justify-between mb-4">
-        <span className="font-mono text-[10px] font-semibold text-[#3d6e92] uppercase tracking-wider">Incoterm recomendado</span>
-        <button onClick={() => navigate('/analysis?tab=calculator')} className="font-mono text-[9px] text-[#00d4f0] hover:underline">Abrir simulador →</button>
+        <span className="font-data text-[10px] font-semibold text-[#3d6e92] uppercase tracking-wider">Incoterm recomendado</span>
+        <button onClick={() => navigate('/analysis?tab=calculator')} className="font-data text-[9px] text-[var(--ds-cyan)] hover:underline">Abrir simulador →</button>
       </div>
-      <div className="bg-[#00d4f0]/5 border border-[#00d4f0]/15 rounded-xl p-4 mb-3">
+      <div className="bg-[var(--ds-cyan)]/5 border border-[var(--ds-cyan)]/15 rounded-xl p-4 mb-3">
         <div className="flex items-center gap-3 mb-2">
-          <div className="font-['Barlow_Condensed'] text-[32px] font-black text-[#00d4f0]">FOB</div>
+          <div className="font-['Inter'] text-[32px] font-black text-[var(--ds-cyan)]">FOB</div>
           <div>
             <div className="text-[12px] font-semibold text-[#c4dcf4]">Free On Board</div>
-            <div className="font-mono text-[9px] text-[#00e878]">★ Ideal para tu perfil</div>
+            <div className="font-data text-[9px] text-[var(--ds-green)]">★ Ideal para tu perfil</div>
           </div>
         </div>
         <p className="text-[10px] text-[#3d6e92] leading-[1.6]">
@@ -394,11 +373,11 @@ function IncotermQuick() {
       </div>
       <div className="grid grid-cols-2 gap-2 text-[10px]">
         <div className="bg-[#071525] border border-[#0f1e2c] rounded-lg p-2.5">
-          <div className="font-mono text-[8px] text-[#3d6e92] uppercase mb-1">Vendedor cubre</div>
+          <div className="font-data text-[8px] text-[#3d6e92] uppercase mb-1">Vendedor cubre</div>
           <div className="text-[#c4dcf4] leading-[1.5]">Hasta el puerto de embarque AR. Despacho de exportación.</div>
         </div>
         <div className="bg-[#071525] border border-[#0f1e2c] rounded-lg p-2.5">
-          <div className="font-mono text-[8px] text-[#3d6e92] uppercase mb-1">Comprador cubre</div>
+          <div className="font-data text-[8px] text-[#3d6e92] uppercase mb-1">Comprador cubre</div>
           <div className="text-[#c4dcf4] leading-[1.5]">Flete, seguro y despacho de importación en destino.</div>
         </div>
       </div>
@@ -409,23 +388,45 @@ function IncotermQuick() {
 // ─── Alertas Feed ─────────────────────────────────────────────────────────────
 function AlertasFeed() {
   const [, navigate] = useLocation();
-  const dotColor = { hi: '#ff3e5a', md: '#f5a800', lo: '#264a68' };
+  const dotColor = { critical: 'var(--ds-red)', warning: 'var(--ds-amber)', regulation: 'var(--ds-cyan)', opportunity: 'var(--ds-green)', treaty: 'var(--ds-blue)', market: '#264a68' };
+  
+  const [news, setNews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/news?limit=5&lang=es&period=30')
+      .then(r => r.json())
+      .then(data => {
+        setNews(data.news || []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
   return (
     <div className="bg-[#03101c] border border-[#152637] rounded-xl p-5">
       <div className="flex items-center justify-between mb-3">
-        <span className="font-mono text-[10px] font-semibold text-[#3d6e92] uppercase tracking-wider">Alertas regulatorias</span>
-        <button onClick={() => navigate('/alerts')} className="font-mono text-[9px] text-[#00d4f0] hover:underline">Ver todas →</button>
+        <span className="font-data text-[10px] font-semibold text-[#3d6e92] uppercase tracking-wider">Alertas regulatorias</span>
+        <button onClick={() => navigate('/alerts')} className="font-data text-[9px] text-[var(--ds-cyan)] hover:underline">Ver todas →</button>
       </div>
       <div className="divide-y divide-[#0f1e2c]">
-        {ALERTS.map((a, i) => (
-          <div key={i} onClick={() => navigate('/alerts')} className="flex gap-2.5 py-2.5 cursor-pointer hover:opacity-80 transition-opacity">
-            <div className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5" style={{ background: dotColor[a.level as keyof typeof dotColor] }} />
-            <div className="flex-1 min-w-0">
-              <div className="text-[11px] text-[#7fb0d0] leading-[1.5]">{a.text}</div>
-              <div className="font-mono text-[9px] text-[#3d6e92] mt-0.5">{a.time}</div>
+        {loading ? (
+          <div className="text-[11px] text-[#7fb0d0] py-2">Cargando actualizaciones...</div>
+        ) : news.length === 0 ? (
+          <div className="text-[11px] text-[#7fb0d0] py-2">No hay alertas recientes.</div>
+        ) : (
+          news.map((a: any) => (
+            <div key={a.id} onClick={() => navigate('/alerts')} className="flex gap-2.5 py-2.5 cursor-pointer hover:opacity-80 transition-opacity">
+              <div className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5" style={{ background: dotColor[a.alert_type as keyof typeof dotColor] || '#264a68' }} />
+              <div className="flex-1 min-w-0">
+                <div className="text-[11px] text-[#7fb0d0] leading-[1.5]">{a.title}</div>
+                <div className="font-data text-[9px] text-[#3d6e92] mt-0.5">
+                  {new Date(a.published_at * 1000).toLocaleDateString('es-AR')} • {a.source_name}
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
@@ -446,19 +447,19 @@ function RightPanel({ score, done, onNextStep }: { score: number; done: string[]
     <div className="flex flex-col gap-4 pt-2 pb-4 px-3 overflow-y-auto h-full">
       {/* Commodities */}
       <div>
-        <div className="font-mono text-[8px] font-semibold text-[#1e3d56] uppercase tracking-[1.5px] mb-2">Commodities Live</div>
+        <div className="font-data text-[8px] font-semibold text-[#1e3d56] uppercase tracking-[1.5px] mb-2">Commodities Live</div>
         {commodities.map((c, i) => (
           <div key={i} className="flex items-center justify-between gap-2 p-2 bg-[#03101c] border border-[#152637] rounded mb-1.5">
-            <span className="font-mono text-[9px] text-[#3d6e92]">{c.name}</span>
-            <span className="font-['Barlow_Condensed'] text-[15px] font-black text-[#eef6ff]">{c.val}</span>
-            <span className={`font-mono text-[9px] ${c.up ? 'text-[#00e878]' : 'text-[#ff3e5a]'}`}>{c.chg}</span>
+            <span className="font-data text-[9px] text-[#3d6e92]">{c.name}</span>
+            <span className="font-['Inter'] text-[15px] font-black text-[#eef6ff]">{c.val}</span>
+            <span className={`font-data text-[9px] ${c.up ? 'text-[var(--ds-green)]' : 'text-[var(--ds-red)]'}`}>{c.chg}</span>
           </div>
         ))}
       </div>
 
       {/* Feature unlocks */}
       <div>
-        <div className="font-mono text-[8px] font-semibold text-[#1e3d56] uppercase tracking-[1.5px] mb-2">Features · Score {pct}/100</div>
+        <div className="font-data text-[8px] font-semibold text-[#1e3d56] uppercase tracking-[1.5px] mb-2">Features · Score {pct}/100</div>
         {FEATURES.map((f, i) => {
           const locked = pct < f.threshold;
           return (
@@ -484,13 +485,13 @@ function RightPanel({ score, done, onNextStep }: { score: number; done: string[]
       {done.length < VERIFY_DOCS.length && (
         <button
           onClick={onNextStep}
-          className="w-full py-2.5 bg-gradient-to-r from-[#00d4f0] to-[#1a8aff] text-[#020810] font-mono text-[10px] font-bold uppercase tracking-wider rounded-lg hover:opacity-90 transition-all"
+          className="w-full py-2.5 bg-gradient-to-r from-[var(--ds-cyan)] to-[var(--ds-blue)] text-[#020810] font-data text-[10px] font-bold uppercase tracking-wider rounded-lg hover:opacity-90 transition-all"
         >
           Próximo paso →
         </button>
       )}
       {done.length === VERIFY_DOCS.length && (
-        <div className="w-full py-2.5 bg-[#00e878]/10 border border-[#00e878]/25 rounded-lg text-center font-mono text-[10px] font-bold text-[#00e878]">
+        <div className="w-full py-2.5 bg-[var(--ds-green)]/10 border border-[var(--ds-green)]/25 rounded-lg text-center font-data text-[10px] font-bold text-[var(--ds-green)]">
           ✓ Perfil 100% verificado
         </div>
       )}
@@ -521,11 +522,11 @@ export default function Home() {
   const docsPending = VERIFY_DOCS.length - done.length;
 
   return (
-    <div className="min-h-screen bg-[#020810] text-[#7fb0d0] font-['Outfit',sans-serif] overflow-x-hidden">
+    <div className="min-h-screen bg-[#020810] text-[#7fb0d0] font-['Inter',sans-serif] overflow-x-hidden">
       {/* Add ticker keyframes globally */}
       <style>{`
         @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700;800;900&family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
       `}</style>
 
       {/* Global background */}
@@ -540,8 +541,7 @@ export default function Home() {
         <PremiumGlobe3D className="w-full h-full opacity-25 mix-blend-screen" />
       </div>
 
-      {/* Ticker + Topbar */}
-      <TickerBar />
+      {/* Topbar */}
       <Topbar score={score} onScoreClick={focusVerify} />
 
       {/* Main layout: sidebar + main + right panel */}
@@ -549,8 +549,6 @@ export default function Home() {
         className="relative z-10 grid"
         style={{
           gridTemplateColumns: '200px 1fr 260px',
-          minHeight: '100vh',
-          paddingTop: '72px', // 26px ticker + 46px topbar
         }}
       >
         {/* Left sidebar */}
@@ -566,20 +564,20 @@ export default function Home() {
               style={{ background: 'radial-gradient(circle, rgba(0,212,240,.07) 0%, transparent 70%)' }} />
             <div className="flex items-center justify-between gap-4 relative">
               <div>
-                <div className="font-['Barlow_Condensed'] text-[22px] font-black text-[#eef6ff] tracking-[0.5px]">Buen día, Jezabel 👋</div>
+                <div className="font-['Inter'] text-[22px] font-black text-[#eef6ff] tracking-[0.5px]">Buen día, Jezabel 👋</div>
                 <div className="text-[11px] text-[#3d6e92] mt-1">🇦🇷 Exportadora del Sur S.A. · Comerciante · Pro PyME · {new Date().toLocaleDateString('es-AR', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' })}</div>
                 <div className="flex gap-2 flex-wrap mt-2.5">
                   {['⏳ Verificación en progreso', 'Pro PyME', '✓ AFIP activo', 'MERCOSUR'].map((chip, i) => {
-                    const colors = ['text-[#f5a800] bg-[#f5a800]/8 border-[#f5a800]/20', 'text-[#00d4f0] bg-[#00d4f0]/8 border-[#00d4f0]/20', 'text-[#00e878] bg-[#00e878]/8 border-[#00e878]/20', 'text-[#1a8aff] bg-[#1a8aff]/8 border-[#1a8aff]/20'];
-                    return <span key={i} className={`inline-flex items-center font-mono text-[8px] px-2 py-0.5 rounded-full border ${colors[i]}`}>{chip}</span>;
+                    const colors = ['text-[var(--ds-amber)] bg-[var(--ds-amber)]/8 border-[var(--ds-amber)]/20', 'text-[var(--ds-cyan)] bg-[var(--ds-cyan)]/8 border-[var(--ds-cyan)]/20', 'text-[var(--ds-green)] bg-[var(--ds-green)]/8 border-[var(--ds-green)]/20', 'text-[var(--ds-blue)] bg-[var(--ds-blue)]/8 border-[var(--ds-blue)]/20'];
+                    return <span key={i} className={`inline-flex items-center font-data text-[8px] px-2 py-0.5 rounded-full border ${colors[i]}`}>{chip}</span>;
                   })}
                 </div>
               </div>
               <div className="flex gap-5 flex-shrink-0">
-                {[{ val: '3', label: 'Oportunidades', color: '#00d4f0' }, { val: '$142K', label: 'USD Potencial', color: '#00e878' }, { val: String(score), label: 'Score', color: '#f5a800' }].map((s, i) => (
+                {[{ val: '3', label: 'Oportunidades', color: 'var(--ds-cyan)' }, { val: '$142K', label: 'USD Potencial', color: 'var(--ds-green)' }, { val: String(score), label: 'Score', color: 'var(--ds-amber)' }].map((s, i) => (
                   <div key={i} className="text-right">
-                    <div className="font-['Barlow_Condensed'] text-[22px] font-black" style={{ color: s.color }}>{s.val}</div>
-                    <div className="font-mono text-[8px] text-[#1e3d56] uppercase tracking-[1px] mt-0.5">{s.label}</div>
+                    <div className="font-['Inter'] text-[22px] font-black" style={{ color: s.color }}>{s.val}</div>
+                    <div className="font-data text-[8px] text-[#1e3d56] uppercase tracking-[1px] mt-0.5">{s.label}</div>
                   </div>
                 ))}
               </div>

@@ -10,6 +10,7 @@ interface InteractiveMapProps {
   topBuyers?: any[];
   recommended?: any[];
   cheComex?: any[];
+  language?: string;
 }
 
 export default function InteractiveMap({ 
@@ -18,7 +19,8 @@ export default function InteractiveMap({
   onCountryClick,
   topBuyers = [],
   recommended = [],
-  cheComex = [] 
+  cheComex = [],
+  language = 'es'
 }: InteractiveMapProps) {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -103,7 +105,7 @@ export default function InteractiveMap({
                 L.marker([jLat, jLng], { icon: blueIcon }).addTo(map)
                 .bindPopup(`
                     <div class="p-2 bg-[#0A1929] text-white rounded text-xs border border-cyan-500/50">
-                        <div class="font-bold text-cyan-400 mb-1">Top #${buyer.rank} Buyer</div>
+                        <div class="font-bold text-cyan-400 mb-1">${language === 'es' ? 'Comprador Top #' : 'Top Buyer #'}${buyer.rank}</div>
                         <div class="font-medium">${buyer.country}</div>
                         ${buyer.volume ? `<div class="text-gray-400">${(buyer.volume/1000000).toFixed(1)}M tons</div>` : ''}
                     </div>
@@ -129,9 +131,9 @@ export default function InteractiveMap({
                 L.marker([lat, lng], { icon: greenIcon }).addTo(map)
                 .bindPopup(`
                     <div class="p-2 bg-[#0A1929] text-white rounded text-xs border border-green-500/50">
-                        <div class="font-bold text-green-400 mb-1">Trade Agreement</div>
+                        <div class="font-bold text-green-400 mb-1">${language === 'es' ? 'Tratado Comercial' : 'Trade Agreement'}</div>
                         <div class="font-medium">${rec.country}</div>
-                        <div class="text-gray-400 italic">${rec.treaty || 'Active Treaty'}</div>
+                        <div class="text-gray-400 italic">${rec.treaty || (language === 'es' ? 'Tratado Activo' : 'Active Treaty')}</div>
                     </div>
                 `);
             }
@@ -159,11 +161,11 @@ export default function InteractiveMap({
                     <div class="min-w-[200px] p-0 overflow-hidden rounded-lg bg-slate-900 border border-amber-500/50 text-white">
                         <div class="bg-amber-500/10 p-2 border-b border-amber-500/20 flex items-center justify-between">
                             <span class="text-xs font-bold text-amber-400 uppercase tracking-wider">Marketplace</span>
-                            <span class="text-[10px] bg-amber-500 text-black px-1.5 py-0.5 rounded font-bold">${post.activeOrders} orders</span>
+                            <span class="text-[10px] bg-amber-500 text-black px-1.5 py-0.5 rounded font-bold">${post.activeOrders} ${language === 'es' ? 'órdenes' : 'orders'}</span>
                         </div>
                         <div class="p-3">
                             <h4 class="font-bold text-sm mb-1">${post.country}</h4>
-                            <div class="text-xs text-slate-400 mb-2">Active Buyer Demand</div>
+                            <div class="text-xs text-slate-400 mb-2">${language === 'es' ? 'Demanda Activa de Compradores' : 'Active Buyer Demand'}</div>
                         </div>
                     </div>
                  `);
@@ -228,20 +230,20 @@ export default function InteractiveMap({
       
       {/* Layer Controls - Updated */}
       <div className="absolute top-4 right-4 z-10 bg-[#0f172a]/90 backdrop-blur-md border border-cyan-500/30 rounded-lg p-3 shadow-xl">
-        <div className="text-xs font-bold text-cyan-400 mb-2 uppercase tracking-wider">Che.Comex View</div>
+        <div className="text-xs font-bold text-cyan-400 mb-2 uppercase tracking-wider">{language === 'es' ? 'Vista Che.Comex' : 'Che.Comex View'}</div>
 
         <div className="flex flex-col gap-2">
             <button onClick={() => setSelectedLayer('all')} className={`px-3 py-1.5 rounded text-xs text-left flex items-center gap-2 ${selectedLayer === 'all' ? 'bg-cyan-900/50 text-cyan-200 border border-cyan-500/50' : 'text-gray-400 hover:bg-white/5'}`}>
-                <div className="w-2 h-2 rounded-full bg-cyan-400"></div> All Layers
+                <div className="w-2 h-2 rounded-full bg-cyan-400"></div> {language === 'es' ? 'Todas las Capas' : 'All Layers'}
             </button>
             <button onClick={() => setSelectedLayer('marketplace')} className={`px-3 py-1.5 rounded text-xs text-left flex items-center gap-2 ${selectedLayer === 'marketplace' ? 'bg-amber-900/30 text-amber-200 border border-amber-500/50' : 'text-gray-400 hover:bg-white/5'}`}>
                 <div className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_5px_#fbbf24]"></div> ⭐ Marketplace
             </button>
             <button onClick={() => setSelectedLayer('macro')} className={`px-3 py-1.5 rounded text-xs text-left flex items-center gap-2 ${selectedLayer === 'macro' ? 'bg-blue-900/30 text-blue-200 border border-blue-500/50' : 'text-gray-400 hover:bg-white/5'}`}>
-                <div className="w-2 h-2 rounded-full bg-blue-500"></div> 🌍 Top Buyers
+                <div className="w-2 h-2 rounded-full bg-blue-500"></div> 🌍 {language === 'es' ? 'Top Compradores' : 'Top Buyers'}
             </button>
             <button onClick={() => setSelectedLayer('treaties')} className={`px-3 py-1.5 rounded text-xs text-left flex items-center gap-2 ${selectedLayer === 'treaties' ? 'bg-green-900/30 text-green-200 border border-green-500/50' : 'text-gray-400 hover:bg-white/5'}`}>
-                <div className="w-2 h-2 rounded-full bg-green-500"></div> 📜 Treaties
+                <div className="w-2 h-2 rounded-full bg-green-500"></div> 📜 {language === 'es' ? 'Tratados' : 'Treaties'}
             </button>
         </div>
       </div>

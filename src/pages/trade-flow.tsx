@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/hooks/use-language";
-import { ArrowLeft, Navigation, Users, TrendingUp, Globe, Download, Upload, Star, AlertTriangle, CheckCircle, XCircle, Info, ZoomIn, ZoomOut, RotateCcw, MapPin, Flag } from "lucide-react";
+import { ArrowLeft, Navigation, Users, TrendingUp, Globe, Download, Upload, Star, AlertTriangle, CheckCircle, XCircle, Info, ZoomIn, ZoomOut, RotateCcw, MapPin, Flag, Building2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,18 @@ import { ComplianceAlertBanner } from "@/components/compliance-alert-banner";
 import { RequiredDocuments } from "@/components/required-documents";
 import { countries } from "@shared/countries-data";
 import { getCountryCoordinates as getCoordinatesFromContinental } from "@shared/continental-coordinates";
+import IncotermsSmartAnalysis from "@/components/trade/IncotermsSmartAnalysis";
+import { motion, AnimatePresence } from "framer-motion";
+
+// Helper: get country emoji flag from ISO code
+const getCountryFlag = (code: string): string => {
+  if (!code || code.length !== 2) return '🌎';
+  try {
+    return code.toUpperCase().replace(/./g, c =>
+      String.fromCodePoint(127397 + c.charCodeAt(0))
+    );
+  } catch { return '🌎'; }
+};
 
 // Modern satellite map providers for high-quality visualization
 const mapProviders = {
@@ -95,7 +107,10 @@ export default function TradeFlow() {
   const [isZooming, setIsZooming] = useState(false);
   const [hasNavigationError, setHasNavigationError] = useState(false);
   const [navigationErrorMessage, setNavigationErrorMessage] = useState<string>('');
-  
+
+  // Phase 33C — Transport layer toggle
+  const [activeLayer, setActiveLayer] = useState<'maritime' | 'land' | 'air'>('maritime');
+
   // Subscription State
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [isPremium, setIsPremium] = useState(false); // Mock premium state
@@ -178,6 +193,30 @@ export default function TradeFlow() {
       setNavigationErrorMessage('');
     }
   }, []);
+
+  // Phase 33C — Fetch maritime zones
+  const { data: maritimeZonesData } = useQuery({
+    queryKey: ['/api/maritime/zones'],
+    queryFn: () => fetch('/api/maritime/zones').then(r => r.json()).catch(() => ({ zones: [] })),
+    staleTime: 30 * 60 * 1000,
+  });
+  const maritimeZones = maritimeZonesData?.zones ?? [];
+
+  // Phase 33C — Fetch land zones
+  const { data: landZonesData } = useQuery({
+    queryKey: ['/api/maritime/land-zones'],
+    queryFn: () => fetch('/api/maritime/land-zones').then(r => r.json()).catch(() => ({ zones: [] })),
+    staleTime: 30 * 60 * 1000,
+  });
+  const landZones = landZonesData?.zones ?? [];
+
+  // Phase 33C — Fetch air zones
+  const { data: airZonesData } = useQuery({
+    queryKey: ['/api/maritime/air-zones'],
+    queryFn: () => fetch('/api/maritime/air-zones').then(r => r.json()).catch(() => ({ zones: [] })),
+    staleTime: 30 * 60 * 1000,
+  });
+  const airZones = airZonesData?.zones ?? [];
 
   // Fetch country recommendations with origin country
   const { data: recommendationsData, isLoading, error: recommendationsError } = useQuery({
@@ -670,7 +709,8 @@ export default function TradeFlow() {
 
       <Header />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: 'calc(var(--ds-offset-top) + 24px)', paddingBottom: 'var(--ds-offset-bottom)' }}>
+
         {/* Navigation Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
@@ -1159,6 +1199,32 @@ export default function TradeFlow() {
                         </Tooltip>
                       ))}
                     </div>
+
+                    {/* Phase 33C — Transport Layer Toggles */}
+                    <div className="flex items-center gap-1 ml-3 border-l border-white/20 pl-3">
+                      {([
+                        { id: 'maritime', emoji: '🚢', label: language === 'es' ? 'Marítimo' : 'Maritime' },
+                        { id: 'land',     emoji: '🚛', label: language === 'es' ? 'Terrestre' : 'Land' },
+                        { id: 'air',      emoji: '✈️', label: language === 'es' ? 'Aéreo' : 'Air' },
+                      ] as const).map(({ id, emoji, label }) => (
+                        <Tooltip key={id}>
+                          <TooltipTrigger asChild>
+                            <button
+                              id={`layer-toggle-${id}`}
+                              onClick={() => setActiveLayer(id)}
+                              className={`px-2 py-1 rounded text-xs font-bold transition-all duration-200 border ${
+                                activeLayer === id
+                                  ? 'bg-white/30 border-white/60 text-white shadow-lg scale-105'
+                                  : 'bg-white/5 border-white/20 text-white/60 hover:bg-white/15 hover:text-white'
+                              }`}
+                            >
+                              {emoji}
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>{label}</TooltipContent>
+                        </Tooltip>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </CardHeader>
@@ -1210,6 +1276,124 @@ export default function TradeFlow() {
                       dprs={[1, 2]}
                     >
                     {mapMarkers}
+
+                      {/* Phase 33C — MARITIME RISK ZONE OVERLAYS */}
+                      {activeLayer === 'maritime' && maritimeZones.map((zone: any) => (
+                        <Overlay
+                          key={`maritime-${zone.id}`}
+                          anchor={[zone.centerLat, zone.centerLng] as [number, number]}
+                          offset={[0, 0]}
+                        >
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div
+                                className="flex flex-col items-center cursor-pointer group"
+                                style={{ transform: 'translate(-50%, -50%)' }}
+                              >
+                                <div
+                                  className="rounded-lg px-2 py-1 text-xs font-bold text-white border border-white/30 backdrop-blur-md shadow-lg group-hover:scale-110 transition-transform"
+                                  style={{
+                                    backgroundColor: zone.color + 'cc',
+                                    boxShadow: `0 0 16px ${zone.color}66`,
+                                  }}
+                                >
+                                  🚢 {zone.riskLevel.toUpperCase()}
+                                </div>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs bg-[#020a12]/95 border border-white/20 text-white p-3 rounded-xl">
+                              <p className="font-bold mb-1" style={{ color: zone.color }}>{zone.name}</p>
+                              <p className="text-xs text-gray-300 mb-1">{zone.warningMessage}</p>
+                              {zone.impact?.extraDays > 0 && (
+                                <p className="text-xs text-amber-300">+{zone.impact.extraDays} días · +USD {zone.impact.extraCostUsdPer40GP?.toLocaleString()}/40GP</p>
+                              )}
+                              <p className="text-xs text-gray-500 mt-1 italic">Fuentes: {zone.officialSources?.map((s: any) => s.name).join(', ')}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </Overlay>
+                      ))}
+
+                      {/* Phase 33C — LAND RISK ZONE OVERLAYS */}
+                      {activeLayer === 'land' && landZones.map((zone: any) => (
+                        <Overlay
+                          key={`land-${zone.id}`}
+                          anchor={[zone.coordinates?.[0]?.lat ?? 0, zone.coordinates?.[0]?.lng ?? 0] as [number, number]}
+                          offset={[0, 0]}
+                        >
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div
+                                className="flex flex-col items-center cursor-pointer group"
+                                style={{ transform: 'translate(-50%, -50%)' }}
+                              >
+                                <div
+                                  className="rounded-lg px-2 py-1 text-xs font-bold text-white border border-white/30 backdrop-blur-md shadow-lg group-hover:scale-110 transition-transform"
+                                  style={{
+                                    backgroundColor: zone.color + 'cc',
+                                    boxShadow: `0 0 16px ${zone.color}66`,
+                                  }}
+                                >
+                                  🚛 {zone.riskLevel.toUpperCase()}
+                                  {zone.isHighRiskNow && ' ⚠️'}
+                                </div>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs bg-[#020a12]/95 border border-white/20 text-white p-3 rounded-xl">
+                              <p className="font-bold mb-1" style={{ color: zone.color }}>{zone.name}</p>
+                              <p className="text-xs text-gray-300 mb-1">{zone.warningMessage}</p>
+                              {zone.isHighRiskNow && (
+                                <p className="text-xs text-red-400 font-bold mb-1">⚠️ Riesgo ACTIVO este mes</p>
+                              )}
+                              {zone.impact?.extraDays > 0 && (
+                                <p className="text-xs text-amber-300">+{zone.impact.extraDays} días · +USD {zone.impact.extraCostUsd?.toLocaleString()}</p>
+                              )}
+                              {zone.impact?.alternativeRoute && (
+                                <p className="text-xs text-cyan-300 mt-1">↪ Alt: {zone.impact.alternativeRoute}</p>
+                              )}
+                              <p className="text-xs text-gray-500 mt-1 italic">Fuentes: {zone.sources?.map((s: any) => s.name).join(', ')}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </Overlay>
+                      ))}
+
+                      {/* Phase 33C — AIR RISK ZONE OVERLAYS */}
+                      {activeLayer === 'air' && airZones.map((zone: any) => (
+                        <Overlay
+                          key={`air-${zone.id}`}
+                          anchor={[zone.centerLat, zone.centerLng] as [number, number]}
+                          offset={[0, 0]}
+                        >
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div
+                                className="flex flex-col items-center cursor-pointer group"
+                                style={{ transform: 'translate(-50%, -50%)' }}
+                              >
+                                <div
+                                  className="rounded-lg px-2 py-1 text-xs font-bold text-white border border-white/30 backdrop-blur-md shadow-lg group-hover:scale-110 transition-transform"
+                                  style={{
+                                    backgroundColor: zone.color + 'cc',
+                                    boxShadow: `0 0 16px ${zone.color}66`,
+                                  }}
+                                >
+                                  ✈️ {zone.riskLevel.toUpperCase()}
+                                </div>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs bg-[#020a12]/95 border border-white/20 text-white p-3 rounded-xl">
+                              <p className="font-bold mb-1" style={{ color: zone.color }}>{zone.name}</p>
+                              <p className="text-xs text-gray-300 mb-1">{zone.warningMessage}</p>
+                              {zone.impact?.extraHours > 0 && (
+                                <p className="text-xs text-amber-300">+{zone.impact.extraHours}h vuelo · +USD {zone.impact.extraCostUsd?.toLocaleString()}/vuelo</p>
+                              )}
+                              {zone.affectedRoutes?.length > 0 && (
+                                <p className="text-xs text-blue-300 mt-1">Rutas afectadas: {zone.affectedRoutes.join(' · ')}</p>
+                              )}
+                              <p className="text-xs text-gray-500 mt-1 italic">Fuentes: {zone.sources?.map((s: any) => s.name).join(', ')}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </Overlay>
+                      ))}
 
                       {/* TRADE FLOW ARCS - High Impact Visualization */}
                       {originCountryData && recommendations.map((dest, dIdx) => {
@@ -1687,6 +1871,14 @@ export default function TradeFlow() {
                   originCountry={originCountry}
                   destinationCountry={selectedCountry.countryCode}
                   direction={operation}
+                />
+
+                {/* Smart Incoterms Analysis */}
+                <IncotermsSmartAnalysis
+                  origin={originCountry}
+                  destination={selectedCountry.countryCode}
+                  hsCode={selectedProduct}
+                  productName={selectedProduct || 'Producto'}
                 />
               </>
             ) : (

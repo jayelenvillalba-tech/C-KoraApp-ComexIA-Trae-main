@@ -8,7 +8,8 @@ import { fileURLToPath } from 'url';
 // Routes
 import * as authRoutes from './routes/auth';
 import * as marketplaceRoutes from './routes/marketplace';
-import * as chatRoutes from './routes/chat';
+import * as chatRoutesLegacy from './routes/chat';
+import { createChatRouter } from './routes/chat';
 import documentsRouter from './routes/documents';
 import aiRouter from './routes/ai';
 import hsCodesRouter from './routes/hs-codes';
@@ -54,11 +55,7 @@ app.get('/api/marketplace/posts', marketplaceRoutes.getPosts);
 app.post('/api/marketplace/posts', authRoutes.isAuthenticated, marketplaceRoutes.createPost);
 
 // Chat
-app.get('/api/chat/conversations', chatRoutes.getConversations);
-app.post('/api/chat/conversations', chatRoutes.createConversation);
-app.get('/api/chat/:conversationId/messages', chatRoutes.getMessages);
-app.post('/api/chat/:conversationId/messages', chatRoutes.sendMessage);
-app.post('/api/chat/suggestions', chatRoutes.getSuggestions);
+app.use('/api/chat', createChatRouter());
 
 // Documents
 app.use('/api/documents', documentsRouter);

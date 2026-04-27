@@ -161,7 +161,7 @@ export default function AudioCall({ conversationId, isCallActive, onEndCall }: A
               <p className="text-white font-medium mb-1">
                 {language === 'es' ? 'En llamada' : 'Connected'}
               </p>
-              <p className="text-slate-400 text-sm font-mono">
+              <p className="text-slate-400 text-sm font-data">
                 {formatDuration(callDuration)}
               </p>
             </>

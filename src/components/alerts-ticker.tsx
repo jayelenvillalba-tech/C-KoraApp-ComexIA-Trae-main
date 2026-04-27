@@ -1,71 +1,110 @@
 import { useState, useEffect } from "react";
-import { TrendingUp, TrendingDown, RefreshCw } from "lucide-react";
+
+const COMMODITY_FALLBACK = [
+  { label: 'SOJA (CBE)',       value: '412.80',   change: '-1.5%',  up: false },
+  { label: 'MAÍZ (CBE)',       value: '198.20',   change: '+0.8%',  up: true  },
+  { label: 'TRIGO (CBE)',      value: '284.50',   change: '+4.2%',  up: true  },
+  { label: 'ACEITE SOJA',      value: '1,042',    change: '+2.1%',  up: true  },
+  { label: 'GIRASOL',         value: '398.60',   change: '-0.3%',  up: false },
+];
+
+interface TickerItem {
+  label: string;
+  value: string;
+  change: string;
+  up: boolean;
+  color: string;
+}
 
 export function AlertsTicker() {
-  const [timestamp, setTimestamp] = useState(new Date().toLocaleTimeString());
+  const [timestamp, setTimestamp] = useState(new Date().toLocaleTimeString('es-AR'));
+  const [items, setItems] = useState<TickerItem[]>([
+    ...COMMODITY_FALLBACK.map(c => ({ ...c, color: c.up ? 'text-[var(--ds-green)]' : 'text-[var(--ds-red)]' })),
+    { label: 'USD/ARS OFICIAL', value: '...', change: '',     up: true,  color: 'text-[var(--ds-amber)]' },
+    { label: 'USD/ARS CCL',     value: '...', change: '',     up: true,  color: 'text-[var(--ds-amber)]' },
+    { label: 'USD/BRL',         value: '...',  change: '',    up: true,  color: 'text-[var(--ds-cyan)]'  },
+    { label: 'EUR/USD',         value: '...',  change: '',    up: true,  color: 'text-[var(--ds-cyan)]'  },
+  ]);
+
+  const fetchRates = async () => {
+    try {
+      // DolarAPI — tipo de cambio Argentina
+      const [ar, rates] = await Promise.all([
+        fetch('/api/exchange/argentina').then(r => r.json()).catch(() => null),
+        fetch('/api/exchange/rates').then(r => r.json()).catch(() => null),
+      ]);
+
+      setItems(prev => prev.map(item => {
+        if (item.label === 'USD/ARS OFICIAL' && ar?.oficial) {
+          return { ...item, value: `$${ar.oficial.venta?.toLocaleString('es-AR') ?? '—'}` };
+        }
+        if (item.label === 'USD/ARS CCL' && ar?.ccl) {
+          return { ...item, value: `$${ar.ccl.venta?.toLocaleString('es-AR') ?? '—'}` };
+        }
+        if (item.label === 'USD/BRL' && rates?.rates?.BRL) {
+          return { ...item, value: rates.rates.BRL.toFixed(4) };
+        }
+        if (item.label === 'EUR/USD' && rates?.rates?.EUR) {
+          return { ...item, value: (1 / rates.rates.EUR).toFixed(4) };
+        }
+        return item;
+      }));
+    } catch {
+      // Silently keep fallback values
+    }
+  };
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimestamp(new Date().toLocaleTimeString());
-    }, 60000);
-    return () => clearInterval(timer);
+    fetchRates();
+    const rateTimer  = setInterval(fetchRates, 5 * 60 * 1000); // every 5 min
+    const clockTimer = setInterval(() => setTimestamp(new Date().toLocaleTimeString('es-AR')), 60000);
+    return () => { clearInterval(rateTimer); clearInterval(clockTimer); };
   }, []);
 
-  const marketData = [
-    { label: "TRIGO (CBE)", value: "284.50", change: "+4.2%", trend: "up", color: "text-[#00e878]" },
-    { label: "SOJA (CBE)", value: "412.80", change: "-1.5%", trend: "down", color: "text-[#ff4040]" },
-    { label: "MAÍZ (CBE)", value: "198.20", change: "+0.8%", trend: "up", color: "text-[#00e878]" },
-    { label: "USD/ARS (OFICIAL)", value: "1025.50", change: "+0.1%", trend: "up", color: "text-[#f5a800]" },
-    { label: "USD/ARS (CCL)", value: "1240.00", change: "-0.5%", trend: "down", color: "text-[#f5a800]" },
-  ];
-
   return (
-    <div className="bg-[#03080f] border-b border-[#1a2e42] h-[32px] flex items-center px-4 overflow-hidden relative z-40">
-      <div className="flex items-center gap-2 mr-6 shrink-0 z-10 bg-[#03080f] h-full pr-4 border-r border-[#1a2e42] shadow-[10px_0_10px_-5px_rgba(3,8,15,1)]">
-        <span className="w-1.5 h-1.5 rounded-full bg-[#00e878] animate-pulse"></span>
-        <span className="font-mono text-[9px] font-bold text-[#c8dff0] tracking-[1px] uppercase">
-          Mercados en Vivo
+    <div
+      className="ticker-bar bg-[var(--ds-bg-void)] border-b border-[var(--ds-border-subtle)] flex items-center overflow-hidden"
+    >
+      {/* LIVE badge */}
+      <div className="flex items-center gap-2 shrink-0 z-10 bg-[var(--ds-bg-void)] h-full px-4 border-r border-[var(--ds-border-subtle)]">
+        <span className="w-1.5 h-1.5 rounded-full bg-[var(--ds-cyan)] animate-pulse shadow-[var(--ds-glow-cyan)]" />
+        <span className="font-data text-[var(--ds-text-xs)] text-[var(--ds-cyan)] tracking-[var(--ds-tracking-label)] uppercase">
+          LIVE
         </span>
       </div>
-      
-      {/* Ticker Animation Container */}
+
+      {/* Scrolling ticker */}
       <div className="flex flex-1 overflow-hidden relative h-full items-center">
-        {/* We duplicate the content to create an infinite scroll effect */}
-        <div className="flex whitespace-nowrap animate-ticker items-center min-w-full">
-          {[...marketData, ...marketData, ...marketData].map((item, idx) => (
-            <div key={idx} className="flex items-center gap-1.5 mx-6">
-              <span className="font-mono text-[10px] text-[#4a7090] font-bold tracking-[0.5px]">
+        <div className="flex whitespace-nowrap items-center animate-ticker min-w-full" style={{ fontFamily: 'var(--ds-font-data)' }}>
+          {[...items, ...items, ...items].map((item, idx) => (
+            <div key={idx} className="flex items-center h-full px-5 border-r border-[var(--ds-border-subtle)]">
+              <span className="text-[10px] text-[var(--ds-text-muted)] tracking-widest mr-2 uppercase">
                 {item.label}
               </span>
-              <span className="font-mono text-[11px] font-bold text-white">
+              <span className="text-[10px] text-[var(--ds-text-primary)] mr-1.5 font-medium">
                 {item.value}
               </span>
-              <span className={`font-mono text-[9px] font-bold flex items-center ${item.color}`}>
-                {item.trend === 'up' ? '▲' : '▼'} {item.change}
-              </span>
+              {item.change && (
+                <span className={`text-[10px] ${item.color}`}>
+                  {item.change}
+                </span>
+              )}
             </div>
           ))}
         </div>
       </div>
 
-      <div className="flex items-center gap-2 ml-4 shrink-0 z-10 bg-[#03080f] h-full pl-4 border-l border-[#1a2e42] shadow-[-10px_0_10px_-5px_rgba(3,8,15,1)]">
-        <RefreshCw className="w-3 h-3 text-[#4a7090]" />
-        <span className="font-mono text-[9px] text-[#4a7090]">
+      {/* Clock */}
+      <div className="flex items-center shrink-0 z-10 bg-[var(--ds-bg-void)] h-full px-4 border-l border-[var(--ds-border-subtle)]">
+        <span className="text-[10px] text-[var(--ds-text-muted)] font-data tracking-widest">
           {timestamp}
         </span>
       </div>
 
       <style>{`
-        @keyframes ticker {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-33.33%); }
-        }
-        .animate-ticker {
-          animation: ticker 40s linear infinite;
-        }
-        .animate-ticker:hover {
-          animation-play-state: paused;
-        }
+        @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-33.33%); } }
+        .animate-ticker { animation: ticker 50s linear infinite; }
+        .animate-ticker:hover { animation-play-state: paused; }
       `}</style>
     </div>
   );

@@ -1,0 +1,81 @@
+{
+  "nav": {
+    "home": "Home",
+    "news": "News",
+    "hsCode": "HS Code",
+    "marketplace": "Marketplace",
+    "chats": "Chats",
+    "login": "Login",
+    "register": "Register",
+    "dashboard": "My Dashboard",
+    "incoterms": "Incoterms"
+  },
+  "marketplace": {
+    "searchPlaceholder": "Search products, HS codes, companies...",
+    "filters": "Smart Filters",
+    "type": "Operation Type",
+    "buy": "Buy",
+    "sell": "Sell",
+    "sector": "Sector",
+    "country": "Country / Bloc",
+    "onlyVerified": "Verified only ✓",
+    "advanced": "Advanced",
+    "docFilter": "Document Status",
+    "canOperateNow": "Can operate TODAY",
+    "canOperateSoon": "With 1-2 more docs",
+    "showAll": "Show all",
+    "aiFilter": "AI Smart Filter",
+    "aiFilterPlaceholder": "Ex: compatible offers to export to Europe this quarter",
+    "compatibility": "Compatibility",
+    "contact": "Contact",
+    "viewCosts": "View Costs →",
+    "missingDocs": "⚠ Missing docs",
+    "canOperate": "✓ Can operate",
+    "verifying": "⏳ Verifying..."
+  },
+  "news": {
+    "title": "World Trade Pulse",
+    "subtitle": "Official regulatory updates, compliance alerts, and trade opportunities.",
+    "searchPlaceholder": "Search by HS Code, country, or treaty...",
+    "allTypes": "All types",
+    "customizeFeed": "Customize Feed",
+    "viewSource": "View official source →",
+    "types": {
+      "warning": "Warning",
+      "critical": "Critical",
+      "treaty": "Treaty",
+      "regulation": "Regulation",
+      "opportunity": "Opportunity"
+    },
+    "filters": {
+      "country": "Country / Region",
+      "hsCode": "HS Code",
+      "period": "Period",
+      "source": "Official Source",
+      "lastWeek": "Last week",
+      "lastMonth": "Last month",
+      "last3months": "Last 3 months"
+    },
+    "routeAlert": "{{count}} active alert for this route"
+  },
+  "chatbot": {
+    "placeholder": "Write your international trade query...",
+    "thinking": "Analyzing...",
+    "proactive": {
+      "lowScore": "With your current score you can only operate {{pct}}% of the offers. Shall we start with the first document?",
+      "missingDocs": "You are missing {{count}} documents for this operation. Want me to guide you?",
+      "routeAlert": "There is an active regulatory alert for this route. Should I analyze it?",
+      "newsTranslation": "This news is in another language. Want me to translate and summarize it for you?"
+    }
+  },
+  "godmode": {
+    "autoMessage": {
+      "routeAlert": "I detected {{count}} active regulatory alert for {{product}} ({{origin}}→{{destination}}): \"{{alertTitle}}\". Shall I analyze the impact on this operation?",
+      "scoreBlock": "Your compatibility with this offer is {{compatibility}}%. The first document you need is {{firstMissingDoc}}. Want me to explain how to get it step by step?"
+    },
+    "orbTooltip": {
+      "alert": "I have important information about this operation",
+      "idle": "Foreign trade assistant"
+    }
+  }
+}

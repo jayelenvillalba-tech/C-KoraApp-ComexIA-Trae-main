@@ -7,6 +7,19 @@
   </head>
   <body>
     <div id="root"></div>
+    <div id="debug-overlay" style="position:fixed;top:0;left:0;z-index:999999;background:red;color:white;font-family:monospace;white-space:pre-wrap;padding:20px;display:none;width:100%;height:100%;font-size:16px;"></div>
+    <script>
+      window.onerror = function(msg, url, line, col, error) {
+        var el = document.getElementById('debug-overlay');
+        el.style.display = 'block';
+        el.innerHTML += '\n' + msg + '\n' + (error && error.stack ? error.stack : '');
+      };
+      window.addEventListener('unhandledrejection', function(event) {
+        var el = document.getElementById('debug-overlay');
+        el.style.display = 'block';
+        el.innerHTML += '\nUnhandled Promise: ' + event.reason + '\n' + (event.reason && event.reason.stack ? event.reason.stack : '');
+      });
+    </script>
     <script type="module" src="/src/main.tsx"></script>
     <!-- <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script> -->
   </body>

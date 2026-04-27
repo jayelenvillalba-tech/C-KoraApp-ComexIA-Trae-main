@@ -1,7 +1,5 @@
-import { MessageCircle, TrendingUp, MapPin, Calendar, Package, CheckCircle, DollarSign, Ship, FileText } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { MessageCircle, TrendingUp, MapPin, Calendar, Package, CheckCircle, DollarSign, Ship, FileText, Handshake } from "lucide-react";
+import { Card, Badge, Button, DataLabel } from "@/design-system/components";
 import { useLanguage } from "@/hooks/use-language";
 import { useLocation } from "wouter";
 import { useState, useEffect, useMemo } from "react";
@@ -9,9 +7,7 @@ import CostAnalysisModal from "./cost-analysis-modal";
 import AuthGuardModal from "@/components/auth/auth-guard-modal";
 import { useUser } from "@/context/user-context";
 import { useMarketplace } from "@/context/marketplace-context";
-import ReputationBadge from "@/components/ui/reputation-badge";
 import ComplianceBadge from "@/components/marketplace/compliance-badge";
-import { getRequiredDocuments } from "@shared/documents-data";
 import {
   Carousel,
   CarouselContent,
@@ -71,28 +67,42 @@ export default function PostCard({ post }: PostCardProps) {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [tradePrefs, setTradePrefs] = useState<any[]>([]);
 
-  // Fetch trade preferences if origin and destination are available
+  // Fetch live trade agreements from the agreements API
   useEffect(() => {
-    if (post.originCountry && post.destinationCountry && post.hsCode) {
-      fetch(`/api/marketplace/tariff-preferences?hsCode=${post.hsCode}&originCountry=${post.originCountry}&destinationCountry=${post.destinationCountry}`)
-        .then(res => res.json())
-        .then(data => setTradePrefs(data.preferences || []))
-        .catch(err => console.error('Error fetching trade preferences:', err));
+    if (post.originCountry && post.destinationCountry) {
+      fetch(`/api/agreements/between?origin=${post.originCountry}&destination=${post.destinationCountry}`)
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data?.agreements) {
+            // Map to the structure expected by the badge renderer
+            setTradePrefs(data.agreements.map((a: any) => ({
+              agreement: a.code,
+              agreementName: language === 'es' ? a.name_es : a.name_en,
+              status: a.status,
+              tariffRate: a.status === 'active' ? 0 : null
+            })));
+          }
+        })
+        .catch(() => {});
     }
+  }, [post.originCountry, post.destinationCountry, language]);
+
+  // Static docs count (simplified — no longer depends on deleted shared module)
+  const requiredDocsCount = useMemo(() => {
+    if (!post.hsCode || !post.originCountry || !post.destinationCountry) return 0;
+    return 5;
   }, [post.hsCode, post.originCountry, post.destinationCountry]);
 
-  // Calculate required documents count
-  const requiredDocsCount = useMemo(() => {
-    if (!post.hsCode) return 0;
-    const docs = getRequiredDocuments({
-      hsCode: post.hsCode,
-      originCountry: post.originCountry,
-      destinationCountry: post.destinationCountry,
-      incoterm: post.incoterm,
-      direction: post.type === 'buy' ? 'import' : 'export'
-    });
-    return docs.filter(d => d.mandatory).length;
-  }, [post.hsCode, post.originCountry, post.destinationCountry, post.incoterm, post.type]);
+  // Phase 33: Price vs market analysis
+  const [priceAnalysis, setPriceAnalysis] = useState<any>(null);
+  useEffect(() => {
+    if (post.price && post.hsCode) {
+      fetch(`/api/market/price-analysis?hsCode=${post.hsCode}&price=${post.price}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(data => { if (data?.success) setPriceAnalysis(data); })
+        .catch(() => {});
+    }
+  }, [post.price, post.hsCode]);
 
   const handleContact = async () => {
     if (!user) {
@@ -132,215 +142,240 @@ export default function PostCard({ post }: PostCardProps) {
   const isVerified = post.company.verificationLevel === 'verified' || post.company.verificationLevel === 'premium';
 
   return (
-    <Card className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/15 transition-all duration-200">
-      <CardContent className="p-6">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-start gap-3">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-xl">
-              {post.company.name.charAt(0)}
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-white font-bold">
-                  {post.company.name}
-                </h3>
-                {isVerified && (
-                  <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-xs">
-                    ✓ Verified
-                  </Badge>
-                )}
-              </div>
-              <div className="flex items-center gap-2 text-sm text-slate-300">
-                <span>{post.user.name}</span>
-                {post.user.verified && (
-                  <CheckCircle className="w-3 h-3 text-blue-400" />
-                )}
-                <span>·</span>
-                <span>{post.user.role}</span>
-              </div>
-              <p className="text-xs text-slate-400 mt-1">
-                {getTimeAgo(post.createdAt)}
-              </p>
-            </div>
+    <Card 
+      variant="default" 
+      className={`mb-4 relative overflow-hidden transition-all duration-300 ${
+        post.type === 'buy' ? 'hover:shadow-[0_0_30px_rgba(0,212,240,0.15)]' : 'hover:shadow-[0_0_30px_rgba(255,140,0,0.15)]'
+      } hover:scale-[1.02] glass border border-white/5`}
+      style={{
+        boxShadow: priceAnalysis && (priceAnalysis.assessment === 'excellent' || priceAnalysis.assessment === 'good') 
+          ? '0 0 20px rgba(105,246,185,0.15), inset 0 0 10px rgba(105,246,185,0.05)' // radiance-green
+          : post.type === 'sell' && post.hsCode?.startsWith('02') 
+          ? '0 0 20px rgba(255,140,0,0.1), inset 0 0 10px rgba(255,140,0,0.05)' // Simulated maritime/amber risk
+          : 'var(--ds-shadow-raised)',
+      }}
+    >
+      {/* Background ambient glow based on type */}
+      <div className={`absolute -top-20 -right-20 w-40 h-40 rounded-full blur-[80px] opacity-20 pointer-events-none ${post.type === 'buy' ? 'bg-[var(--ds-cyan)]' : 'bg-[var(--ds-amber)]'}`} />
+      {/* Header */}
+      <div className="flex items-start justify-between mb-[var(--ds-space-4)]">
+        <div className="flex items-start gap-3 relative z-10">
+          <div className="w-12 h-12 rounded-[var(--ds-radius-full)] bg-black/40 border border-white/10 flex items-center justify-center font-display text-[var(--ds-text-xl)] text-[var(--ds-text-primary)] font-bold shadow-[0_4px_10px_rgba(0,0,0,0.5)]">
+            {post.company.name.charAt(0)}
           </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="font-body text-[var(--ds-text-primary)] text-[var(--ds-text-md)] font-bold truncate max-w-[200px] md:max-w-[300px]">
+                {post.company.name}
+              </h3>
+              {isVerified && (
+                <Badge variant="verified" text="Verified" />
+              )}
+            </div>
+            <div className="flex items-center gap-2 text-[var(--ds-text-sm)] text-[var(--ds-text-secondary)]">
+              <span>{post.user.name}</span>
+              {post.user.verified && (
+                <CheckCircle className="w-3 h-3 text-[var(--ds-cyan)]" />
+              )}
+              <span>·</span>
+              <span className="truncate max-w-[120px]">{post.user.role}</span>
+            </div>
+            <p className="font-data text-[var(--ds-text-xs)] text-[var(--ds-text-tertiary)] mt-1">
+              {getTimeAgo(post.createdAt)}
+            </p>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Badge 
+            variant={post.type === "buy" ? "buy" : "sell"}
+            text={post.type === "buy" ? (language === 'es' ? 'BUSCO' : 'BUYING') : (language === 'es' ? 'VENDO' : 'SELLING')}
+          />
           
-          <div className="flex items-center gap-2">
-            <Badge 
-              className={post.type === "buy" 
-                ? "bg-green-500/20 text-green-300 border-green-500/30" 
-                : "bg-red-500/20 text-red-300 border-red-500/30"
-              }
-            >
-              {post.type === "buy" 
-                ? (language === 'es' ? '🟢 BUSCO' : '🟢 BUYING')
-                : (language === 'es' ? '🔴 VENDO' : '🔴 SELLING')
-              }
-            </Badge>
-            
-            {/* Phase 22: Document Count Badge */}
-            {requiredDocsCount > 0 && (
-              <Badge className="bg-blue-500/20 text-blue-300 border-blue-400/30 flex items-center gap-1">
+          {/* Phase 22: Document Count Badge */}
+          {requiredDocsCount > 0 && (
+            <Badge variant="neutral">
+              <span className="flex items-center gap-1">
                 <FileText className="w-3 h-3" />
                 {requiredDocsCount} {language === 'es' ? 'docs' : 'docs'}
-              </Badge>
-            )}
-          </div>
-          {/* Compliance Badge — AI document gap analysis */}
-          {post.destinationCountry && post.hsCode && (
-            <div className="mt-2">
-              <ComplianceBadge
-                destinationCountry={post.destinationCountry}
-                ncmCode={post.hsCode}
-                incoterm={post.incoterm || 'FOB'}
-                direction={post.type === 'buy' ? 'import' : 'export'}
-                userDocIds={[]} // TODO: connect real user doc IDs from profile/onboarding store
-              />
-            </div>
+              </span>
+            </Badge>
           )}
         </div>
+      </div>
 
-        {/* Phase 21: Large Title */}
-        <h2 className="text-white text-2xl font-bold mb-3">
-          {post.productName} HS {post.hsCode}
-        </h2>
+      {/* Compliance Badge — AI document gap analysis */}
+      {post.destinationCountry && post.hsCode && (
+        <div className="mb-4">
+          <ComplianceBadge
+            destinationCountry={post.destinationCountry}
+            ncmCode={post.hsCode}
+            incoterm={post.incoterm || 'FOB'}
+            direction={post.type === 'buy' ? 'import' : 'export'}
+            userDocIds={[]} 
+          />
+        </div>
+      )}
 
-        {/* Phase 21: Photo Carousel */}
-        {post.photos && post.photos.length > 0 && (
-          <div className="mb-4">
-            <Carousel className="w-full">
-              <CarouselContent>
-                {post.photos.map((photo, index) => (
-                  <CarouselItem key={index}>
-                    <img 
-                      src={photo} 
-                      alt={`${post.productName} ${index + 1}`}
-                      className="w-full h-64 object-cover rounded-lg"
-                    />
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              {post.photos.length > 1 && (
-                <>
-                  <CarouselPrevious className="left-2" />
-                  <CarouselNext className="right-2" />
-                </>
-              )}
-            </Carousel>
-          </div>
-        )}
+      {/* Main Title */}
+      <h2 className="font-display text-[var(--ds-text-xl)] md:text-[var(--ds-text-2xl)] font-bold text-[var(--ds-text-primary)] mb-[var(--ds-space-3)]">
+        {post.productName} <span className="text-[var(--ds-text-tertiary)] font-data text-[var(--ds-text-lg)]">HS {post.hsCode}</span>
+      </h2>
 
-        {/* Phase 21: Long Description (Alibaba-style) */}
-        {post.descriptionLong && (
-          <p className="text-gray-300 text-base leading-relaxed mb-4">
-            {post.descriptionLong}
+      {/* Phase 21: Photo Carousel */}
+      {post.photos && post.photos.length > 0 && (
+        <div className="mb-[var(--ds-space-4)]">
+          <Carousel className="w-full">
+            <CarouselContent>
+              {post.photos.map((photo, index) => (
+                <CarouselItem key={index}>
+                  <img 
+                    src={photo} 
+                    alt={`${post.productName} ${index + 1}`}
+                    className="w-full h-48 md:h-64 object-cover rounded-[var(--ds-radius-md)] border border-[var(--ds-border-subtle)]"
+                  />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            {post.photos.length > 1 && (
+              <>
+                <CarouselPrevious className="left-2 bg-[var(--ds-bg-surface)] border-[var(--ds-border-default)]" />
+                <CarouselNext className="right-2 bg-[var(--ds-bg-surface)] border-[var(--ds-border-default)]" />
+              </>
+            )}
+          </Carousel>
+        </div>
+      )}
+
+      {/* Long Description */}
+      {post.descriptionLong && (
+        <p className="font-body text-[var(--ds-text-base)] text-[var(--ds-text-secondary)] leading-relaxed mb-[var(--ds-space-4)] line-clamp-3">
+          {post.descriptionLong}
+        </p>
+      )}
+
+      {/* Specs Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-[var(--ds-space-4)]">
+        <div className="bg-black/30 p-3 rounded-[var(--ds-radius-md)] border border-white/5 backdrop-blur-[2px]">
+          <p className="font-data text-[8px] text-[var(--ds-text-tertiary)] tracking-[0.1em] uppercase flex items-center gap-1 mb-1">
+            <Package className="w-3 h-3 text-[var(--ds-cyan)]" />
+            {language === 'es' ? 'CANTIDAD' : 'QUANTITY'}
           </p>
-        )}
-
-        {/* Phase 21: Specs Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-          <div className="bg-blue-900/20 p-3 rounded-lg">
-            <p className="text-xs text-gray-400 flex items-center gap-1">
-              <Package className="w-3 h-3" />
-              {language === 'es' ? 'Cantidad' : 'Quantity'}
-            </p>
-            <p className="text-white font-bold text-sm">{post.quantity}</p>
-            {post.moq && (
-              <p className="text-xs text-gray-400 mt-1">MOQ: {post.moq}</p>
-            )}
-          </div>
-          
-          {post.incoterm && (
-            <div className="bg-purple-900/20 p-3 rounded-lg">
-              <p className="text-xs text-gray-400 flex items-center gap-1">
-                <Ship className="w-3 h-3" />
-                Incoterm
-              </p>
-              <p className="text-white font-bold text-sm">{post.incoterm}</p>
-            </div>
-          )}
-          
-          {post.price && (
-            <div className="bg-green-900/20 p-3 rounded-lg">
-              <p className="text-xs text-gray-400 flex items-center gap-1">
-                <DollarSign className="w-3 h-3" />
-                {language === 'es' ? 'Precio' : 'Price'}
-              </p>
-              <p className="text-white font-bold text-sm">
-                ${post.price} {post.currency || 'USD'}
-              </p>
-            </div>
-          )}
-          
-          {post.originCountry && (
-            <div className="bg-cyan-900/20 p-3 rounded-lg">
-              <p className="text-xs text-gray-400 flex items-center gap-1">
-                <MapPin className="w-3 h-3" />
-                {language === 'es' ? 'Origen' : 'Origin'}
-              </p>
-              <p className="text-white font-bold text-sm">
-                {getCountryFlag(post.originCountry)} {post.originCountry}
-              </p>
-            </div>
+          <p className="font-body font-semibold text-[var(--ds-text-primary)]">{post.quantity}</p>
+          {post.moq && (
+            <p className="font-data text-[var(--ds-text-xs)] text-[var(--ds-text-muted)] mt-1">MOQ: {post.moq}</p>
           )}
         </div>
+        
+        {post.incoterm && (
+          <div className="bg-black/30 p-3 rounded-[var(--ds-radius-md)] border border-white/5 backdrop-blur-[2px]">
+            <p className="font-data text-[8px] text-[var(--ds-text-tertiary)] tracking-[0.1em] uppercase flex items-center gap-1 mb-1">
+              <Ship className="w-3 h-3 text-[var(--ds-cyan)]" />
+              INCOTERM
+            </p>
+            <p className="font-data font-bold text-[10px] text-[var(--ds-text-primary)] tracking-widest">{post.incoterm}</p>
+          </div>
+        )}
+        
+        {post.price && (
+          <div className="bg-black/30 p-3 rounded-[var(--ds-radius-md)] border border-white/5 backdrop-blur-[2px] col-span-2 md:col-span-1 relative overflow-hidden">
+            {priceAnalysis && (priceAnalysis.assessment === 'excellent' || priceAnalysis.assessment === 'good') && (
+              <div className="absolute inset-0 bg-emerald-500/10 animate-pulse pointer-events-none" />
+            )}
+            <p className="font-data text-[8px] text-[var(--ds-text-tertiary)] tracking-[0.1em] uppercase flex items-center gap-1 mb-1 relative border-z-10">
+              <DollarSign className="w-3 h-3 text-[var(--ds-green)]" />
+              {language === 'es' ? 'PRECIO' : 'PRICE'}
+            </p>
+            <p className="font-body font-semibold text-[var(--ds-green)] relative z-10" style={{ textShadow: '0 0 10px rgba(105,246,185,0.3)' }}>
+              ${post.price} <span className="text-[var(--ds-text-secondary)] text-xs">{post.currency || 'USD'}/ton</span>
+            </p>
+            {priceAnalysis && (
+              <p className={`font-data text-[9px] mt-1 font-bold relative z-10 ${
+                priceAnalysis.assessment === 'excellent' || priceAnalysis.assessment === 'good'
+                  ? 'text-emerald-400 drop-shadow-[0_0_5px_rgba(52,211,153,0.5)]'
+                  : priceAnalysis.assessment === 'fair'
+                  ? 'text-amber-400'
+                  : 'text-red-400'
+              }`}>
+                {priceAnalysis.label}
+                {' '}
+                <span className="font-normal text-[var(--ds-text-tertiary)] opacity-60">— {priceAnalysis.source}</span>
+              </p>
+            )}
+          </div>
+        )}
+        
+        {post.originCountry && (
+          <div className="bg-black/30 p-3 rounded-[var(--ds-radius-md)] border border-white/5 backdrop-blur-[2px]">
+            <p className="font-data text-[8px] text-[var(--ds-text-tertiary)] tracking-[0.1em] uppercase flex items-center gap-1 mb-1">
+              <MapPin className="w-3 h-3 text-[var(--ds-amber)]" />
+              {language === 'es' ? 'ORIGEN' : 'ORIGIN'}
+            </p>
+            <p className="font-body font-semibold text-[var(--ds-text-primary)]">
+              {getCountryFlag(post.originCountry)} {post.originCountry}
+            </p>
+          </div>
+        )}
+      </div>
 
-        {/* Phase 21: Trade Preference Badges */}
-        {tradePrefs.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            {tradePrefs.map((pref, index) => (
-              pref.tariffRate === 0 && (
-                <Badge 
-                  key={index}
-                  className="bg-green-500/20 text-green-300 border-green-500/30"
-                >
-                  ✓ {pref.agreement} 0% {language === 'es' ? 'Arancel' : 'Tariff'}
-                  {pref.regionalContentRequired && ` (${pref.regionalContentRequired}% regional)`}
-                </Badge>
-              )
+      {/* Trade Agreement Badges — live from /api/agreements/between */}
+      {tradePrefs.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-[var(--ds-space-4)]">
+          {tradePrefs.map((pref: any, index: number) => (
+            <span
+              key={index}
+              className={`inline-flex items-center gap-1.5 font-data text-[9px] font-bold px-2 py-0.5 rounded-[2px] uppercase tracking-[0.5px] border ${
+                pref.status === 'active'
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                  : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+              }`}
+              title={pref.agreementName}
+            >
+              <Handshake className="w-2.5 h-2.5" />
+              {pref.agreement}
+              {pref.status === 'active' ? ` · 0%` : ` · Pendiente`}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Certifications */}
+      {post.certifications && post.certifications.length > 0 && (
+        <div className="mb-[var(--ds-space-4)]">
+          <p className="font-data text-[var(--ds-text-xs)] text-[var(--ds-text-tertiary)] tracking-[var(--ds-tracking-data)] uppercase mb-2">
+            {language === 'es' ? 'CERTIFICACIONES' : 'CERTIFICATIONS'}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {post.certifications.map((cert, index) => (
+              <Badge key={index} variant="institutional" text={cert} />
             ))}
           </div>
-        )}
-
-        {/* Certifications */}
-        {post.certifications && post.certifications.length > 0 && (
-          <div className="mb-4">
-            <p className="text-slate-400 text-xs mb-2">
-              {language === 'es' ? 'Certificaciones:' : 'Certifications:'}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {post.certifications.map((cert, index) => (
-                <Badge key={index} variant="secondary" className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-xs">
-                  ✓ {cert}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Action Buttons */}
-        <div className="flex gap-3 pt-4 border-t border-white/10">
-          <Button 
-            onClick={handleContact}
-            disabled={isCreatingChat}
-            className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-          >
-            <MessageCircle className="w-4 h-4 mr-2" />
-            {isCreatingChat 
-              ? (language === 'es' ? 'Abriendo...' : 'Opening...')
-              : (language === 'es' ? 'Contactar' : 'Contact')
-            }
-          </Button>
-          <Button 
-            variant="outline"
-            onClick={() => setShowCostModal(true)}
-            className="flex-1 bg-white/10 border-white/20 text-white hover:bg-white/20"
-          >
-            <TrendingUp className="w-4 h-4 mr-2" />
-            {language === 'es' ? 'Ver Costos' : 'View Costs'}
-          </Button>
         </div>
-      </CardContent>
+      )}
+
+      {/* Action Buttons */}
+      <div className="flex gap-3 pt-[var(--ds-space-4)] border-t border-[var(--ds-border-subtle)]">
+        <Button 
+          variant="primary"
+          onClick={handleContact}
+          disabled={isCreatingChat}
+          className="flex-1"
+        >
+          <MessageCircle className="w-4 h-4 mr-2" />
+          {isCreatingChat 
+            ? (language === 'es' ? 'Abriendo...' : 'Opening...')
+            : (language === 'es' ? 'Contactar' : 'Contact')
+          }
+        </Button>
+        <Button 
+          variant="ghost"
+          onClick={() => setShowCostModal(true)}
+          className="flex-1 border border-[var(--ds-border-default)] hover:border-[var(--ds-border-strong)]"
+        >
+          <TrendingUp className="w-4 h-4 mr-2" />
+          {language === 'es' ? 'Ver Costos' : 'View Costs'}
+        </Button>
+      </div>
 
       {/* Cost Analysis Modal */}
       <CostAnalysisModal

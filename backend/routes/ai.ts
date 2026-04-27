@@ -407,5 +407,20 @@ Usá lenguaje simple sin jerga técnica. Respondé en español rioplatense.`;
   }
 });
 
+// ─── GET /api/ai/status ───────────────────────────────────────────────
+router.get("/status", (req: Request, res: Response) => {
+  res.json({
+    status: process.env.GROQ_API_KEY ? "ok" : "degraded",
+    provider: "Groq",
+    activeModels: ["llama-3.3-70b-versatile"],
+    features: {
+      chat: true,
+      search: true,
+      analyze: true,
+      compliance: true
+    }
+  });
+});
+
 export default router;
 

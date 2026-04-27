@@ -1,8 +1,0 @@
-[2025-12-22T19:31:05.930Z] 🔍 [DEBUG] Search Query: "a"
-[2025-12-22T19:31:05.997Z] ✅ [DEBUG] sqliteDb imported successfully.
-[2025-12-22T19:31:06.020Z] 🔍 [DEBUG] Partidas found: 50
-[2025-12-22T19:31:06.039Z] 🔍 [DEBUG] Subpartidas found: 50
-[2025-12-22T20:25:34.597Z] 🔍 [DEBUG] Search Query: "soja"
-[2025-12-22T20:25:34.604Z] ✅ [DEBUG] sqliteDb imported successfully.
-[2025-12-22T20:25:34.614Z] 🔍 [DEBUG] Partidas found: 2
-[2025-12-22T20:25:34.652Z] 🔍 [DEBUG] Subpartidas found: 0

@@ -1,23 +1,17 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useLocation } from "wouter";
 import { 
   Users, Building2, CheckCircle, XCircle, TrendingUp, 
-  DollarSign, Package, AlertTriangle, Settings, LogOut,
-  Search, Filter, MoreVertical, Eye, Trash2, Shield
+  DollarSign, Package, AlertTriangle, Shield, LogOut, FileText
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/hooks/use-language";
-import Header from "@/components/header";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { Button, Card, Badge } from "@/design-system/components"; // assuming these exist, or I can use inline styling with DS classes
 
 // Mock admin user
-const ADMIN_PASSWORD = "admin123"; // En producción, esto debe estar en el backend
+const ADMIN_PASSWORD = "admin123";
 
-// Mock data
 const mockStats = {
   totalUsers: 156,
   totalCompanies: 89,
@@ -34,13 +28,13 @@ const mockPendingVerifications = [
     entityName: "Importadora ABC S.A.",
     country: "AR",
     submittedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    documents: ["RUT", "Comprobante domicilio", "Cámara de comercio"],
+    documents: ["RUT", "Comprobante domicilio", "CÃ¡mara de comercio"],
     status: "pending"
   },
   {
     id: "v2",
     type: "employee",
-    entityName: "Juan Pérez",
+    entityName: "Juan PÃ©rez",
     company: "Exportadora XYZ Ltda.",
     email: "juan.perez@xyz.com",
     submittedAt: new Date(Date.now() - 5 * 60 * 60 * 1000),
@@ -83,32 +77,26 @@ export default function AdminDashboard() {
   const [password, setPassword] = useState("");
   const [activeTab, setActiveTab] = useState<"overview" | "verifications" | "subscriptions" | "posts">("overview");
 
-  // Fetch pending verifications
   const { data: verifications = [] } = useQuery({
     queryKey: ['verifications'],
     queryFn: async () => {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/verifications', {
-          headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await fetch('/api/verifications', { headers: { Authorization: `Bearer ${token}` } });
       if (!res.ok) throw new Error('Failed to fetch verifications');
       return res.json();
     },
-    enabled: isAuthenticated
+    enabled: !!isAuthenticated
   });
 
-  // Fetch real stats
   const { data: realStats } = useQuery({
       queryKey: ['admin-stats'],
       queryFn: async () => {
         const token = localStorage.getItem('token');
-        const res = await fetch('/api/admin/stats', {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!res.ok) return mockStats; // Fallback to mock if failed (e.g. not admin)
+        const res = await fetch('/api/admin/stats', { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) return mockStats;
         return res.json();
       },
-      enabled: isAuthenticated
+      enabled: !!isAuthenticated
   });
 
   const stats = realStats || mockStats;
@@ -116,14 +104,11 @@ export default function AdminDashboard() {
   const approveMutation = useMutation({
     mutationFn: async (id: string) => {
        const token = localStorage.getItem('token');
-       await fetch(`/api/verifications/${id}/approve`, { 
-           method: 'POST',
-           headers: { Authorization: `Bearer ${token}` }
-       });
+       await fetch(`/api/verifications/${id}/approve`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
     },
     onSuccess: () => {
        queryClient.invalidateQueries({ queryKey: ['verifications'] });
-       toast({ title: "Verificación aprobada" });
+       toast({ title: "VerificaciÃ³n aprobada" });
     }
   });
 
@@ -133,7 +118,7 @@ export default function AdminDashboard() {
     },
     onSuccess: () => {
        queryClient.invalidateQueries({ queryKey: ['verifications'] });
-       toast({ title: "Verificación rechazada", variant: "destructive" });
+       toast({ title: "VerificaciÃ³n rechazada", variant: "destructive" });
     }
   });
 
@@ -141,366 +126,222 @@ export default function AdminDashboard() {
     e.preventDefault();
     if (password === ADMIN_PASSWORD) {
       setIsAuthenticated(true);
+      window.dispatchEvent(new Event('admin_login'));
     } else {
-      alert(language === 'es' ? 'Contraseña incorrecta' : 'Incorrect password');
+      alert(language === 'es' ? 'ContraseÃ±a incorrecta' : 'Incorrect password');
     }
+  };
+
+  const handleApproveVerification = async (id: string) => {
+    try { await approveMutation.mutateAsync(id); } catch { /* handled by mutation */ }
+  };
+
+  const handleRejectVerification = async (id: string) => {
+    try { await rejectMutation.mutateAsync(id); } catch { /* handled by mutation */ }
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
     setPassword("");
+    localStorage.removeItem('admin_demo_mode');
+    window.dispatchEvent(new Event('demo_mode_changed'));
   };
 
-  const handleApproveVerification = (id: string) => {
-    approveMutation.mutate(id);
-  };
-
-  const handleRejectVerification = (id: string) => {
-    rejectMutation.mutate(id);
-  };
-
-  // Login Screen
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-        <Card className="bg-white/10 backdrop-blur-sm border-white/20 max-w-md w-full">
-          <CardHeader>
-            <CardTitle className="text-white text-2xl text-center">
-              <Shield className="w-12 h-12 mx-auto mb-4 text-blue-400" />
-              {language === 'es' ? '🔐 Acceso Administrador' : '🔐 Admin Access'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <label className="text-white text-sm mb-2 block">
-                  {language === 'es' ? 'Contraseña' : 'Password'}
-                </label>
-                <Input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="bg-white/10 border-white/20 text-white placeholder:text-slate-400"
-                  required
-                />
-              </div>
-              <Button
-                type="submit"
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-              >
-                {language === 'es' ? 'Ingresar' : 'Login'}
-              </Button>
-              <p className="text-slate-400 text-xs text-center mt-4">
-                Demo: admin123
-              </p>
-            </form>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-[var(--ds-bg-base)] flex flex-col relative items-center justify-center p-[var(--ds-space-4)] overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[var(--ds-amber)]/5 rounded-full blur-[100px] pointer-events-none" />
+        <div className="w-full max-w-md bg-[var(--ds-bg-surface)] border border-[var(--ds-border-default)] rounded-[var(--ds-radius-lg)] p-[var(--ds-space-6)] shadow-[var(--ds-shadow-modal)] relative z-10">
+          <div className="text-center mb-[var(--ds-space-6)]">
+            <Shield className="w-12 h-12 mx-auto mb-[var(--ds-space-4)] text-[var(--ds-amber)] drop-shadow-[0_0_15px_rgba(245,168,0,0.4)]" />
+            <h1 className="font-display text-[var(--ds-text-2xl)] font-bold text-[var(--ds-text-primary)]">
+              {language === 'es' ? 'Acceso Administrador' : 'Admin Access'}
+            </h1>
+            <p className="font-data text-[var(--ds-text-xs)] text-[var(--ds-amber)] uppercase tracking-[var(--ds-tracking-data)] mt-2">
+              GodMode Control Center
+            </p>
+          </div>
+          <form onSubmit={handleLogin} className="space-y-[var(--ds-space-4)]">
+            <div>
+              <label className="font-data text-[var(--ds-text-xs)] text-[var(--ds-text-secondary)] uppercase tracking-[var(--ds-tracking-data)] block mb-2">
+                {language === 'es' ? 'ContraseÃ±a' : 'Password'}
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                className="w-full bg-[var(--ds-bg-input)] border border-[var(--ds-border-default)] rounded-[var(--ds-radius-md)] px-3 py-2.5 text-[var(--ds-text-primary)] placeholder-[var(--ds-text-muted)] focus:border-[var(--ds-amber)] focus:outline-none transition-colors"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full bg-[var(--ds-amber)] hover:opacity-90 text-[var(--ds-bg-base)] font-bold text-[var(--ds-text-sm)] py-3 rounded-[var(--ds-radius-md)] shadow-[var(--ds-glow-amber)] transition-all"
+            >
+              {language === 'es' ? 'Ingresar al sistema' : 'Login to system'}
+            </button>
+            <p className="text-[var(--ds-text-muted)] font-data text-center text-[var(--ds-text-xs)] mt-4">Demo: admin123</p>
+          </form>
+        </div>
       </div>
     );
   }
 
-  // Admin Dashboard
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      <Header />
-      
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-4xl font-bold text-white mb-2">
-              {language === 'es' ? '⚙️ Panel de Administración' : '⚙️ Admin Dashboard'}
-            </h1>
-            <p className="text-slate-300">
-              {language === 'es' ? 'Gestión completa de la plataforma' : 'Complete platform management'}
-            </p>
+    <div className="w-full max-w-[1200px] mx-auto animate-in fade-in duration-300">
+      <div className="flex items-center justify-between mb-[var(--ds-space-8)]">
+        <div>
+          <h1 className="font-display text-[var(--ds-text-3xl)] font-bold text-[var(--ds-text-primary)] mb-1">
+            Command Center
+          </h1>
+          <p className="text-[var(--ds-text-secondary)] text-[var(--ds-text-sm)]">
+            {language === 'es' ? 'Panel central de mÃ©tricas y validaciones operativas.' : 'Central dashboard for metrics and operational validations.'}
+          </p>
+        </div>
+        <button
+          onClick={handleLogout}
+          className="px-4 py-2 border border-[var(--ds-border-default)] rounded-[var(--ds-radius-md)] text-[var(--ds-text-secondary)] hover:text-[var(--ds-text-primary)] hover:bg-[var(--ds-bg-overlay)] transition-colors flex items-center gap-2 text-[var(--ds-text-sm)] font-medium"
+        >
+          <LogOut size={16} />
+          {language === 'es' ? 'Pausar SesiÃ³n' : 'Pause Session'}
+        </button>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-[var(--ds-space-4)] mb-[var(--ds-space-8)]">
+        {[
+          { label: 'Usuarios', icon: Users, value: stats.totalUsers, color: 'var(--ds-cyan)' },
+          { label: 'Empresas', icon: Building2, value: stats.totalCompanies, color: 'var(--ds-cyan)' },
+          { label: 'Suscripciones', icon: TrendingUp, value: stats.activeSubscriptions, color: 'var(--ds-green)' },
+          { label: 'Verificaciones', icon: AlertTriangle, value: stats.pendingVerifications, color: 'var(--ds-amber)' },
+          { label: 'Ingresos/mes', icon: DollarSign, value: '$' + stats.totalRevenue.toLocaleString(), color: 'var(--ds-gold)' },
+          { label: 'Publicaciones', icon: Package, value: stats.activePosts, color: 'var(--ds-blue)' },
+        ].map((stat, i) => (
+          <div key={i} className="bg-[var(--ds-bg-surface)] border border-[var(--ds-border-default)] rounded-[var(--ds-radius-lg)] p-[var(--ds-space-4)] relative overflow-hidden group hover:border-[var(--ds-border-strong)] transition-all">
+            <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full blur-[30px] opacity-10 transition-opacity group-hover:opacity-20" style={{ background: stat.color }} />
+            <p className="font-data text-[var(--ds-text-xs)] text-[var(--ds-text-secondary)] uppercase tracking-[var(--ds-tracking-data)] mb-2">{stat.label}</p>
+            <div className="flex items-end justify-between">
+              <p className="font-display text-[var(--ds-text-2xl)] font-bold text-[var(--ds-text-primary)]">{stat.value}</p>
+              <stat.icon size={20} style={{ color: stat.color }} className="opacity-80" />
+            </div>
           </div>
-          <Button
-            onClick={handleLogout}
-            variant="outline"
-            className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+        ))}
+      </div>
+
+      {/* Tabs */}
+      <div className="flex border-b border-[var(--ds-border-default)] mb-[var(--ds-space-6)]">
+        {[
+          { id: 'overview', label: 'Resumen' },
+          { id: 'verifications', label: 'Verificaciones', badge: stats.pendingVerifications > 0 ? stats.pendingVerifications : null },
+          { id: 'subscriptions', label: 'Suscripciones' },
+          { id: 'posts', label: 'Publicaciones' },
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as any)}
+            className={'px-[var(--ds-space-5)] py-[var(--ds-space-3)] font-data text-[var(--ds-text-xs)] font-bold uppercase tracking-[var(--ds-tracking-data)] transition-colors flex items-center gap-2 border-b-2 ' + (activeTab === tab.id ? 'border-[var(--ds-amber)] text-[var(--ds-amber)]' : 'border-transparent text-[var(--ds-text-secondary)] hover:text-[var(--ds-text-primary)]')}
           >
-            <LogOut className="w-4 h-4 mr-2" />
-            {language === 'es' ? 'Salir' : 'Logout'}
-          </Button>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-          <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-slate-300 text-xs">{language === 'es' ? 'Usuarios' : 'Users'}</p>
-                  <p className="text-white text-2xl font-bold">{stats.totalUsers}</p>
-                </div>
-                <Users className="w-8 h-8 text-blue-400" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-slate-300 text-xs">{language === 'es' ? 'Empresas' : 'Companies'}</p>
-                  <p className="text-white text-2xl font-bold">{stats.totalCompanies}</p>
-                </div>
-                <Building2 className="w-8 h-8 text-purple-400" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-slate-300 text-xs">{language === 'es' ? 'Suscripciones' : 'Subscriptions'}</p>
-                  <p className="text-white text-2xl font-bold">{stats.activeSubscriptions}</p>
-                </div>
-                <TrendingUp className="w-8 h-8 text-green-400" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-slate-300 text-xs">{language === 'es' ? 'Verificaciones' : 'Verifications'}</p>
-                  <p className="text-white text-2xl font-bold">{stats.pendingVerifications}</p>
-                </div>
-                <AlertTriangle className="w-8 h-8 text-yellow-400" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-slate-300 text-xs">{language === 'es' ? 'Ingresos/mes' : 'Revenue/mo'}</p>
-                  <p className="text-white text-2xl font-bold">${stats.totalRevenue ? stats.totalRevenue.toLocaleString() : '0'}</p>
-                </div>
-                <DollarSign className="w-8 h-8 text-emerald-400" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-slate-300 text-xs">{language === 'es' ? 'Publicaciones' : 'Posts'}</p>
-                  <p className="text-white text-2xl font-bold">{stats.activePosts}</p>
-                </div>
-                <Package className="w-8 h-8 text-orange-400" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex gap-2 mb-6">
-          <Button
-            variant={activeTab === "overview" ? "default" : "outline"}
-            onClick={() => setActiveTab("overview")}
-            className={activeTab === "overview"
-              ? "bg-blue-600 hover:bg-blue-700"
-              : "bg-white/10 border-white/20 text-white hover:bg-white/20"
-            }
-          >
-            {language === 'es' ? 'Resumen' : 'Overview'}
-          </Button>
-          <Button
-            variant={activeTab === "verifications" ? "default" : "outline"}
-            onClick={() => setActiveTab("verifications")}
-            className={activeTab === "verifications"
-              ? "bg-blue-600 hover:bg-blue-700"
-              : "bg-white/10 border-white/20 text-white hover:bg-white/20"
-            }
-          >
-            {language === 'es' ? 'Verificaciones' : 'Verifications'}
-            {mockStats.pendingVerifications > 0 && (
-              <Badge className="ml-2 bg-yellow-500 text-black">
-                {mockStats.pendingVerifications}
-              </Badge>
+            {tab.label}
+            {tab.badge && (
+              <span className="bg-[var(--ds-amber-dim)] text-[var(--ds-amber)] px-1.5 py-0.5 rounded text-[9px] border border-[var(--ds-amber)]/20">
+                {tab.badge}
+              </span>
             )}
-          </Button>
-          <Button
-            variant={activeTab === "subscriptions" ? "default" : "outline"}
-            onClick={() => setActiveTab("subscriptions")}
-            className={activeTab === "subscriptions"
-              ? "bg-blue-600 hover:bg-blue-700"
-              : "bg-white/10 border-white/20 text-white hover:bg-white/20"
-            }
-          >
-            {language === 'es' ? 'Suscripciones' : 'Subscriptions'}
-          </Button>
-          <Button
-            variant={activeTab === "posts" ? "default" : "outline"}
-            onClick={() => setActiveTab("posts")}
-            className={activeTab === "posts"
-              ? "bg-blue-600 hover:bg-blue-700"
-              : "bg-white/10 border-white/20 text-white hover:bg-white/20"
-            }
-          >
-            {language === 'es' ? 'Publicaciones' : 'Posts'}
-          </Button>
-        </div>
+          </button>
+        ))}
+      </div>
 
-        {/* Content */}
-        {activeTab === "verifications" && (
-          <div className="space-y-4">
-            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-              <CardHeader>
-                <CardTitle className="text-white">
-                  {language === 'es' ? '⏳ Verificaciones Pendientes' : '⏳ Pending Verifications'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {verifications.length === 0 && (
-                  <p className="text-slate-400 text-center py-4">
-                    {language === 'es' ? 'No hay verificaciones pendientes.' : 'No pending verifications.'}
-                  </p>
-                )}
-                {verifications.map((verification: any) => (
-                  <div
-                    key={verification.id}
-                    className="bg-white/5 p-4 rounded-lg border border-white/10"
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-white font-bold">{verification.entityName || "Unknown"}</h3>
-                          <Badge className={verification.entityType === "company"
-                            ? "bg-purple-500/20 text-purple-300 border-purple-500/30"
-                            : "bg-blue-500/20 text-blue-300 border-blue-500/30"
-                          }>
-                            {verification.entityType === "company"
-                              ? (language === 'es' ? 'Empresa' : 'Company')
-                              : (language === 'es' ? 'Empleado' : 'Employee')
-                            }
-                          </Badge>
-                        </div>
-                        <p className="text-slate-400 text-xs mt-1">
-                          {new Date(verification.submittedAt).toLocaleString()}
-                        </p>
+      {/* Tab Content */}
+      <div className="bg-[var(--ds-bg-surface)] border border-[var(--ds-border-default)] rounded-[var(--ds-radius-lg)] rounded-tl-none min-h-[400px] shadow-[var(--ds-shadow-card)]">
+        
+        {activeTab === 'verifications' && (
+          <div className="p-[var(--ds-space-6)]">
+            <h2 className="font-display text-[var(--ds-text-xl)] font-bold text-[var(--ds-text-primary)] mb-[var(--ds-space-4)] flex items-center gap-2">
+              <AlertTriangle size={18} className="text-[var(--ds-amber)]" />
+              Cola de VerificaciÃ³n Manual
+            </h2>
+            {verifications.length === 0 ? (
+              <p className="text-[var(--ds-text-secondary)] text-[var(--ds-text-sm)]">No hay solicitudes pendientes.</p>
+            ) : (
+              <div className="space-y-4">
+                {verifications.map((v: any, i: number) => (
+                  <div key={i} className="flex flex-col md:flex-row gap-4 p-5 bg-[var(--ds-bg-overlay)] border border-[var(--ds-border-default)] rounded-[var(--ds-radius-md)] items-start md:items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="font-bold text-[var(--ds-text-primary)]">{v.entityName}</span>
+                        <span className={"font-data px-2 py-0.5 rounded text-[9px] uppercase tracking-[var(--ds-tracking-data)] border " + (v.entityType === 'company' ? 'bg-[var(--ds-cyan-dim)] text-[var(--ds-cyan)] border-[var(--ds-cyan)]/20' : 'bg-[var(--ds-blue-dim)] text-[var(--ds-blue)] border-[var(--ds-blue)]/20')}>
+                          {v.entityType === 'company' ? 'EMPRESA' : 'EMPLEADO'}
+                        </span>
                       </div>
-                    </div>
-
-                    <div className="mb-3">
-                      <p className="text-slate-300 text-sm mb-2">
-                        {language === 'es' ? 'Documentos:' : 'Documents:'}
-                      </p>
+                      <p className="text-[var(--ds-text-xs)] font-data text-[var(--ds-text-tertiary)] mb-4">{new Date(v.submittedAt).toLocaleString()}</p>
                       <div className="flex flex-wrap gap-2">
-                        {/* Parse documents if string (SQLite stores JSON as string usually) */}
-                        {(() => {
-                            try {
-                                const docs = typeof verification.documents === 'string' 
-                                    ? JSON.parse(verification.documents) 
-                                    : verification.documents;
-                                return Array.isArray(docs) ? docs.map((doc: string, index: number) => {
-                                  // Extract readable name from URL: /uploads/documents-123-CUIT_File.pdf -> CUIT_File.pdf
-                                  const parts = doc.split('/');
-                                  const rawName = parts[parts.length - 1];
-                                  // Remove multer prefix if possible (documents-timestamp-)
-                                  const cleanName = rawName.replace(/^documents-\d+-/, '');
-                                  
-                                  return (
-                                    <a key={index} href={doc} target="_blank" rel="noreferrer">
-                                      <Badge variant="outline" className="text-slate-300 border-slate-500 hover:bg-white/10 cursor-pointer flex gap-1 items-center" title={cleanName}>
-                                        <div className="bg-slate-700/50 p-1 rounded-sm"><FileText size={10} /></div>
-                                        <span className="truncate max-w-[150px]">{cleanName}</span>
-                                      </Badge>
-                                    </a>
-                                  );
-                                }) : null;
-                            } catch(e) { return null; }
-                        })()}
+                        {v.documents?.map((doc: string, idx: number) => (
+                          <div key={idx} className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--ds-bg-base)] border border-[var(--ds-border-default)] rounded-[var(--ds-radius-sm)] text-[var(--ds-text-xs)] text-[var(--ds-text-secondary)] font-body hover:border-[var(--ds-border-strong)] cursor-pointer transition-colors">
+                            <FileText size={12} className="text-[var(--ds-amber)]" /> {doc}
+                          </div>
+                        ))}
                       </div>
-                      {verification.notes && (
-                         <p className="text-slate-400 text-sm mt-2 italic">"{verification.notes}"</p>
-                      )}
                     </div>
-
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => handleApproveVerification(verification.id)}
-                        className="flex-1 bg-green-600 hover:bg-green-700"
-                        disabled={approveMutation.isPending}
-                      >
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        {language === 'es' ? 'Aprobar' : 'Approve'}
-                      </Button>
-                      <Button
-                        onClick={() => handleRejectVerification(verification.id)}
-                        variant="outline"
-                        className="flex-1 bg-red-600/20 border-red-500/30 text-red-300 hover:bg-red-600/30"
-                        disabled={rejectMutation.isPending}
-                      >
-                        <XCircle className="w-4 h-4 mr-2" />
-                        {language === 'es' ? 'Rechazar' : 'Reject'}
-                      </Button>
+                    <div className="flex gap-3 w-full md:w-auto mt-4 md:mt-0">
+                      <button onClick={() => handleApproveVerification(v.id)} className="flex-1 md:w-auto px-5 py-2.5 bg-[var(--ds-green-dim)] text-[var(--ds-green)] hover:bg-[var(--ds-green)] hover:text-[var(--ds-bg-base)] border border-[var(--ds-green)]/30 rounded-[var(--ds-radius-sm)] flex items-center justify-center gap-2 text-[var(--ds-text-sm)] font-bold transition-colors">
+                        <CheckCircle size={16} /> Aprobar
+                      </button>
+                      <button onClick={() => handleRejectVerification(v.id)} className="flex-1 md:w-auto px-5 py-2.5 bg-[var(--ds-red-dim)] text-[var(--ds-red)] hover:bg-[var(--ds-red)] hover:text-[var(--ds-bg-base)] border border-[var(--ds-red)]/30 rounded-[var(--ds-radius-sm)] flex items-center justify-center gap-2 text-[var(--ds-text-sm)] font-bold transition-colors">
+                        <XCircle size={16} /> Rechazar
+                      </button>
                     </div>
                   </div>
                 ))}
-              </CardContent>
-            </Card>
+              </div>
+            )}
           </div>
         )}
 
-        {activeTab === "subscriptions" && (
-          <div className="space-y-4">
-            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-              <CardHeader>
-                <CardTitle className="text-white">
-                  {language === 'es' ? '💳 Suscripciones Activas' : '💳 Active Subscriptions'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {mockSubscriptions.map((sub) => (
-                  <div
-                    key={sub.id}
-                    className="bg-white/5 p-4 rounded-lg border border-white/10"
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h3 className="text-white font-bold">{sub.company}</h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge className={sub.plan === "multinacional"
-                            ? "bg-purple-500/20 text-purple-300 border-purple-500/30"
-                            : "bg-blue-500/20 text-blue-300 border-blue-500/30"
-                          }>
-                            {sub.plan.toUpperCase()}
-                          </Badge>
-                          <Badge className="bg-green-500/20 text-green-300 border-green-500/30">
-                            {sub.status.toUpperCase()}
-                          </Badge>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-white text-2xl font-bold">${sub.monthlyRevenue}</p>
-                        <p className="text-slate-400 text-xs">/mes</p>
+        {activeTab === 'subscriptions' && (
+          <div className="p-[var(--ds-space-6)]">
+             <h2 className="font-display text-[var(--ds-text-xl)] font-bold text-[var(--ds-text-primary)] mb-[var(--ds-space-4)] flex items-center gap-2">
+              <TrendingUp size={18} className="text-[var(--ds-green)]" />
+              Suscripciones Activas
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-[var(--ds-space-4)]">
+              {mockSubscriptions.map(sub => (
+                <div key={sub.id} className="p-5 bg-[var(--ds-bg-overlay)] border border-[var(--ds-border-default)] rounded-[var(--ds-radius-md)] flex flex-col justify-between">
+                  {/* header */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="text-[var(--ds-text-base)] font-bold text-[var(--ds-text-primary)] mb-2">{sub.company}</h3>
+                      <div className="flex gap-2">
+                        <span className="font-data px-2 py-0.5 bg-[var(--ds-cyan-dim)] text-[var(--ds-cyan)] border border-[var(--ds-cyan)]/20 rounded text-[9px] uppercase tracking-[var(--ds-tracking-data)]">{sub.plan}</span>
+                        <span className="font-data px-2 py-0.5 bg-[var(--ds-green-dim)] text-[var(--ds-green)] border border-[var(--ds-green)]/20 rounded text-[9px] uppercase tracking-[var(--ds-tracking-data)]">{sub.status}</span>
                       </div>
                     </div>
-
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <p className="text-slate-400">{language === 'es' ? 'Empleados:' : 'Employees:'}</p>
-                        <p className="text-white">{sub.employees} / {sub.maxEmployees}</p>
-                      </div>
-                      <div>
-                        <p className="text-slate-400">{language === 'es' ? 'Próximo cobro:' : 'Next billing:'}</p>
-                        <p className="text-white">{sub.nextBilling.toLocaleDateString()}</p>
-                      </div>
+                    <div className="text-right">
+                      <div className="font-display text-[var(--ds-text-2xl)] font-bold text-[var(--ds-text-primary)]">${sub.monthlyRevenue}</div>
+                      <div className="font-data text-[var(--ds-text-xs)] text-[var(--ds-text-tertiary)] uppercase tracking-[var(--ds-tracking-data)]">USD / Mes</div>
                     </div>
                   </div>
-                ))}
-              </CardContent>
-            </Card>
+                  {/* footer */}
+                  <div className="pt-4 border-t border-[var(--ds-border-subtle)] grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="font-data text-[var(--ds-text-xs)] text-[var(--ds-text-tertiary)] uppercase tracking-[var(--ds-tracking-data)] mb-1">Empleados</p>
+                      <p className="text-[var(--ds-text-sm)] text-[var(--ds-text-secondary)]">{sub.employees} / {sub.maxEmployees}</p>
+                    </div>
+                    <div>
+                       <p className="font-data text-[var(--ds-text-xs)] text-[var(--ds-text-tertiary)] uppercase tracking-[var(--ds-tracking-data)] mb-1">PrÃ³ximo cobro</p>
+                       <p className="text-[var(--ds-text-sm)] text-[var(--ds-text-secondary)]">{sub.nextBilling.toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* placeholder components for other tabs */}
+        {(activeTab === 'overview' || activeTab === 'posts') && (
+          <div className="p-16 text-center">
+            <p className="text-[var(--ds-text-secondary)] opacity-60">Tab en construcciÃ³n bajo el Design System v2.0</p>
           </div>
         )}
       </div>

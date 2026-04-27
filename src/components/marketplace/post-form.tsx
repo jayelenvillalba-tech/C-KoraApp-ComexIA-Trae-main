@@ -480,7 +480,7 @@ export default function PostForm({ onClose, onSubmit }: PostFormProps) {
                           className="w-full text-left p-2 bg-blue-500/10 hover:bg-blue-500/20 rounded border border-blue-500/20 transition-colors group"
                         >
                           <div className="flex items-center justify-between mb-1">
-                            <span className="font-mono text-cyan-300 font-bold">{suggestion.code}</span>
+                            <span className="font-data text-cyan-300 font-bold">{suggestion.code}</span>
                             <Badge className={`text-xs ${
                               suggestion.confidence > 0.8 ? 'bg-green-500/20 text-green-300' : 'bg-yellow-500/20 text-yellow-300'
                             }`}>

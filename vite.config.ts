@@ -21,9 +21,12 @@ export default defineConfig({
     emptyOutDir: true,
   },
   server: {
+    port: 5174,
+    host: true, // Listen on all local IPs to prevent localhost IPv6 resolution errors
+    strictPort: false,      // Si 5174 está ocupado, busca el siguiente
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:3001',
+        target: 'http://127.0.0.1:3001',  // IPv4 explícito — crítico en Windows
         changeOrigin: true,
         secure: false,
         ws: true,
@@ -31,3 +34,4 @@ export default defineConfig({
     },
   },
 });
+

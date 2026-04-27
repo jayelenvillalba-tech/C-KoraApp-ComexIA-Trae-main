@@ -1,0 +1,81 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "news": "Noticias",
+    "hsCode": "HS Code",
+    "marketplace": "Marketplace",
+    "chats": "Chats",
+    "login": "Ingresar",
+    "register": "Crear Cuenta",
+    "dashboard": "Mi Panel",
+    "incoterms": "Incoterms"
+  },
+  "marketplace": {
+    "searchPlaceholder": "Buscar productos, HS codes, empresas...",
+    "filters": "Filtros Inteligentes",
+    "type": "Tipo de Operación",
+    "buy": "Compra",
+    "sell": "Venta",
+    "sector": "Sector",
+    "country": "País / Bloque",
+    "onlyVerified": "Solo verificadas ✓",
+    "advanced": "Avanzado",
+    "docFilter": "Estado Documental",
+    "canOperateNow": "Puedo operar HOY",
+    "canOperateSoon": "Con 1-2 docs más",
+    "showAll": "Ver todas",
+    "aiFilter": "Filtro Inteligente IA",
+    "aiFilterPlaceholder": "Ej: ofertas compatibles para exportar a Europa este trimestre",
+    "compatibility": "Compatibilidad",
+    "contact": "Contactar",
+    "viewCosts": "Ver Costos →",
+    "missingDocs": "⚠ Te faltan docs",
+    "canOperate": "✓ Podés operar",
+    "verifying": "⏳ Verificando..."
+  },
+  "news": {
+    "title": "World Trade Pulse",
+    "subtitle": "Actualizaciones regulatorias oficiales, alertas de cumplimiento y oportunidades comerciales.",
+    "searchPlaceholder": "Buscar por HS Code, país o tratado...",
+    "allTypes": "Todos los tipos",
+    "customizeFeed": "Personalizar Feed",
+    "viewSource": "Ver fuente oficial →",
+    "types": {
+      "warning": "Advertencia",
+      "critical": "Crítico",
+      "treaty": "Tratado",
+      "regulation": "Regulación",
+      "opportunity": "Oportunidad"
+    },
+    "filters": {
+      "country": "País / Región",
+      "hsCode": "HS Code",
+      "period": "Período",
+      "source": "Fuente Oficial",
+      "lastWeek": "Última semana",
+      "lastMonth": "Último mes",
+      "last3months": "3 meses"
+    },
+    "routeAlert": "{{count}} alerta activa para esta ruta"
+  },
+  "chatbot": {
+    "placeholder": "Escribí tu consulta de comercio exterior...",
+    "thinking": "Analizando...",
+    "proactive": {
+      "lowScore": "Con tu score actual solo podés operar el {{pct}}% de las ofertas. ¿Empezamos con el primer documento?",
+      "missingDocs": "Para esta operación te faltan {{count}} documentos. ¿Querés que te guíe?",
+      "routeAlert": "Hay una alerta regulatoria activa para esta ruta. ¿Querés que la analice?",
+      "newsTranslation": "Esta noticia está en otro idioma. ¿Querés que te la traduzca y resuma?"
+    }
+  },
+  "godmode": {
+    "autoMessage": {
+      "routeAlert": "Detecté {{count}} alerta regulatoria activa para {{product}} ({{origin}}→{{destination}}): \"{{alertTitle}}\". ¿Querés que analice el impacto en esta operación?",
+      "scoreBlock": "Tu compatibilidad con esta oferta es del {{compatibility}}%. El primer documento que necesitás es el {{firstMissingDoc}}. ¿Querés que te explique cómo obtenerlo paso a paso?"
+    },
+    "orbTooltip": {
+      "alert": "Tengo información importante sobre esta operación",
+      "idle": "Asistente de comercio exterior"
+    }
+  }
+}

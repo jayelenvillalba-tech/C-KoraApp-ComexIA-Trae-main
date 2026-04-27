@@ -133,24 +133,26 @@ export default function HsCodeLookup() {
   }
 
   return (
-    <div className="glass-card rounded-2xl p-6 mb-8">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-bold text-gray-900 flex items-center">
-          <Zap className="mr-3 text-kora-primary w-6 h-6" />
-          {t("hsLookup.title")} - Continental Intelligence
+    <div className="glass rounded-2xl p-6 mb-8 border border-white/5 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+        <h3 className="text-[18px] font-bold text-white flex items-center tracking-wide" style={{ fontFamily: 'Inter', fontWeight: 900 }}>
+          <Zap className="mr-3 text-[var(--ds-cyan)] w-5 h-5 drop-shadow-[0_0_8px_rgba(0,212,240,0.8)]" />
+          {t("hsLookup.title")} <span className="text-slate-500 font-data text-[10px] uppercase ml-3 border border-white/10 px-2 py-0.5 rounded bg-black/50 tracking-widest">Global Scan Active</span>
         </h3>
-        <div className="flex space-x-2">
+        <div className="flex space-x-2 bg-black/40 p-1 rounded-full border border-white/5">
           <Button
-            variant={operationType === "importer" ? "default" : "outline"}
+            variant={operationType === "importer" ? "default" : "ghost"}
             onClick={() => setOperationType("importer")}
-            className={operationType === "importer" ? "bg-kora-primary text-white" : ""}
+            className={operationType === "importer" ? "bg-[var(--ds-cyan)] text-[#010609] hover:bg-cyan-400 font-bold rounded-full text-[11px] uppercase tracking-wider" : "text-slate-400 hover:text-white font-bold rounded-full text-[11px] uppercase tracking-wider"}
+            style={{ fontFamily: 'var(--ds-font-data)' }}
           >
             {t("hsLookup.importer")}
           </Button>
           <Button
-            variant={operationType === "exporter" ? "default" : "outline"}
+            variant={operationType === "exporter" ? "default" : "ghost"}
             onClick={() => setOperationType("exporter")}
-            className={operationType === "exporter" ? "bg-kora-primary text-white" : ""}
+            className={operationType === "exporter" ? "bg-[var(--ds-cyan)] text-[#010609] hover:bg-cyan-400 font-bold rounded-full text-[11px] uppercase tracking-wider" : "text-slate-400 hover:text-white font-bold rounded-full text-[11px] uppercase tracking-wider"}
+            style={{ fontFamily: 'var(--ds-font-data)' }}
           >
             {t("hsLookup.exporter")}
           </Button>
@@ -161,19 +163,19 @@ export default function HsCodeLookup() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         {/* Country Selection */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <MapPin className="inline w-4 h-4 mr-1" />
-            Country Context (Optional)
+          <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-2 font-data">
+            <MapPin className="inline w-3.5 h-3.5 mr-1" />
+            Contexto País (Opcional)
           </label>
           <Select value={selectedCountry} onValueChange={setSelectedCountry}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select country for better results" />
+            <SelectTrigger className="bg-[#0a1d2e] border-white/5 text-white h-12 focus:ring-1 focus:ring-[var(--ds-cyan)] focus:border-[var(--ds-cyan)] transition-shadow shadow-inner">
+              <SelectValue placeholder="Selecciona un país para optimizar" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">No country filter</SelectItem>
+            <SelectContent className="bg-[#0a1d2e] border-white/10 text-white backdrop-blur-[20px]">
+              <SelectItem value="all">Sin filtro de país</SelectItem>
               {countries.map(country => (
                 <SelectItem key={country.code} value={country.code}>
-                  {country.flag} {country.name} ({country.region})
+                  {country.flag} {country.name} <span className="text-slate-500 font-data text-[10px] ml-2">({country.region})</span>
                 </SelectItem>
               ))}
             </SelectContent>
@@ -182,83 +184,97 @@ export default function HsCodeLookup() {
         
         {/* Search Type Indicator */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Search Intelligence
+          <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-2 font-data">
+            Inteligencia Activa
           </label>
-          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="text-sm text-blue-800">
-              ✨ Enhanced with 875 companies data
-              {selectedCountry && (
-                <div className="text-xs text-blue-600 mt-1">
-                  🎯 Optimized for {countries.find(c => c.code === selectedCountry)?.name}
-                </div>
-              )}
+          <div className="h-12 px-4 bg-[var(--ds-cyan)]/10 border border-[var(--ds-cyan)]/30 rounded-lg flex flex-col justify-center relative overflow-hidden">
+             <div className="absolute top-0 right-0 w-16 h-full bg-gradient-to-l from-[var(--ds-cyan)]/20 to-transparent animate-pulse" />
+            <div className="text-[11px] font-bold text-[var(--ds-cyan)] font-data tracking-wide flex items-center">
+              <Sparkles className="w-3.5 h-3.5 mr-1.5" /> IA Escaneando 875 perfiles
             </div>
           </div>
         </div>
       </div>
       
       {/* Enhanced Search Bar */}
-      <div className="relative mb-6">
-        <Input
-          type="text"
-          placeholder="Search: 'smartphone', 'telefono', 'computadora', 'cafe', 'petroleo', or HS codes..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-12 text-base"
-        />
-        <Search className="absolute left-4 top-3.5 text-gray-400 w-4 h-4" />
+      <div className="relative mb-6 glass border border-white/5 rounded-xl shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] transition-all group overflow-hidden">
+        <div className={`absolute -inset-0.5 rounded-xl blur ${searchQuery.length > 0 ? 'bg-[var(--ds-cyan)] opacity-20 animate-[pulse_2s_infinite]' : 'opacity-0'} transition-opacity duration-300 pointer-events-none`} />
         
-        {/* Search Status */}
-        {searchQuery.length > 0 && searchQuery.length < 3 && (
-          <div className="text-xs text-gray-500 mt-1">
-            Type at least 3 characters for intelligent search
-          </div>
-        )}
-        {searchQuery.length >= 3 && (
-          <div className="text-xs text-green-600 mt-1">
-            🧠 Continental intelligence active - searching 875 companies database
-          </div>
-        )}
+        <div className="relative">
+          <Input
+            type="text"
+            placeholder="Buscar Inteligencia: 'smartphone', 'tecnología', 'petroleo', o Código HS..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-14 bg-transparent border-transparent text-white font-data text-[14px] placeholder:text-slate-600 focus:ring-0 focus:border-transparent h-14 w-full shadow-none outline-none"
+            style={{ fontFamily: 'var(--ds-font-data)' }}
+          />
+          <Search className={`absolute left-5 top-4 w-6 h-6 transition-colors duration-300 ${searchQuery.length > 0 ? 'text-[var(--ds-cyan)] drop-shadow-[0_0_8px_rgba(0,212,240,0.8)]' : 'text-slate-600'}`} />
+          
+          {/* Search Status */}
+          {searchQuery.length > 0 && searchQuery.length < 3 && (
+            <div className="absolute right-4 top-4 text-[10px] text-slate-500 font-data uppercase tracking-widest bg-black/50 px-2 py-1 rounded">
+              Buscando...
+            </div>
+          )}
+          {searchQuery.length >= 3 && (
+            <div className="absolute right-4 top-4 text-[10px] text-[var(--ds-cyan)] font-data font-bold uppercase tracking-widest bg-[var(--ds-cyan)]/10 px-2 py-1 rounded flex items-center gap-1.5 border border-[var(--ds-cyan)]/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--ds-cyan)] animate-pulse glow-cyan" /> DB Activa
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Enhanced Search Results */}
       {searchResults && searchQuery.length >= 3 && (
-        <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 rounded-lg">
-          <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-            <Zap className="w-4 h-4 mr-2 text-blue-600" />
-            Enhanced Search Results
+        <div className="mb-8 p-6 glass rounded-2xl border border-[var(--ds-cyan)]/30 shadow-[0_0_30px_rgba(0,212,240,0.1)] backdrop-blur-[20px] relative z-10 animate-in slide-in-from-top-4 duration-300">
+          <h4 className="font-bold text-white mb-4 flex items-center tracking-wide" style={{ fontFamily: 'Inter' }}>
+            <Zap className="w-4 h-4 mr-2 text-[var(--ds-cyan)]" />
+            Resultados Tácticos
           </h4>
           
           {/* Smart Partidas Results */}
           {searchResults.partidas && searchResults.partidas.length > 0 && (
-            <div className="mb-4">
-              <h5 className="font-medium text-gray-800 mb-2">🎯 Recommended HS Codes:</h5>
-              <div className="grid gap-2">
+            <div className="mb-6">
+              <h5 className="font-data text-[10px] text-slate-400 tracking-widest uppercase mb-3">🎯 HS Codes Sugeridos:</h5>
+              <div className="grid gap-3">
                 {searchResults.partidas.slice(0, 5).map((partida: any) => (
                   <div 
                     key={partida.id}
-                    className="p-3 bg-white border border-gray-200 rounded-lg hover:border-blue-300 cursor-pointer transition-colors"
+                    className={`p-4 bg-[#0a1d2e] border rounded-xl cursor-pointer transition-all relative overflow-hidden group hover:bg-black/40 ${
+                       partida.tariffRate === 0 
+                         ? 'border-[var(--ds-green)]/40 hover:border-[var(--ds-green)] hover:shadow-[0_0_15px_rgba(0,255,0,0.2)]'
+                         : partida.tariffRate > 15 
+                           ? 'border-[var(--ds-amber)]/40 hover:border-[var(--ds-amber)] hover:shadow-[0_0_15px_rgba(255,140,0,0.2)]'
+                           : 'border-white/10 hover:border-[var(--ds-cyan)]/50 hover:shadow-[0_0_15px_rgba(0,212,240,0.15)]'
+                    }`}
                     onClick={() => handlePartidaSelect(partida)}
                   >
-                    <div className="font-medium text-blue-700">
-                      {partida.code} - {language === "es" ? partida.description : partida.descriptionEn}
-                    </div>
-                    <div className="text-sm text-gray-600 mb-2">
-                      Tariff: {partida.tariffRate}% {selectedCountry && `• Relevant for ${countries.find(c => c.code === selectedCountry)?.flag} ${countries.find(c => c.code === selectedCountry)?.name}`}
+                    <div className="flex items-start justify-between">
+                       <div className="font-bold text-white text-[14px]" style={{ fontFamily: 'Inter' }}>
+                         <span className="font-data text-[var(--ds-cyan)] mr-2">{partida.code}</span>
+                         {language === "es" ? partida.description : partida.descriptionEn}
+                       </div>
+                       <div className={`font-data px-2 py-1 rounded bg-black/50 border text-[13px] font-bold ${
+                          partida.tariffRate === 0 ? 'text-[var(--ds-green)] border-[var(--ds-green)]/30' : 
+                          partida.tariffRate > 15 ? 'text-[var(--ds-amber)] border-[var(--ds-amber)]/30' : 
+                          'text-white border-white/20'
+                       }`}>
+                         {partida.tariffRate}%
+                       </div>
                     </div>
                     {selectedCountry && (
                       <Button 
                         size="sm" 
-                        className="mt-2 bg-green-600 hover:bg-green-700 text-white"
+                        className="mt-4 bg-gradient-to-r from-[var(--ds-cyan)] to-blue-600 hover:shadow-[0_0_15px_rgba(0,212,240,0.4)] text-[#010609] border-none font-bold uppercase tracking-wider font-data text-[10px]"
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedPartida(partida);
                           handleProceedToOpportunities();
                         }}
                       >
-                        Find Commercial Opportunities
-                        <ArrowRight className="w-4 h-4 ml-1" />
+                        Scanner Oportunidades 
+                        <ArrowRight className="w-3.5 h-3.5 ml-2" />
                       </Button>
                     )}
                   </div>

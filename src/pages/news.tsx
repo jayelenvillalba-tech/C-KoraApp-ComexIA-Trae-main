@@ -3,7 +3,7 @@ import { WorldTradePulse } from "@/components/world-trade-pulse";
 
 export default function NewsPage() {
   return (
-    <div className="min-h-screen bg-[#0A1929] flex flex-col font-sans">
+    <div className="min-h-screen bg-[#0A1929] flex flex-col font-body">
       <Header />
       <WorldTradePulse />
     </div>

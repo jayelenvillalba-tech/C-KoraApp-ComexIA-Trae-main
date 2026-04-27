@@ -25,7 +25,7 @@ export default function QuoteMessage({ content }: QuoteMessageProps) {
           <FileText className="w-4 h-4 mr-2" />
           <span className="text-xs font-bold uppercase">{language === 'es' ? 'Cotización' : 'Quote'}</span>
         </div>
-        <span className="text-xs font-mono text-slate-400">{incoterm}</span>
+        <span className="text-xs font-data text-slate-400">{incoterm}</span>
       </div>
       
       <div className="p-3 space-y-2">

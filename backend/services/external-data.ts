@@ -1,5 +1,5 @@
 
-import { db } from '../../database/db-sqlite';
+import { getDb } from '../../database/db-sqlite';
 import { marketData } from '../../shared/schema-sqlite';
 import { eq, and, like, desc, sql } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
@@ -20,7 +20,7 @@ export class ExternalDataService {
     console.log(`🌍 ExternalDataService: Requesting flows for HS ${hsCode} from ${originCountry}`);
 
     // 1. Check Local DB Cache
-    const cachedData = await this.getChedData(hsCode, originCountry);
+    const cachedData = await this.getCachedData(hsCode, originCountry);
     
     // Si tenemos datos recientes y no forzamos refresh, devolver caché
     if (!forceRefresh && cachedData.length > 0) {
@@ -42,89 +42,60 @@ export class ExternalDataService {
   }
 
   /**
-   * Lógica para consultar API externa (Simulado por ahora hasta tener keys)
-   * En el futuro aquí llamaremos a UN Comtrade API v2
+   * Lógica para consultar UN Comtrade API v2 y traer flujos reales.
    */
   private static async fetchComtradeData(hsCode: string, originCountry: string) {
-    // TODO: Implement actual HTTP call to https://comtradeapi.un.org/data/v1/get
-    // Constante simulation por ahora para demostrar el flujo "Real Time"
-    console.log('🔌 Connecting to Global Trade Network...');
+    console.log(`🔌 Connecting to Global Trade Network (UN Comtrade) for HS ${hsCode} from ${originCountry}...`);
     
-    // Simulating API Latency
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Importamos dinámicamente o podríamos estáticamente arriba
+    const { getTopBuyers } = await import('./unComtrade');
+    
+    // Usamos el servicio unComtrade que ya maneja rate limits y base de datos cache
+    const year = '2023'; // Año de referencia estable para UN Comtrade
+    const topBuyers = await getTopBuyers(hsCode, originCountry, year);
 
-    // Generar datos "Reales" basados en reglas lógicas si no hay API key
-    // NOTA: Esto se reemplazará por fetch real.
-    
-    const timestamp = new Date();
-    const source = 'comtrade_simulated';
-    
-    // Ejemplo: Si es Litio (2805), compradores son China, Corea, Japón
-    // Si es Carne (0202), China, Alemania, Israel
-    
-    let mockFlows = [];
-    
-    if (hsCode.startsWith('10')) { // Cereales
-       mockFlows = [
-         { destination: 'Brasil', volume: 6000000, value: 1800000000 },
-         { destination: 'China', volume: 4000000, value: 1200000000 },
-         { destination: 'Indonesia', volume: 3000000, value: 900000000 },
-         { destination: 'Vietnam', volume: 2500000, value: 750000000 }
-       ];
-    } else if (hsCode.startsWith('02')) { // Carne
-       mockFlows = [
-         { destination: 'China', volume: 500000, value: 2500000000 },
-         { destination: 'Alemania', volume: 80000, value: 600000000 },
-         { destination: 'Israel', volume: 40000, value: 300000000 }
-       ];
-    } else if (hsCode.startsWith('28')) { // Litio/Químicos
-        mockFlows = [
-            { destination: 'China', volume: 40000, value: 800000000 },
-            { destination: 'Estados Unidos', volume: 25000, value: 600000000 },
-            { destination: 'Corea del Sur', volume: 15000, value: 350000000 }
-        ];
-    } else {
-        // Genérico realístico
-        mockFlows = [
-            { destination: 'Estados Unidos', volume: 1000, value: 5000000 },
-            { destination: 'Brasil', volume: 800, value: 3000000 },
-            { destination: 'China', volume: 1200, value: 4500000 }
-        ];
+    if (!topBuyers || topBuyers.length === 0) {
+        console.warn(`[ExternalData] No real data found for ${hsCode} from ${originCountry}. Returning empty array.`);
+        return [];
     }
 
-    return mockFlows.map(flow => ({
+    const timestamp = new Date();
+    const source = 'un_comtrade_api_v2';
+    
+    // Map ComtradeResult to marketData schema format
+    return topBuyers.map(buyer => ({
         hsCode,
         originCountry,
-        destinationCountry: flow.destination,
-        year: 2024,
-        volume: flow.volume,
-        valueUsd: flow.value,
-        activeCompanies: Math.floor(Math.random() * 50) + 10,
+        destinationCountry: buyer.countryCode,  // Already ISO2 code from unComtrade.ts
+        year: parseInt(year),
+        volume: buyer.netWeightKg || 1000,      // Fallback si la API no reporta peso
+        valueUsd: buyer.tradeValueUsd,
+        activeCompanies: Math.floor(Math.random() * 50) + 10, // Simulated metric (not provided by Comtrade)
         lastUpdatedAt: timestamp,
         sourceApi: source
     }));
   }
 
-  private static async getChedData(hsCode: string, originCountry: string) {
+  private static async getCachedData(hsCode: string, originCountry: string) {
+    const db = getDb();
+    if (!db) return [];
+    
     return await db.select()
       .from(marketData)
       .where(and(
         like(marketData.hsCode, `${hsCode}%`),
         eq(marketData.originCountry, originCountry),
-        // Podríamos agregar filtro de antigüedad aquí (ej. lastUpdatedAt > 30 days ago)
       ))
       .orderBy(desc(marketData.valueUsd));
   }
 
   private static async saveToDatabase(rows: any[]) {
+    const db = getDb();
+    if (!db) return;
+    
     console.log(`💾 Ingesting ${rows.length} records into Global DB...`);
     
-    // Transacción implícita (batch insert)
     for (const row of rows) {
-        // Verificar si existe para actualizar o insertar
-        // Por simplicidad en MVP, insertamos nuevo con ID único.
-        // En prod, usaríamos upsert/onConflict
-        
         await db.insert(marketData).values({
             id: randomUUID(),
             hsCode: row.hsCode,
@@ -141,3 +112,4 @@ export class ExternalDataService {
     console.log('✅ Ingestion Complete.');
   }
 }
+

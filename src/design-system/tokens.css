@@ -1,0 +1,203 @@
+/* ═══════════════════════════════════════════════════════
+   CHE.COMEX DESIGN SYSTEM v3.0
+   "Cyber-Trade Meridian"
+   Global Command Center aesthetic — Bloomberg × Fintech
+   Fuente de verdad — usar SIEMPRE estas variables
+═══════════════════════════════════════════════════════ */
+
+/* ── PALETA TONAL: THE SURFACE HIERARCHY ── */
+:root {
+  /* Fondos — Tonal Layering (oscuro → claro) */
+  --ds-bg-void:        #050f17;   /* surface_container_lowest — vacío absoluto */
+  --ds-bg-base:        #0a141d;   /* surface — background principal (The Void) */
+  --ds-bg-surface:     #121d25;   /* surface_container_low — sidebar, utility areas */
+  --ds-bg-raised:      #162129;   /* surface_container — cards estándar, paneles */
+  --ds-bg-overlay:     #212b34;   /* surface_container_high — hover, popovers */
+  --ds-bg-input:       #2c363f;   /* surface_container_highest — inputs activos */
+  --ds-bg-bright:      #303a44;   /* surface_bright — hover state, active overlays */
+  
+  /* Layout variables */
+  --ds-ticker-height:  26px;
+  --ds-topbar-height:  46px;
+  --ds-offset-top:     72px;
+
+  /* ── FILOSOFÍA "SIN LÍNEAS" ──
+     Ghost Borders: se sienten, no se ven.
+     Usar cambios de tono para separar, NO border-gray. */
+  --ds-border-subtle:  rgba(60,73,76,.15);    /* ghost border — apenas perceptible */
+  --ds-border-default: rgba(60,73,76,.25);    /* solo cuando accesibilidad lo requiere */
+  --ds-border-strong:  rgba(60,73,76,.40);    /* hover, focus visible */
+  --ds-border-focus:   rgba(0,212,240,.50);   /* focus ring — cyan glow */
+
+  /* ── COLORES SEMÁNTICOS — AMBIENT RADIANCE PALETTE ── */
+
+  /* CYAN — acción / interactivo / seguro
+     Botones primarios, links, rutas seguras, datos en vivo */
+  --ds-cyan:       #00d4f0;
+  --ds-cyan-soft:  #8cebff;               /* texto cyan suavizado para lectura */
+  --ds-cyan-dim:   rgba(0,212,240,.10);    /* background de elementos cyan */
+  --ds-cyan-glow:  rgba(0,212,240,.25);    /* glow ambiental — reemplaza sombras */
+  --ds-cyan-text:  #1bd9f6;               /* principal interactivo */
+
+  /* GREEN / TERTIARY — éxito / completado / safe route */
+  --ds-green:      #69f6b9;
+  --ds-green-dim:  rgba(105,246,185,.08);
+  --ds-green-glow: rgba(105,246,185,.20);
+  --ds-green-text: #4edea3;
+
+  /* AMBER — atención / riesgo moderado / pendiente */
+  --ds-amber:      #f5a800;
+  --ds-amber-dim:  rgba(245,168,0,.08);
+  --ds-amber-glow: rgba(245,168,0,.18);
+  --ds-amber-text: #f5a800;
+
+  /* RED — bloqueo / error / riesgo alto */
+  --ds-red:        #ffb4ab;
+  --ds-red-dim:    rgba(255,180,171,.08);
+  --ds-red-glow:   rgba(255,180,171,.15);
+  --ds-red-text:   #ffb4ab;
+
+  /* GOLD — distinción / premium / institucional */
+  --ds-gold:       #f0c040;
+  --ds-gold-dim:   rgba(240,192,64,.08);
+  --ds-gold-glow:  rgba(240,192,64,.18);
+  --ds-gold-text:  #f0c040;
+
+  /* BLUE — info / secundario */
+  --ds-blue:       #9bcdee;
+  --ds-blue-dim:   rgba(155,205,238,.08);
+
+  /* ── TEXTOS — 4 NIVELES DE JERARQUÍA ──
+     NUNCA usar #FFFFFF puro — rompe la inmersión dark mode */
+  --ds-text-primary:   #eef6ff;  /* on_surface — headlines, datos principales */
+  --ds-text-secondary: #7fb0d0;  /* secondary — apoyo, subtítulos */
+  --ds-text-tertiary:  #859397;  /* outline — labels, timestamps */
+  --ds-text-muted:     #3c494c;  /* outline_variant — ruido mínimo */
+
+  /* ── TIPOGRAFÍA: INTER COMO VARIABLE FONT ──
+     Editorial Authority: headlines pesados, data labels micro */
+  --ds-font-display: 'Inter', sans-serif;     /* headlines, KPIs — weight 900 */
+  --ds-font-data:    'Inter', sans-serif;      /* labels datos, uppercase, weight 700 */
+  --ds-font-body:    'Inter', sans-serif;      /* cuerpo, chat, tooltip — weight 400 */
+
+  /* Escala tipográfica */
+  --ds-text-xs:   10px;    /* data labels, timestamps, badges */
+  --ds-text-sm:   12px;    /* hints, metadata */
+  --ds-text-base: 14px;    /* cuerpo principal */
+  --ds-text-md:   16px;    /* subtítulos, sección */
+  --ds-text-lg:   20px;    /* títulos de card */
+  --ds-text-xl:   26px;    /* títulos de página */
+  --ds-text-2xl:  32px;    /* KPIs, dashboard numbers */
+  --ds-text-3xl:  42px;    /* hero numbers */
+  --ds-text-4xl:  56px;    /* momentos especiales */
+
+  /* Letter spacing
+     Terminal markers: tracking-wide para legibilidad en micro-tamaños */
+  --ds-tracking-data:  0.15em;   /* 10px uppercase labels */
+  --ds-tracking-label: 0.1em;    /* section headers */
+
+  /* ── ESPACIADO — escala de 4px ── */
+  --ds-space-1:  4px;
+  --ds-space-2:  8px;
+  --ds-space-3:  12px;
+  --ds-space-4:  16px;
+  --ds-space-5:  20px;
+  --ds-space-6:  24px;
+  --ds-space-8:  32px;
+  --ds-space-10: 40px;
+  --ds-space-12: 48px;
+  --ds-space-16: 64px;
+  --ds-space-20: 72px;  /* márgenes para tablas densas */
+
+  /* ── BORDES REDONDEADOS — Técnico / Precisión ──
+     0.25rem (4px) es el default para mantener el feel terminal */
+  --ds-radius-sm:   4px;
+  --ds-radius-md:   8px;
+  --ds-radius-lg:   12px;
+  --ds-radius-xl:   16px;
+  --ds-radius-full: 9999px;
+
+  /* ── ELEVACIÓN: AMBIENT RADIANCE ──
+     NO drop shadows negros. Usamos glow de color primario. */
+  --ds-shadow-card:   0 0 0 1px var(--ds-border-subtle);
+  --ds-shadow-raised: 0 4px 24px rgba(0,212,240,.04), 0 0 0 1px var(--ds-border-subtle);
+  --ds-shadow-modal:  0 8px 40px rgba(0,212,240,.06), 0 0 0 1px var(--ds-border-default);
+  --ds-glow-cyan:     0 0 24px var(--ds-cyan-glow), 0 0 0 1px rgba(0,212,240,.15);
+  --ds-glow-green:    0 0 24px var(--ds-green-glow);
+  --ds-glow-amber:    0 0 24px var(--ds-amber-glow);
+  --ds-glow-red:      0 0 24px var(--ds-red-glow);
+
+  /* ── GLASSMORPHISM ── */
+  --ds-glass-bg:      rgba(22,33,41,.60);    /* surface_container at 60% */
+  --ds-glass-blur:    20px;
+  --ds-glass-border:  rgba(60,73,76,.15);
+
+  /* ── TRANSICIONES — Cyan-Glow micro-animations ── */
+  --ds-ease-fast:   .15s cubic-bezier(.4,0,.2,1);
+  --ds-ease-base:   .2s ease-out;            /* default para hover */
+  --ds-ease-slow:   .35s cubic-bezier(.4,0,.2,1);
+  --ds-ease-spring: .5s cubic-bezier(.34,1.56,.64,1);
+
+  /* ── DIMENSIONES FIJAS DE LAYOUT ── */
+  --ds-ticker-height:    26px;
+  --ds-topbar-height:    48px;
+  --ds-sidebar-width:    200px;
+  --ds-right-panel-width: 260px;
+  --ds-content-max:      1440px;
+  --ds-offset-top: calc(var(--ds-ticker-height) + var(--ds-topbar-height));
+}
+
+/* ── GLASSMORPHISM UTILITY CLASS ── */
+.glass {
+  background: var(--ds-glass-bg);
+  backdrop-filter: blur(var(--ds-glass-blur));
+  -webkit-backdrop-filter: blur(var(--ds-glass-blur));
+  border: 1px solid var(--ds-glass-border);
+}
+
+/* ── AMBIENT GLOW ON HOVER ── */
+.glow-cyan:hover  { box-shadow: var(--ds-glow-cyan); }
+.glow-green:hover { box-shadow: var(--ds-glow-green); }
+.glow-amber:hover { box-shadow: var(--ds-glow-amber); }
+.glow-red:hover   { box-shadow: var(--ds-glow-red); }
+
+/* ── RADIANCE CARDS — RISK LEVEL EMITTERS ── */
+.radiance-cyan  { box-shadow: 0 0 30px rgba(0,212,240,.08); }
+.radiance-green { box-shadow: 0 0 30px rgba(105,246,185,.08); }
+.radiance-amber { box-shadow: 0 0 30px rgba(245,168,0,.08); }
+.radiance-red   { box-shadow: 0 0 30px rgba(255,180,171,.08); }
+
+/* ── ANTI-FLICKER: Prevent FOUT on Inter ── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+html {
+  font-family: 'Inter', sans-serif;
+}
+
+/* ── LAYOUT FIXES (Ticker & Topbar) ── */
+.main-content {
+  padding-top: var(--ds-offset-top);
+  min-height: calc(100vh - var(--ds-offset-top));
+}
+
+.ticker-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--ds-ticker-height);
+  z-index: 300;
+}
+
+.topbar {
+  position: fixed;
+  top: var(--ds-ticker-height);
+  left: 0;
+  right: 0;
+  height: var(--ds-topbar-height);
+  z-index: 200;
+}
+
+.page-content {
+  padding-top: var(--ds-offset-top);
+}

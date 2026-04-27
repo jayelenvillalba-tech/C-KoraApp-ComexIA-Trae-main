@@ -13,6 +13,7 @@ import SmartSidebar, { MarketplaceFilters } from '@/components/marketplace/smart
 import PostForm from '@/components/marketplace/post-form';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useMarketplace } from '@/context/marketplace-context';
+import Header from '@/components/header';
 
 // Mock data for posts - will be replaced with real API
 const mockPosts = [
@@ -170,107 +171,48 @@ export default function Marketplace() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A1929]">
-      {/* LinkedIn-style Top Navigation Bar */}
-      <nav className="bg-[#0D1117] border-b border-cyan-900/30 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between h-14">
-            {/* Logo */}
-            <div className="flex items-center gap-6">
-              <a href="/" className="text-cyan-400 font-bold text-xl">
-                CHE.COMEX
-              </a>
-              
-              {/* Global Search */}
-              <div className="hidden md:block">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <Input
-                    type="text"
-                    placeholder={language === 'es' ? 'Buscar empresas, productos, códigos HS...' : 'Search companies, products, HS codes...'}
-                    className="pl-10 w-80 bg-[#0A1929] border-gray-700 text-white placeholder-gray-500"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
+    <div className="min-h-screen bg-[#0a141d] relative pt-[var(--ds-offset-top)]">
+      <Header />
 
-            {/* Navigation Menu */}
-            <div className="flex items-center gap-6">
-              <NavItem icon={<Home className="w-5 h-5" />} label={language === 'es' ? 'Inicio' : 'Home'} active onClick={() => navigate('/')} />
-              <NavItem icon={<Users className="w-5 h-5" />} label={language === 'es' ? 'Mi Red' : 'My Network'} onClick={() => navigate('/marketplace')} />
-              <NavItem icon={<Briefcase className="w-5 h-5" />} label={language === 'es' ? 'Oportunidades' : 'Opportunities'} onClick={() => navigate('/marketplace')} />
-              <NavItem icon={<MessageSquare className="w-5 h-5" />} label={language === 'es' ? 'Mensajes' : 'Messages'} badge={3} onClick={() => navigate('/chat')} />
-              <NavItem icon={<Bell className="w-5 h-5" />} label={language === 'es' ? 'Notificaciones' : 'Notifications'} badge={5} onClick={() => navigate('/alerts-center')} />
-              
-              {/* User Profile */}
-              {/* User Profile or Login Button */}
-              {user ? (
-                <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/profile')}>
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
-                    {user.name?.charAt(0) || 'U'}
-                  </div>
-                  <span className="hidden md:inline text-sm text-gray-300 font-medium">{user.name}</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Button 
-                    variant="ghost" 
-                    className="text-gray-300 hover:text-white hover:bg-white/10"
-                    onClick={() => navigate('/auth')}
-                  >
-                    {language === 'es' ? 'Iniciar Sesión' : 'Login'}
-                  </Button>
-                  <Button 
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
-                    onClick={() => navigate('/auth?tab=register')}
-                  >
-                    {language === 'es' ? 'Registrarse' : 'Sign Up'}
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
+      {/* Subtle void background glow */}
+      <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[var(--ds-cyan)]/5 blur-[120px] pointer-events-none rounded-[100%]" />
 
       {/* 3-Column Layout */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="max-w-[var(--ds-content-max)] mx-auto px-4 py-[var(--ds-space-6)] relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-[var(--ds-space-6)]">
           {/* Left Sidebar - Smart Filters */}
-          <aside className="lg:col-span-3 space-y-4">
+          <aside className="lg:col-span-3 space-y-[var(--ds-space-4)]">
             <SmartSidebar onFilterChange={setFilters} currentFilters={filters} />
           </aside>
 
           {/* Center Feed */}
-          <main className="lg:col-span-6 space-y-4">
-            {/* Post Creation Box */}
-            <div className="bg-[#0D2137] border border-cyan-900/30 rounded-lg p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-xl">
-                  {user?.name?.charAt(0) || 'U'}
+          <main className="lg:col-span-6 space-y-[var(--ds-space-4)]">
+            {/* Central Search & Post Creation Box */}
+            <div className="relative group mb-6">
+              <div className="absolute -inset-1 bg-gradient-to-r from-[var(--ds-cyan)]/30 to-blue-600/30 rounded-[var(--ds-radius-lg)] blur opacity-75 group-hover:opacity-100 transition duration-500" />
+              <div className="relative glass bg-[#0a1d2e]/90 border border-white/10 rounded-[var(--ds-radius-lg)] p-5 shadow-[0_0_30px_rgba(0,212,240,0.1)]">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[var(--ds-cyan)] to-blue-600 flex items-center justify-center text-white font-bold text-2xl shadow-[0_0_20px_rgba(0,212,240,0.4)] border border-white/20">
+                    {user?.name?.charAt(0) || 'U'}
+                  </div>
+                  <button
+                    onClick={() => setShowPostForm(true)}
+                    className="flex-1 text-left px-5 py-4 bg-black/50 border border-transparent rounded-2xl text-gray-400 hover:text-white hover:border-[var(--ds-cyan)]/50 transition-all focus:outline-none"
+                    style={{ fontFamily: 'Inter', fontWeight: 900, fontSize: '16px', letterSpacing: '0.02em' }}
+                  >
+                    {language === 'es' ? 'Buscador Central de Oportunidades...' : 'Central Opportunity Search...'}
+                  </button>
                 </div>
-                <button
-                  onClick={() => setShowPostForm(true)}
-                  className="flex-1 text-left px-4 py-3 bg-[#0A1929] border border-gray-700 rounded-full text-gray-400 hover:bg-[#0D2137] transition-colors"
-                >
-                  {language === 'es' ? '¿Qué oportunidad comercial querés compartir?' : 'What trade opportunity do you want to share?'}
-                </button>
-              </div>
-              <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-800">
-                <Button variant="ghost" size="sm" className="text-cyan-400 hover:text-cyan-300" onClick={() => setShowPostForm(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  {language === 'es' ? 'Agregar HS Code' : 'Add HS Code'}
-                </Button>
-                <Button variant="ghost" size="sm" className="text-cyan-400 hover:text-cyan-300" onClick={() => setShowPostForm(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  {language === 'es' ? 'Documentos' : 'Documents'}
-                </Button>
-                <Button variant="ghost" size="sm" className="text-cyan-400 hover:text-cyan-300" onClick={() => setShowPostForm(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  {language === 'es' ? 'Contacto' : 'Contact'}
-                </Button>
+                <div className="flex items-center gap-4 mt-[var(--ds-space-4)] pt-[var(--ds-space-4)] border-t border-white/5">
+                  <Button variant="ghost" size="sm" className="text-[var(--ds-cyan)] hover:text-[var(--ds-cyan)] hover:bg-[var(--ds-cyan)]/10" onClick={() => setShowPostForm(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    {language === 'es' ? 'Publicar Demanda' : 'Post Demand'}
+                  </Button>
+                  <Button variant="ghost" size="sm" className="text-gray-300 hover:text-white hover:bg-white/5" onClick={() => setShowPostForm(true)}>
+                    <Briefcase className="w-4 h-4 mr-2" />
+                    {language === 'es' ? 'Ofrecer Capacidad' : 'Offer Capacity'}
+                  </Button>
+                </div>
               </div>
             </div>
 
@@ -349,26 +291,21 @@ function WorldTradePulseWidget() {
     queryKey: ['/api/news', 'all'],
     queryFn: async () => {
       try {
-        const response = await fetch('/api/news?category=all');
+        const response = await fetch('/api/news?limit=3');
         if (!response.ok) throw new Error('Failed to fetch news');
         const data = await response.json();
-        return data.slice(0, 3); // Only show 3 latest
+        return data.news || data.data || [];
       } catch (error) {
         console.error('News fetch error:', error);
-        // Fallback to mock data
-        return [
-          { id: '1', title: 'Nueva regulación aduanera en UE', category: 'regulacion', createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000) },
-          { id: '2', title: 'Tratado comercial China-LATAM', category: 'tratado', createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000) },
-          { id: '3', title: 'Alerta: Sanciones Rusia', category: 'alerta', createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000) }
-        ];
+        return [];
       }
     }
   });
 
-  const getTimeAgo = (date: Date) => {
-    const now = Date.now();
-    const diff = now - new Date(date).getTime();
-    const hours = Math.floor(diff / (1000 * 60 * 60));
+  const getTimeAgo = (timestamp: number) => {
+    const now = Math.floor(Date.now() / 1000);
+    const diff = now - timestamp;
+    const hours = Math.floor(diff / 3600);
     const days = Math.floor(hours / 24);
     
     if (hours < 1) return language === 'es' ? 'Hace menos de 1h' : 'Less than 1h ago';
@@ -378,17 +315,17 @@ function WorldTradePulseWidget() {
 
   const getCategoryLabel = (category: string) => {
     const labels: Record<string, { es: string; en: string }> = {
-      regulacion: { es: 'Regulación', en: 'Regulation' },
-      tratado: { es: 'Tratado', en: 'Treaty' },
-      alerta: { es: 'Alerta', en: 'Alert' },
-      mercado: { es: 'Mercado', en: 'Market' },
-      logistica: { es: 'Logística', en: 'Logistics' }
+      regulation: { es: 'Regulación', en: 'Regulation' },
+      treaty: { es: 'Tratado', en: 'Treaty' },
+      warning: { es: 'Alerta', en: 'Alert' },
+      market: { es: 'Mercado', en: 'Market' },
+      info: { es: 'Info', en: 'Info' }
     };
-    return labels[category]?.[language] || category;
+    return labels[category]?.[language] || category.toUpperCase();
   };
   
   return (
-    <div className="bg-[#0D2137] border border-cyan-900/30 rounded-lg p-4">
+    <div className="glass bg-[#0a1d2e]/80 border border-white/5 rounded-2xl p-5 shadow-[var(--ds-shadow-raised)]">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-white font-bold flex items-center gap-2">
           <span className="text-cyan-400">📰</span>
@@ -410,10 +347,10 @@ function WorldTradePulseWidget() {
             className="pb-3 border-b border-gray-800 last:border-0 cursor-pointer hover:bg-white/5 p-2 rounded transition-colors"
             onClick={() => navigate('/news')}
           >
-            <p className="text-white text-sm font-medium line-clamp-2">{item.title}</p>
+            <p className="text-white text-sm font-medium line-clamp-2">{item.title_en || item.title_original}</p>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-xs text-cyan-400">{getCategoryLabel(item.category)}</span>
-              <span className="text-xs text-gray-500">• {getTimeAgo(item.createdAt)}</span>
+              <span className="text-xs text-cyan-400">{getCategoryLabel(item.alert_type || 'info')}</span>
+              <span className="text-xs text-gray-500">• {getTimeAgo(item.published_at)}</span>
             </div>
           </div>
         ))}
@@ -427,7 +364,7 @@ function EventsWidget() {
   const { language } = useLanguage();
   
   return (
-    <div className="bg-[#0D2137] border border-cyan-900/30 rounded-lg p-4">
+    <div className="glass bg-[#0a1d2e]/80 border border-white/5 rounded-2xl p-5 shadow-[var(--ds-shadow-raised)]">
       <h3 className="text-white font-bold mb-4">
         {language === 'es' ? 'Eventos de Comercio' : 'Trade Events'}
       </h3>
@@ -451,7 +388,7 @@ function SuggestedGroupsWidget() {
   const { language } = useLanguage();
   
   return (
-    <div className="bg-[#0D2137] border border-cyan-900/30 rounded-lg p-4">
+    <div className="glass bg-[#0a1d2e]/80 border border-white/5 rounded-2xl p-5 shadow-[var(--ds-shadow-raised)]">
       <h3 className="text-white font-bold mb-4">
         {language === 'es' ? 'Grupos Sugeridos' : 'Suggested Groups'}
       </h3>
@@ -468,7 +405,7 @@ function SuggestedGroupsWidget() {
               </div>
               <div>
                 <p className="text-white text-sm font-medium">{group.name}</p>
-                <p className="text-xs text-gray-400">{group.members} {language === 'es' ? 'miembros' : 'members'}</p>
+                <p className="text-xs text-cyan-400" style={{ fontFamily: 'Inter', fontWeight: 900 }}>{group.members} {language === 'es' ? 'miembros' : 'members'}</p>
               </div>
             </div>
             <Button variant="outline" size="sm" className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-900/20">
