@@ -13,6 +13,8 @@ export interface User {
   verified: boolean;
   onboardingStatus?: 'PENDING' | 'COMPLETED';
   companyType?: string;
+  country?: string;   // ISO-2 code from companies.country
+  industry?: string;  // from companies.business_type
 }
 
 interface UserLogin {
@@ -38,6 +40,22 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const initAuth = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isDemo = urlParams.get('demo') === 'true';
+
+      if (isDemo) {
+        setUser({
+          id: 'demo-123',
+          name: 'Empresa AgroExport S.A.',
+          email: 'demo@agroexport.com.ar',
+          role: 'Exportador',
+          company: 'AgroExport S.A.',
+          verified: true
+        });
+        setIsLoading(false);
+        return;
+      }
+
       const token = localStorage.getItem('token');
       if (!token) {
         setIsLoading(false);
@@ -51,7 +69,19 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
         if (res.ok) {
             const userData = await res.json();
-             // Map backend response to Frontend User interface
+            // Also fetch company details to hydrate TradeContext
+            let companyCountry = '';
+            let companyIndustry = '';
+            if (userData.companyId) {
+              try {
+                const cRes = await fetch(`/api/companies/${userData.companyId}`);
+                if (cRes.ok) {
+                  const cData = await cRes.json();
+                  companyCountry = cData.company?.country || cData.country || '';
+                  companyIndustry = cData.company?.businessType || cData.businessType || '';
+                }
+              } catch { /* silent */ }
+            }
             const mappedUser: User = {
                 id: userData.id,
                 name: userData.name,
@@ -59,11 +89,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 role: userData.role || "Usuario",
                 company: userData.companyName || "",
                 companyId: userData.companyId,
-                verified: false // Backend needs to send this if needed, defaulting for now
+                verified: false,
+                country: companyCountry,
+                industry: companyIndustry,
             };
             setUser(mappedUser);
-        } else {
-            console.log('Token expired or invalid');
+            // Notify TradeContext of the user's origin country
+            if (companyCountry) {
+              window.dispatchEvent(new CustomEvent('user-profile-loaded', { detail: { originCountry: companyCountry } }));
+            }
+        } else {
             logout(); // Clear bad token
         }
       } catch (error) {
@@ -98,11 +133,17 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           role: data.user.role || "Usuario",
           company: data.user.companyName || "",
           companyId: data.user.companyId,
-          verified: !!data.user.verified
+          verified: !!data.user.verified,
+          country: data.user.country || '',
+          industry: data.user.industry || '',
       };
 
       localStorage.setItem('token', data.token);
       setUser(mappedUser);
+      // Notify TradeContext of the user's origin country
+      if (mappedUser.country) {
+        window.dispatchEvent(new CustomEvent('user-profile-loaded', { detail: { originCountry: mappedUser.country } }));
+      }
 
       toast({
         title: "¡Bienvenido de vuelta!",
@@ -126,7 +167,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     try {
         // Map frontend params to backend expectation if needed
         const payload = {
-            name: userData.name,
+            userName: userData.name, // BE expects userName
             companyName: userData.companyName,
             email: userData.email,
             password: userData.password,
@@ -139,8 +180,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify(payload)
       });
 
-      const data = await response.json();
-      console.log('Register Response Data:', data); // DEBUG LOG
+      const data = await response.json(); // DEBUG LOG
 
       if (!response.ok) {
         throw new Error(data.error || 'Registration failed');

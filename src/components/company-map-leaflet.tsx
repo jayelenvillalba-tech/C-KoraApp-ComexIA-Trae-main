@@ -351,7 +351,7 @@ export default function CompanyMapLeaflet({ companies }: CompanyMapLeafletProps)
                 <Popup>
                   <div style={{ fontFamily: 'Inter, sans-serif', minWidth: '220px' }}>
                     <h3 style={{ fontWeight: 900, fontSize: '14px', color: '#d9e4f0', marginBottom: '4px' }}>{company.name}</h3>
-                    <p style={{ fontSize: '12px', color: '#9bcdee', marginBottom: '8px' }}>{company.description}</p>
+                    <p style={{ fontSize: '12px', color: '#9bcdee', marginBottom: '8px' }}>{company.businessType}</p>
                     <div style={{ borderTop: '1px solid rgba(60,73,76,0.15)', paddingTop: '8px', marginTop: '8px' }}>
                       <p style={{ fontSize: '10px', color: '#859397', textTransform: 'uppercase', letterSpacing: '0.15em', fontWeight: 700 }}>
                         {countryCoords[company.country]?.name || company.country} · {companiesByCountry[company.country] || 0} empresas

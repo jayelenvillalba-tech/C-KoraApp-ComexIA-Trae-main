@@ -99,7 +99,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <div style={{ fontSize: 'var(--ds-text-sm)', color: 'var(--ds-text-primary)', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {(user as any)?.name || 'Admin User'}
                 </div>
-                <div style={{ fontSize: 'var(--ds-text-xs)', color: 'var(--ds-amber)', fontFamily: 'var(--ds-font-data)', marginTop: 2, textTransform: 'uppercase', tracking: 'var(--ds-tracking-data)' }}>Superadmin</div>
+                <div style={{ fontSize: 'var(--ds-text-xs)', color: 'var(--ds-amber)', fontFamily: 'var(--ds-font-data)', marginTop: 2, textTransform: 'uppercase', letterSpacing: 'var(--ds-tracking-data)' }}>Superadmin</div>
               </div>
             </div>
             <button 

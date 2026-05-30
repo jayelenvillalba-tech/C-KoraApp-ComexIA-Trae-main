@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useUser } from "@/context/user-context";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { ShieldCheck, User, Building2, Lock, Mail } from "lucide-react";
 import Header from "@/components/header";
 
 export default function AuthPage() {
+  useDocumentTitle('Acceso · ComexIA ID');
   const { user, login, register } = useUser();
   const [location, navigate] = useLocation();
   const { toast } = useToast();
@@ -37,7 +39,7 @@ export default function AuthPage() {
   const [loginPassword, setLoginPassword] = useState("");
   // Register State
   const [regName, setRegName] = useState("");
-  // const [regCompany, setRegCompany] = useState(""); // Removed from step 1
+  const [regCompany, setRegCompany] = useState(""); 
   const [regEmail, setRegEmail] = useState("");
   const [regPassword, setRegPassword] = useState("");
 
@@ -71,7 +73,7 @@ export default function AuthPage() {
     try {
       const success = await register({
           name: regName,
-          companyName: "", // Empty for now, will be set in Onboarding
+          companyName: regCompany || "Sin Nombre", // Provide fallback if somehow empty
           email: regEmail,
           password: regPassword,
           companyType: 'pending' // Pending type
@@ -163,6 +165,20 @@ export default function AuthPage() {
                                     </div>
                                 </div>
                                 <div className="space-y-2">
+                                    <Label htmlFor="companyName">Nombre de Empresa</Label>
+                                    <div className="relative">
+                                        <Building2 className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                                        <Input 
+                                            id="companyName" 
+                                            placeholder="Exportadora S.A."
+                                            className="pl-9 bg-slate-900/50 border-slate-700"
+                                            value={regCompany}
+                                            onChange={e => setRegCompany(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
                                     <Label htmlFor="reg-email">Email Corporativo</Label>
                                     <div className="relative">
                                         <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
@@ -194,6 +210,12 @@ export default function AuthPage() {
                                 <div className="bg-blue-900/20 border border-blue-500/20 p-3 rounded text-center">
                                     <p className="text-xs text-blue-300">
                                         Al crear tu cuenta, serás redirigido al <strong>Asistente de Configuración</strong> para definir tu Rol y Servicios.
+                                    </p>
+                                </div>
+                                
+                                <div className="text-center">
+                                    <p className="text-xs text-slate-400">
+                                        Al continuar, aceptas nuestros <a href="/legal/terms" className="text-cyan-400 hover:underline">Términos</a>, <a href="/legal/privacy" className="text-cyan-400 hover:underline">Privacidad</a> y <a href="/legal/acceptable-use" className="text-cyan-400 hover:underline">Uso Aceptable</a>.
                                     </p>
                                 </div>
 

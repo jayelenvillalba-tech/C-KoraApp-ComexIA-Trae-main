@@ -1,72 +1,107 @@
-
 import express from 'express';
-import { HSCode } from '../models/HSCode';
+import { db } from '../../database/db-sqlite';
+import { hsSubpartidas, hsPartidas } from '../../shared/schema-sqlite';
+import { eq, like, or, and, sql } from 'drizzle-orm';
 
 const router = express.Router();
 
-// Get all chapters (2-digit codes)
-router.get('/chapters', async (req, res) => {
-  try {
-    const chapters = await HSCode.find({ 
-      code: { $regex: /^\d{2}$/ } 
-    }).sort({ code: 1 });
-    
-    res.json(chapters);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get partidas (4-digit codes) by chapter
-router.get('/partidas', async (req, res) => {
-  try {
-    const { chapter } = req.query;
-    
-    const query: any = { code: { $regex: /^\d{4}$/ } };
-    if (chapter) {
-      query.chapterCode = String(chapter);
-    }
-    
-    const partidas = await HSCode.find(query).sort({ code: 1 });
-    res.json(partidas);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get subpartidas (6-digit codes) by partida
-router.get('/subpartidas', async (req, res) => {
-  try {
-    const { partida } = req.query;
-    
-    const query: any = { code: { $regex: /^\d{6}$/ } };
-    if (partida) {
-      query.partidaCode = String(partida);
-    }
-    
-    const subpartidas = await HSCode.find(query).sort({ code: 1 });
-    res.json(subpartidas);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Search endpoint (already exists in ai.ts but duplicating for compatibility)
+// Search HS codes
 router.get('/search', async (req, res) => {
   try {
-    const { q } = req.query;
-    if (!q) return res.status(400).json({ error: 'Query required' });
+    const query = req.query.q as string || '';
+    const limit = parseInt(req.query.limit as string) || 50;
+    const offset = parseInt(req.query.offset as string) || 0;
+
+    let conditions = [];
+    if (query) {
+        const searchPattern = `%${query}%`;
+        conditions.push(or(
+            like(hsSubpartidas.code, searchPattern),
+            like(hsSubpartidas.description, searchPattern),
+            like(hsSubpartidas.descriptionEn, searchPattern)
+        ));
+    }
     
-    const results = await HSCode.find(
-      { $text: { $search: String(q) } },
-      { score: { $meta: "textScore" } }
-    )
-    .sort({ score: { $meta: "textScore" } })
-    .limit(10);
+    const results = await db.select()
+        .from(hsSubpartidas)
+        .where(and(...conditions))
+        .limit(limit)
+        .offset(offset);
     
-    res.json({ results });
+    const totalResult = await db.select({ count: sql<number>`count(*)` })
+        .from(hsSubpartidas)
+        .where(and(...conditions));
+
+    res.json({
+      success: true,
+      total: totalResult[0].count,
+      limit,
+      offset,
+      results
+    });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    console.error('Error searching HS codes:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Error searching HS codes',
+      details: error.message
+    });
+  }
+});
+
+// Get HS code by code
+router.get('/:code', async (req, res) => {
+  try {
+    const code = req.params.code;
+    
+    // Try subpartidas first (6 digits)
+    let hsCode = await db.query.hsSubpartidas.findFirst({
+        where: eq(hsSubpartidas.code, code)
+    });
+
+    // If not found, try partidas (4 digits)
+    if (!hsCode) {
+        const partida = await db.query.hsPartidas.findFirst({
+            where: eq(hsPartidas.code, code)
+        });
+        if (partida) {
+             // Map to similar structure
+             hsCode = {
+                 ...partida,
+                 partidaCode: '',
+                 specialTariffRate: null,
+                 restrictions: null,
+                 isActive: true
+             } as any;
+        }
+    }
+
+    if (!hsCode) {
+      return res.status(404).json({
+        success: false,
+        error: 'HS code not found'
+      });
+    }
+
+    // Compatibility mapping
+    const responseData = {
+        ...hsCode,
+        baseTariff: hsCode.tariffRate || 0,
+        section: '', // TODO: Fetch from chapter -> section
+        specializations: [] // TODO: Add specializations table or column
+    };
+
+    res.json({
+      success: true,
+      data: responseData
+    });
+  } catch (error: any) {
+    console.error('Error getting HS code:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Error getting HS code',
+      details: error.message
+    });
   }
 });
 

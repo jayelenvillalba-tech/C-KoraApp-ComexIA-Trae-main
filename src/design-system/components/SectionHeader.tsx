@@ -1,6 +1,6 @@
 import React, { HTMLAttributes } from 'react';
 
-export interface SectionHeaderProps extends HTMLAttributes<HTMLDivElement> {
+export interface SectionHeaderProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
   title: React.ReactNode;
   action?: React.ReactNode;
   onActionClick?: () => void;

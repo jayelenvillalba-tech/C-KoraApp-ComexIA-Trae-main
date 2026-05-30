@@ -5,7 +5,8 @@ import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Icons 
-import { Building, Globe, Briefcase, ChevronRight, Lock, User, Mail, Shield, ShieldCheck, CheckCircle2, Factory, Ship, Plane, FileText, AlertTriangle, TrendingUp, Search } from "lucide-react";
+import { Building, Globe, Briefcase, ChevronRight, Lock, User, Mail, Shield, ShieldCheck, CheckCircle2, Factory, Ship, Plane, FileText, AlertTriangle, TrendingUp, Search, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // --- Types ---
 type OnboardingRole = 'trader' | 'logistics' | 'institutional' | null;
@@ -41,6 +42,26 @@ export default function Onboarding() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // ── Persist profile data to backend after onboarding steps ──────────────
+  const persistProfile = async (overrides?: Partial<OnboardingState>) => {
+    const s = { ...state, ...overrides };
+    const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
+    if (!token) return;
+    try {
+      await fetch('/api/user/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          role: s.role,
+          country: s.country,
+          industry: s.industry,
+        })
+      });
+    } catch (err) {
+      console.error('Failed to persist profile:', err);
+    }
+  };
+
   const fetchRequirements = async (countryCode: string, role: string, operationType: string, industry: string) => {
     setState(prev => ({ ...prev, loadingDocs: true, requirements: [] }));
     try {
@@ -62,13 +83,14 @@ export default function Onboarding() {
   };
 
   const TopProgress = ({ stepId }: { stepId: string }) => {
-    let total = 3; let current = 0;
-    if (stepId === 'auth') { total = 1; current = 0; }
-    else if (stepId === 'role') { total = 2; current = 1; }
-    else if (stepId.includes('trader')) { total = 5; current = parseInt(stepId.split('-')[1]) + 1; }
-    else if (stepId.includes('logistics')) { total = 5; current = parseInt(stepId.split('-')[1]) + 1; }
-    else if (stepId.includes('inst')) { total = 6; current = parseInt(stepId.split('-')[1]) + 1; }
-    else if (stepId === 'dashboard') { total = 1; current = 1; }
+    let total = 4; let current = 0;
+    if (stepId === 'auth') { total = 4; current = 1; }
+    else if (stepId === 'role') { total = 4; current = 2; }
+    else if (stepId.includes('trader')) { total = 4; current = 3; }
+    else if (stepId.includes('logistics')) { total = 4; current = 3; }
+    else if (stepId.includes('inst')) { total = 4; current = 3; }
+    else if (stepId === 'plan') { total = 4; current = 4; }
+    else if (stepId === 'dashboard') { total = 4; current = 4; }
     
     const pct = total > 0 ? (current / total) * 100 : 0;
     
@@ -121,18 +143,21 @@ export default function Onboarding() {
             onNext={() => goTo('trader-3')}
           />
         );
-      case 'trader-3': return <PlanStep role="trader" onNext={() => goTo('dashboard')} />;
+      case 'trader-3': return <FeaturesTourStep onNext={() => { persistProfile(); goTo('plan'); }} />;
 
       // ----------- LOGISTICS FLOW -----------
       case 'logistics-1': return <LogisticsStep1 country={state.country} setCountry={(c) => setState(prev => ({...prev, country: c}))} onNext={() => goTo('logistics-2')} />;
       case 'logistics-2': return <LogisticsStep2 requirements={state.requirements} loading={state.loadingDocs} fetchDocs={() => fetchRequirements(state.country, 'logistics', 'domestic', state.industry)} onNext={() => goTo('logistics-3')} />;
-      case 'logistics-3': return <LogisticsPlanStep onNext={() => goTo('dashboard')} />;
+      case 'logistics-3': return <LogisticsPlanStep onNext={() => { persistProfile(); goTo('plan'); }} />;
 
       // ----------- INSTITUTIONAL FLOW -----------
       case 'inst-1': return <InstStep1 onNext={() => goTo('inst-2')} />;
       case 'inst-2': return <InstStep2 country={state.country} setCountry={(c) => setState(prev => ({...prev, country: c}))} onNext={() => goTo('inst-3')} />;
       case 'inst-3': return <InstStep3 onNext={() => goTo('inst-4')} />;
-      case 'inst-4': return <InstStep4 onNext={() => goTo('dashboard')} />;
+      case 'inst-4': return <InstStep4 onNext={() => { persistProfile(); goTo('plan'); }} />;
+
+      // ----------- PLAN SELECTION (always before dashboard) -----------
+      case 'plan': return <PlanStep verifyScore={state.verifyScore} role={state.role || 'trader'} onNext={() => goTo('dashboard')} />;
 
       // ----------- DASHBOARD FINAL -----------
       case 'dashboard': return <OnboardingDashboard verifyScore={state.verifyScore} role={state.role || 'trader'} />;
@@ -288,7 +313,9 @@ function AuthStep({ onNext }: { onNext: () => void }) {
           {tab === 'register' && (
             <label className="flex items-start gap-3 mt-4 cursor-pointer">
               <input type="checkbox" checked={terms} onChange={e => setTerms(e.target.checked)} className="mt-1" style={{ accentColor: 'var(--ds-cyan)' }} />
-              <span style={{ fontSize: '12px', color: 'var(--ds-text-secondary)', lineHeight: 1.5 }}>Acepto Políticas de Privacidad y Confirmo Autoridad de Representación Legal.</span>
+              <span style={{ fontSize: '12px', color: 'var(--ds-text-secondary)', lineHeight: 1.5 }}>
+                Confirmo Autoridad de Representación Legal y acepto los <a href="/legal/terms" className="text-[var(--ds-cyan)] hover:underline" target="_blank" rel="noreferrer">Términos</a>, <a href="/legal/privacy" className="text-[var(--ds-cyan)] hover:underline" target="_blank" rel="noreferrer">Privacidad</a> y <a href="/legal/acceptable-use" className="text-[var(--ds-cyan)] hover:underline" target="_blank" rel="noreferrer">Uso Aceptable</a>.
+              </span>
             </label>
           )}
 
@@ -358,17 +385,41 @@ function TraderStep1({ country, setCountry, setIndustry, setVerifyScore, onNext 
   const [cuit, setCuit] = useState('');
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState<null | number>(null);
+  const { user } = useUser();
+
+  const handleScan = async () => {
+    if (cuit.length < 10) return;
+    setScanning(true);
+    setScanResult(null);
+    try {
+      const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
+      const res = await fetch('/api/verifications/kyb', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ taxId: cuit, country: country || 'AR', entityId: user?.companyId || 'mock-id' })
+      });
+      const data = await res.json();
+      if (data.status === 'success' && data.kybResult) {
+        setScanResult(data.kybResult.reputationScore);
+        setVerifyScore(data.kybResult.reputationScore);
+      } else {
+        setScanResult(0);
+        setVerifyScore(0);
+      }
+    } catch (err) {
+      console.error('KYB Scan failed:', err);
+      setScanResult(50);
+      setVerifyScore(50);
+    } finally {
+      setScanning(false);
+    }
+  };
 
   useEffect(() => {
     if (cuit.length >= 10) {
-      setScanning(true);
-      setScanResult(null);
       const timer = setTimeout(() => {
-        setScanning(false);
-        const randScore = Math.floor(Math.random() * 20) + 80; // 80-100 score
-        setScanResult(randScore);
-        setVerifyScore(randScore);
-      }, 2500);
+        handleScan();
+      }, 1000);
       return () => clearTimeout(timer);
     } else {
       setScanning(false);
@@ -387,8 +438,19 @@ function TraderStep1({ country, setCountry, setIndustry, setVerifyScore, onNext 
         <InputField label="Razón Social" icon={<Building className="w-5 h-5 text-gray-500" />} placeholder="Ej: TechCorp S.A." />
         
         {/* Security Scan Area */}
-        <div className="relative overflow-hidden rounded-xl border border-white/5 bg-black/40 p-1">
-          <InputField label="Identificación Tributaria (CUIT/Tax ID)" icon={<Search className="w-5 h-5 text-gray-500" />} placeholder="Ingrese ID fiscal..." value={cuit} onChange={(e:any) => setCuit(e.target.value)} />
+        <TooltipProvider>
+          <div className="relative overflow-hidden rounded-xl border border-white/5 bg-black/40 p-1">
+            <div className="absolute top-2 right-12 z-20">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="w-4 h-4 text-gray-500 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent className="bg-gray-900 border border-gray-700 text-white">
+                  <p>Escaneo automático contra bases OFAC y ONU (Simulado).</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            <InputField label="Identificación Tributaria (CUIT/Tax ID)" icon={<Search className="w-5 h-5 text-gray-500" />} placeholder="Ingrese ID fiscal..." value={cuit} onChange={(e:any) => setCuit(e.target.value)} />
           
           {scanning && (
             <div className="absolute inset-0 pointer-events-none z-10" style={{ background: 'rgba(0,212,240,0.05)' }}>
@@ -410,7 +472,8 @@ function TraderStep1({ country, setCountry, setIndustry, setVerifyScore, onNext 
                <span style={{ fontFamily: 'Inter', fontWeight: 900, color: 'var(--ds-green)', textShadow: '0 0 10px rgba(105,246,185,0.5)' }}>SCORE: {scanResult}/100</span>
             </div>
           )}
-        </div>
+          </div>
+        </TooltipProvider>
 
         <div className="pt-4">
           <ContinueButton onClick={onNext} disabled={!cuit || scanning} />
@@ -443,15 +506,188 @@ function TraderStep2({ op, setOp, fetchDocs, requirements, loading, onNext }: an
   );
 }
 
-// Minimal placeholders for rest of flow to keep logic intact while applying glass styling
-function PlanStep({ role, onNext }: any) { return <div className="text-center mt-20"><h2 className="text-2xl font-bold mb-8">Inicialización del Ecosistema</h2><div className="max-w-xs mx-auto"><ContinueButton onClick={onNext} text="Ingresar al Command Center" /></div></div>; }
-function LogisticsStep1({ onNext }: any) { return <TraderStep1 onNext={onNext} setVerifyScore={()=>{}} />; }
-function LogisticsStep2({ fetchDocs, onNext }: any) { useEffect(() => { fetchDocs(); }, []); return <TraderStep2 op="export" setOp={()=>{}} onNext={onNext} />; }
-function LogisticsPlanStep({ onNext }: any) { return <PlanStep onNext={onNext} />; }
-function InstStep1({ onNext }: any) { return <div className="mt-20"><div className="max-w-xs mx-auto"><ContinueButton onClick={onNext} /></div></div>; }
-function InstStep2({ onNext }: any) { return <div className="mt-20"><div className="max-w-xs mx-auto"><ContinueButton onClick={onNext} /></div></div>; }
-function InstStep3({ onNext }: any) { return <div className="mt-20"><div className="max-w-xs mx-auto"><ContinueButton onClick={onNext} /></div></div>; }
-function InstStep4({ onNext }: any) { return <PlanStep onNext={onNext} />; }
+// ==========================================
+// FEATURES TOUR STEP
+// ==========================================
+function FeaturesTourStep({ onNext }: { onNext: () => void }) {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  
+  const slides = [
+    {
+      title: "Landed Cost Real-Time",
+      desc: "Cotizá fletes, seguros y aduanas al instante. Calculamos la rentabilidad exacta de tu operación considerando zonas de riesgo.",
+      icon: <Ship className="w-12 h-12 text-[var(--ds-cyan)]" />,
+      image: "linear-gradient(135deg, rgba(0,212,240,0.1), rgba(0,102,255,0.05))"
+    },
+    {
+      title: "Che.Comex AI (GodMode)",
+      desc: "Tu copiloto experto en regulaciones del Mercosur. Preguntá sobre aranceles, incoterms o documentación y obtené respuestas precisas.",
+      icon: <ShieldCheck className="w-12 h-12 text-[var(--ds-green)]" />,
+      image: "linear-gradient(135deg, rgba(105,246,185,0.1), rgba(0,212,240,0.05))"
+    },
+    {
+      title: "Marketplace Verificado",
+      desc: "Conectá con compradores internacionales e importadores verificados por KYB. Negociá seguro bajo el amparo de Blockchain.",
+      icon: <Globe className="w-12 h-12 text-[var(--ds-gold)]" />,
+      image: "linear-gradient(135deg, rgba(255,184,0,0.1), rgba(255,100,0,0.05))"
+    }
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide(s => (s + 1) % slides.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [slides.length]);
+
+  return (
+    <div className="w-full max-w-2xl">
+      <div className="text-center mb-8">
+         <h2 style={{ fontFamily: 'var(--ds-font-display)', fontSize: '32px', fontWeight: 900 }}>Tu Ecosistema Comex</h2>
+         <p className="text-[var(--ds-text-secondary)] mt-2">Todo lo que necesitás para exportar, en un solo lugar.</p>
+      </div>
+
+      <div className="glass rounded-2xl overflow-hidden border border-white/5 relative mb-8 h-[300px] flex items-center justify-center transition-all duration-700" style={{ background: slides[currentSlide].image }}>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentSlide}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.5 }}
+            className="flex flex-col items-center text-center px-8"
+          >
+            <div className="mb-6 drop-shadow-[0_0_15px_rgba(0,212,240,0.3)]">{slides[currentSlide].icon}</div>
+            <h3 style={{ fontFamily: 'Inter', fontWeight: 900, fontSize: '24px', marginBottom: '12px' }}>{slides[currentSlide].title}</h3>
+            <p className="text-sm text-[var(--ds-text-secondary)] max-w-md leading-relaxed">{slides[currentSlide].desc}</p>
+          </motion.div>
+        </AnimatePresence>
+        
+        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+           {slides.map((_, i) => (
+             <div key={i} className={`w-2 h-2 rounded-full transition-all duration-300 ${i === currentSlide ? 'w-6 bg-[var(--ds-cyan)]' : 'bg-white/20'}`} />
+           ))}
+        </div>
+      </div>
+
+      <div className="max-w-xs mx-auto">
+        <ContinueButton onClick={onNext} text="Ingresar al Command Center" />
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// PLAN SELECTION STEP (real subscription)
+// ==========================================
+function PlanStep({ verifyScore, role, onNext }: { verifyScore: number; role: string; onNext: () => void }) {
+  const [loading, setLoading] = useState('');
+  const [plans] = useState([
+    { id: 'demo', name: 'Demo', price: 'Free', desc: 'Explorar la plataforma sin compromiso.', features: ['10 búsquedas/mes', '1 análisis de ruta', 'Sin marketplace'], cta: 'Continuar gratis', highlighted: false },
+    { id: 'pro', name: 'Pro PyME', price: 'USD 29/mes', desc: 'Para PyMEs que exportan regularmente.', features: ['Todo ilimitado', 'Marketplace B2B', 'Chat corporativo', 'Documentos de ruta', 'Alertas de riesgo'], cta: 'Suscribirse', highlighted: true },
+    { id: 'enterprise', name: 'Enterprise', price: 'USD 99/mes', desc: 'Para empresas con operaciones complejas.', features: ['Todo Pro', 'Multi-usuario', 'API access', 'Onboarding dedicado', 'Soporte prioritario'], cta: 'Contratar', highlighted: false },
+  ]);
+
+  const handleSelect = async (planId: string) => {
+    if (planId === 'demo') { onNext(); return; }
+    const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
+    if (!token) { onNext(); return; }
+    setLoading(planId);
+    try {
+      // Detect country to choose payment method
+      const plansRes = await fetch('/api/payments/plans', { headers: { Authorization: `Bearer ${token}` } });
+      const plansData = plansRes.ok ? await plansRes.json() : null;
+      const isLatam = plansData?.paymentMethod === 'mercadopago';
+
+      if (isLatam) {
+        const res = await fetch('/api/payments/mp/preference', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ plan: planId, successUrl: `${window.location.origin}/onboarding?plan_success=1` })
+        });
+        const data = await res.json();
+        if (data.initPoint) { window.location.href = data.initPoint; return; }
+      } else {
+        const res = await fetch('/api/payments/stripe/checkout', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ plan: planId, successUrl: `${window.location.origin}/onboarding?plan_success=1` })
+        });
+        const data = await res.json();
+        if (data.url) { window.location.href = data.url; return; }
+      }
+      // fallback if checkout fails
+      onNext();
+    } catch { onNext(); }
+    finally { setLoading(''); }
+  };
+
+  return (
+    <div className="w-full max-w-4xl">
+      <div className="text-center mb-10">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-4" style={{ background: 'rgba(0,212,240,0.1)', border: '1px solid rgba(0,212,240,0.3)', fontFamily: 'var(--ds-font-data)', fontSize: '10px', color: 'var(--ds-cyan)', letterSpacing: '0.1em', fontWeight: 700 }}>
+          PASO FINAL · ELEGÍ TU PLAN
+        </div>
+        <h2 style={{ fontFamily: 'var(--ds-font-display)', fontSize: '32px', fontWeight: 900 }}>Activá tu Acceso</h2>
+        <p style={{ fontFamily: 'var(--ds-font-body)', fontSize: '15px', color: 'var(--ds-text-secondary)', marginTop: '8px' }}>Podés empezar gratis y actualizar cuando quieras.</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+        {plans.map(plan => (
+          <div key={plan.id}
+            className={`relative glass rounded-2xl p-7 flex flex-col transition-all duration-300 ${plan.highlighted ? 'scale-105 z-10' : 'hover:-translate-y-1'}`}
+            style={{ border: plan.highlighted ? '1px solid rgba(0,212,240,0.4)' : '1px solid rgba(255,255,255,0.06)', boxShadow: plan.highlighted ? '0 10px 40px rgba(0,212,240,0.15)' : 'var(--ds-shadow-raised)' }}
+          >
+            {plan.highlighted && (
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <span style={{ background: 'linear-gradient(90deg, var(--ds-cyan) 0%, #0066ff 100%)', color: '#000', fontFamily: 'var(--ds-font-data)', fontSize: '10px', fontWeight: 800, padding: '4px 12px', borderRadius: '99px', letterSpacing: '0.1em' }}>RECOMENDADO</span>
+              </div>
+            )}
+            <div className="mb-4">
+              <h3 style={{ fontFamily: 'var(--ds-font-display)', fontSize: '20px', fontWeight: 900, color: plan.highlighted ? 'var(--ds-cyan)' : 'var(--ds-text-primary)' }}>{plan.name}</h3>
+              <div style={{ fontFamily: 'var(--ds-font-display)', fontSize: '28px', fontWeight: 900, color: 'var(--ds-text-primary)', marginTop: '8px' }}>{plan.price}</div>
+              <p style={{ fontFamily: 'var(--ds-font-body)', fontSize: '12px', color: 'var(--ds-text-muted)', marginTop: '6px' }}>{plan.desc}</p>
+            </div>
+            <ul className="space-y-2 flex-1 mb-6">
+              {plan.features.map((f, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: plan.highlighted ? 'var(--ds-cyan)' : 'var(--ds-green)' }} />
+                  <span style={{ fontFamily: 'var(--ds-font-body)', fontSize: '13px', color: 'var(--ds-text-secondary)' }}>{f}</span>
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={() => handleSelect(plan.id)}
+              disabled={loading === plan.id}
+              className="w-full py-3.5 rounded-xl flex items-center justify-center gap-2 font-bold transition-all disabled:opacity-60"
+              style={{
+                fontFamily: 'Inter', fontSize: '14px', letterSpacing: '0.05em',
+                background: plan.highlighted ? 'linear-gradient(135deg, var(--ds-cyan) 0%, #0066ff 100%)' : 'rgba(255,255,255,0.06)',
+                color: plan.highlighted ? '#000' : 'var(--ds-text-primary)',
+                border: plan.highlighted ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                boxShadow: plan.highlighted ? '0 5px 20px rgba(0,212,240,0.4)' : 'none',
+              }}
+            >
+              {loading === plan.id ? (
+                <><div className="w-4 h-4 rounded-full animate-spin" style={{ border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff' }} /> Procesando...</>
+              ) : plan.cta}
+            </button>
+          </div>
+        ))}
+      </div>
+      <p className="text-center" style={{ fontFamily: 'var(--ds-font-data)', fontSize: '11px', color: 'var(--ds-text-muted)', letterSpacing: '0.05em' }}>
+        🔒 Pago seguro vía Stripe o MercadoPago · Cancelá cuando quieras
+      </p>
+    </div>
+  );
+}
+
+// Minimal placeholders for logistics/institutional flows
+function LogisticsStep1({ country, setCountry, onNext }: any) { return <TraderStep1 country={country} setCountry={setCountry} onNext={onNext} setVerifyScore={()=>{}} setIndustry={()=>{}} />; }
+function LogisticsStep2({ fetchDocs, onNext }: any) { useEffect(() => { fetchDocs(); }, []); return <TraderStep2 op="export" setOp={()=>{}} fetchDocs={fetchDocs} requirements={[]} loading={false} onNext={onNext} />; }
+function LogisticsPlanStep({ onNext }: any) { return <FeaturesTourStep onNext={onNext} />; }
+function InstStep1({ onNext }: any) { return <FeaturesTourStep onNext={onNext} />; }
+function InstStep2({ country, setCountry, onNext }: any) { return <TraderStep1 country={country || 'AR'} setCountry={setCountry || (()=>{})} onNext={onNext} setVerifyScore={()=>{}} setIndustry={()=>{}} />; }
+function InstStep3({ onNext }: any) { return <div className="mt-20"><div className="max-w-xs mx-auto"><ContinueButton onClick={onNext} text="Continuar" /></div></div>; }
+function InstStep4({ onNext }: any) { return <FeaturesTourStep onNext={onNext} />; }
 
 // ==========================================
 // PROGRESSIVE VERIFICATION DASHBOARD (END)

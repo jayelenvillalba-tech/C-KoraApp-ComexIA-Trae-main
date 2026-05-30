@@ -67,7 +67,12 @@ interface AnalysisResult {
 export default function CostAnalysisModal({ isOpen, onClose, publication, userProfile }: Props) {
   const [loading, setLoading] = useState(true);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
+  const [showAllDocs, setShowAllDocs] = useState(false);
   const [, navigate] = useLocation();
+
+  useEffect(() => {
+    if (isOpen) setShowAllDocs(false);
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen || !publication) return;
@@ -179,21 +184,40 @@ export default function CostAnalysisModal({ isOpen, onClose, publication, userPr
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {requirements.map((req, idx) => (
-                      <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: '#0d2035', borderRadius: '6px', border: `1px solid ${req.status === 'available' ? 'var(--ds-green)20' : 'var(--ds-amber)20'}` }}>
-                        {req.status === 'available'
-                          ? <CheckCircle size={16} color="var(--ds-green)" />
-                          : <AlertTriangle size={16} color="var(--ds-amber)" />
-                        }
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: '13px', color: req.status === 'available' ? '#c8e8c8' : '#e8d0a0', fontFamily: 'DM Mono, monospace' }}>{req.name}</div>
-                          <div style={{ fontSize: '11px', color: '#8aafc0' }}>Aprox {req.processingDays} días | ${req.costUsd}</div>
+                    {showAllDocs ? (
+                      requirements.map((req, idx) => (
+                        <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: '#0d2035', borderRadius: '6px', border: `1px solid ${req.status === 'available' ? 'var(--ds-green)20' : 'var(--ds-amber)20'}` }}>
+                          {req.status === 'available'
+                            ? <CheckCircle size={16} color="var(--ds-green)" />
+                            : <AlertTriangle size={16} color="var(--ds-amber)" />
+                          }
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: '13px', color: req.status === 'available' ? '#c8e8c8' : '#e8d0a0', fontFamily: 'DM Mono, monospace' }}>{req.name}</div>
+                            <div style={{ fontSize: '11px', color: '#8aafc0' }}>Aprox {req.processingDays} días | ${req.costUsd}</div>
+                          </div>
+                          <span style={{ fontSize: '11px', color: req.status === 'available' ? 'var(--ds-green)' : 'var(--ds-amber)', fontWeight: 600 }}>
+                            {req.status === 'available' ? 'Subido' : 'Faltante'}
+                          </span>
                         </div>
-                        <span style={{ fontSize: '11px', color: req.status === 'available' ? 'var(--ds-green)' : 'var(--ds-amber)', fontWeight: 600 }}>
-                          {req.status === 'available' ? 'Subido' : 'Faltante'}
-                        </span>
+                      ))
+                    ) : (
+                      <div style={{ padding: '24px 16px', background: '#0d2035', borderRadius: '8px', border: '1px solid var(--ds-cyan)20', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                        <div>
+                          <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--ds-cyan)', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                            {requirements.length} Documentos Requeridos
+                          </div>
+                          <div style={{ fontSize: '14px', color: '#8aafc0', marginTop: '4px' }}>
+                            Costo estimado de gestión: ${analysis?.documents?.totalCostUsd || 300}
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => setShowAllDocs(true)}
+                          style={{ padding: '8px 16px', background: 'transparent', border: '1px solid var(--ds-cyan)40', borderRadius: '6px', color: 'var(--ds-cyan)', cursor: 'pointer', fontSize: '13px', fontFamily: 'Outfit, sans-serif', fontWeight: 600 }}
+                        >
+                          Ver detalle completo ({requirements.filter(r => r.status === 'missing').length} faltantes)
+                        </button>
                       </div>
-                    ))}
+                    )}
                   </div>
 
                   {requirements.some(r => r.status === 'missing') && (

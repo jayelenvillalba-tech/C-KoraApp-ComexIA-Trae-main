@@ -1,6 +1,5 @@
-
-import { useState, useEffect } from 'react';
-import PremiumGlobe3D from '@/components/premium-globe-3d'; // Premium 3D globe with Three.js
+import React, { useState, useEffect, Suspense } from 'react';
+const PremiumGlobe3D = React.lazy(() => import('@/components/premium-globe-3d'));
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { FeatureCard } from '@/components/feature-card';
@@ -52,7 +51,9 @@ export default function Home() {
     <div className="min-h-screen bg-[#050B14] overflow-x-hidden selection:bg-cyan-500/30 relative">
       {/* GLOBAL 3D BACKGROUND */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <PremiumGlobe3D className="w-full h-full opacity-60 mix-blend-screen" />
+        <Suspense fallback={<div className="w-full h-full bg-transparent" />}>
+          <PremiumGlobe3D className="w-full h-full opacity-60 mix-blend-screen" />
+        </Suspense>
         <div className="absolute inset-0 bg-gradient-to-b from-[#050B14]/30 via-transparent to-[#050B14]/90" />
       </div>
 

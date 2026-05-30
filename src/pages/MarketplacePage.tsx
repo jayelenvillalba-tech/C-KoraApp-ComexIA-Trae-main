@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useUser } from '@/context/user-context';
 import { useLanguage } from '@/hooks/use-language';
 import Header from '@/components/header';
@@ -31,6 +32,23 @@ const CSS = `
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: ${DS.bg}; }
   ::-webkit-scrollbar-thumb { background: ${DS.bd}; border-radius: 2px; }
+
+  /* Responsive Grid */
+  .mkt-grid {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 16px 16px 24px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  @media (min-width: 1024px) {
+    .mkt-grid { grid-template-columns: 240px 1fr 280px; }
+  }
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .mkt-grid { grid-template-columns: 240px 1fr; }
+    .mkt-pulse { display: none; } /* Hide right column on tablet */
+  }
 `;
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -44,10 +62,10 @@ interface Publication {
 // ─── Mock Data ───────────────────────────────────────────────────────────────
 const MOCK_PUBLICATIONS: Publication[] = [
   {
-    id: '1', company: 'Empresa Comercial 14', contact: 'Miguel Martínez', contactRole: 'Export Manager',
+    id: '1', company: 'Empresa AgroExport S.A.', contact: 'Miguel Martínez', contactRole: 'Export Manager',
     verified: true, type: 'sell', product: 'Porotos de Soja Orgánica Premium', hsCode: '120190',
     qty: 1000, unit: 'toneladas', incoterm: 'FOB', price: 450, currency: 'USD',
-    origin: 'BR', destination: 'CN', certifications: ['SENASA', 'Orgánico Certificado', 'ISO 9001'],
+    origin: 'AR', destination: 'CN', certifications: ['SENASA', 'Orgánico Certificado', 'ISO 9001'],
     docsCount: 6, timeAgo: 'hace menos de 1 hora',
   },
   {
@@ -74,17 +92,21 @@ const MOCK_PUBLICATIONS: Publication[] = [
     qty: 50, unit: 'toneladas', incoterm: 'CFR', price: 2400, currency: 'USD',
     origin: 'CN', destination: 'AR', certifications: ['Mill Certificate', 'ISO 9001'], docsCount: 3, timeAgo: 'hace 12 horas',
   },
+  {
+    id: '6', company: 'ElectroTech Solutions', contact: 'Sebastián Gómez', contactRole: 'Sourcing Director',
+    verified: true, type: 'buy', product: 'Componentes Electrónicos (Circuitos Integrados)', hsCode: '854231',
+    qty: 50000, unit: 'unidades', incoterm: 'CIF', price: 2.5, currency: 'USD',
+    origin: 'CN', destination: 'AR', certifications: ['RoHS', 'CE'], docsCount: 4, timeAgo: 'hace 14 horas',
+  },
 ];
 
 const FLAGS: Record<string, string> = {
   AR: '🇦🇷', BR: '🇧🇷', CN: '🇨🇳', DE: '🇩🇪', US: '🇺🇸', UY: '🇺🇾', EU: '🇪🇺', ES: '🇪🇸',
 };
 
-const USER_DOCS_COMPLETED = ['Registro AFIP (RIE)', 'Firma Digital AFIP', 'SENASA', 'Certificado de Origen'];
-
-function getCompat(pub: Publication) {
+function getCompat(pub: Publication, userDocs: string[]) {
   // Simple: if user has SENASA and Origin cert, they're partially compatible
-  const score = USER_DOCS_COMPLETED.length / (pub.docsCount + 2);
+  const score = userDocs.length / (pub.docsCount + 2);
   if (score >= 0.8) return { pct: Math.round(score * 100), color: DS.green, label: '✅ Podés operar', icon: 'ok' };
   if (score >= 0.4) return { pct: Math.round(score * 100), color: DS.amber, label: `⚠️ Te faltan docs`, icon: 'warn' };
   return { pct: Math.round(score * 100), color: DS.red, label: '🔴 No podés operar', icon: 'no' };
@@ -115,10 +137,10 @@ function getAlertForPub(pub: Publication, alerts: RouteAlert[]) {
 
 // ─── Components ──────────────────────────────────────────────────────────────
 
-function PublicationCard({ pub, onViewCosts, onContact, alert }: {
-  pub: Publication; onViewCosts: (p: Publication) => void; onContact: (p: Publication) => void; alert?: RouteAlert;
+function PublicationCard({ pub, onViewCosts, onContact, alert, userDocs }: {
+  pub: Publication; onViewCosts: (p: Publication) => void; onContact: (p: Publication) => void; alert?: RouteAlert; userDocs: string[];
 }) {
-  const compat = getCompat(pub);
+  const compat = getCompat(pub, userDocs);
 
   return (
     <div className="card" style={{ padding: '16px', marginBottom: '12px', position: 'relative', border: alert ? `1px solid ${DS.red}50` : undefined }}>
@@ -302,6 +324,7 @@ function WorldTradePulse() {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function MarketplacePage() {
+  useDocumentTitle('Marketplace B2B');
   const { user } = useUser();
   const { setContext } = useGodMode();
   const [, navigate] = useLocation();
@@ -313,12 +336,21 @@ export default function MarketplacePage() {
   const [showModal, setShowModal] = useState(false);
   const [search, setSearch] = useState('');
   const [routeAlerts, setRouteAlerts] = useState<RouteAlert[]>([]);
+  const [userDocs, setUserDocs] = useState<string[]>([]);
 
   useEffect(() => {
     fetch('/api/news/route-alerts')
       .then(r => r.json())
       .then(d => { if(d.success) setRouteAlerts(d.data); })
       .catch(console.error);
+
+    const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
+    if (token) {
+      fetch('/api/verifications/me', { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => r.ok ? r.json() : { docsCompleted: [] })
+        .then(d => setUserDocs(d.docsCompleted || []))
+        .catch(console.error);
+    }
   }, []);
 
   const processAiFilter = async (query: string) => {
@@ -356,7 +388,7 @@ export default function MarketplacePage() {
     if (filters.maxPrice && p.price > Number(filters.maxPrice)) return false;
     
     // Evaluate documentState compatibility
-    const compat = getCompat(p);
+    const compat = getCompat(p, userDocs);
     if (filters.documentState === 'ready' && compat.pct < 80) return false;
     if (filters.documentState === 'partial' && compat.pct < 40) return false;
 
@@ -384,7 +416,7 @@ export default function MarketplacePage() {
       <style>{CSS}</style>
       <div className="mkt">
         <Header />
-        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '16px 16px 24px', display: 'grid', gridTemplateColumns: '240px 1fr 280px', gap: '20px' }}>
+        <div className="mkt-grid">
 
           {/* LEFT: Filters */}
           <aside>
@@ -407,10 +439,10 @@ export default function MarketplacePage() {
                 ¿Qué oportunidad comercial querés compartir?
               </button>
             </div>
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-              <button className="chip" style={{ cursor: 'pointer' }}>+ Agregar HS Code</button>
-              <button className="chip" style={{ cursor: 'pointer' }}>+ Documentos</button>
-              <button className="chip" style={{ cursor: 'pointer' }}>+ Contacto</button>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', overflowX: 'auto', paddingBottom: '4px' }}>
+              <button className="chip whitespace-nowrap" style={{ cursor: 'pointer' }}>+ Agregar HS Code</button>
+              <button className="chip whitespace-nowrap" style={{ cursor: 'pointer' }}>+ Documentos</button>
+              <button className="chip whitespace-nowrap" style={{ cursor: 'pointer' }}>+ Contacto</button>
             </div>
 
             {/* Search */}
@@ -423,13 +455,13 @@ export default function MarketplacePage() {
             {filteredPubs.length === 0
               ? <div style={{ textAlign: 'center', padding: '48px', color: DS.t3, fontFamily: 'DM Mono, monospace', fontSize: '13px' }}>Sin publicaciones para estos filtros.</div>
               : filteredPubs.map(pub => (
-                <PublicationCard key={pub.id} pub={pub} onViewCosts={openModal} onContact={goChat} alert={getAlertForPub(pub, routeAlerts)} />
+                <PublicationCard key={pub.id} pub={pub} onViewCosts={openModal} onContact={goChat} alert={getAlertForPub(pub, routeAlerts)} userDocs={userDocs} />
               ))
             }
           </main>
 
           {/* RIGHT: World Trade Pulse */}
-          <aside>
+          <aside className="mkt-pulse hidden lg:block">
             <WorldTradePulse />
           </aside>
         </div>
@@ -439,7 +471,7 @@ export default function MarketplacePage() {
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         publication={selectedPub}
-        userProfile={{ docsCompleted: USER_DOCS_COMPLETED }}
+        userProfile={{ docsCompleted: userDocs }}
       />
     </>
   );

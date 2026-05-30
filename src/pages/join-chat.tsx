@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useLocation } from "wouter";
+import { useRoute, useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -7,7 +7,8 @@ import { useLanguage } from "@/hooks/use-language";
 import { MessageCircle, CheckCircle, XCircle, Loader2 } from "lucide-react";
 
 export default function JoinChat() {
-  const { token } = useParams();
+  const [, params] = useRoute<{ token: string }>("/join-chat/:token");
+  const token = params?.token ?? '';
   const [, navigate] = useLocation();
   const { language } = useLanguage();
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');

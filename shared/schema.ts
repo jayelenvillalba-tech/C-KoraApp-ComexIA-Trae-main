@@ -310,16 +310,18 @@ export type TradeAlert = typeof tradeAlerts.$inferSelect;
 export type TradeOpportunity = typeof tradeOpportunities.$inferSelect;
 export type MarketIntelligence = typeof marketIntelligence.$inferSelect;
 
-export type InsertHsSection = z.infer<typeof insertHsSectionSchema>;
-export type InsertHsChapter = z.infer<typeof insertHsChapterSchema>;
-export type InsertHsPartida = z.infer<typeof insertHsPartidaSchema>;
-export type InsertHsSubpartida = z.infer<typeof insertHsSubpartidaSchema>;
-export type InsertCompany = z.infer<typeof insertCompanySchema>;
-export type InsertMarketData = z.infer<typeof insertMarketDataSchema>;
-export type InsertCountryOpportunity = z.infer<typeof insertCountryOpportunitySchema>;
-export type InsertCountryRequirement = z.infer<typeof insertCountryRequirementSchema>;
-export type InsertShipment = z.infer<typeof insertShipmentSchema>;
-export type InsertCustomsProcedure = z.infer<typeof insertCustomsProcedureSchema>;
-export type InsertTradeAlert = z.infer<typeof insertTradeAlertSchema>;
-export type InsertTradeOpportunity = z.infer<typeof insertTradeOpportunitySchema>;
-export type InsertMarketIntelligence = z.infer<typeof insertMarketIntelligenceSchema>;
+// Sprint 1 fix: replaced z.infer<typeof schema> with $inferInsert to avoid
+// ZodObject<{}> constraint mismatch with drizzle-zod version.
+export type InsertHsSection = typeof hsSections.$inferInsert;
+export type InsertHsChapter = typeof hsChapters.$inferInsert;
+export type InsertHsPartida = typeof hsPartidas.$inferInsert;
+export type InsertHsSubpartida = typeof hsSubpartidas.$inferInsert;
+export type InsertCompany = typeof companies.$inferInsert;
+export type InsertMarketData = typeof marketData.$inferInsert;
+export type InsertCountryOpportunity = typeof countryOpportunities.$inferInsert;
+export type InsertCountryRequirement = typeof countryRequirements.$inferInsert;
+export type InsertShipment = typeof shipments.$inferInsert;
+export type InsertCustomsProcedure = typeof customsProcedures.$inferInsert;
+export type InsertTradeAlert = typeof tradeAlerts.$inferInsert;
+export type InsertTradeOpportunity = typeof tradeOpportunities.$inferInsert;
+export type InsertMarketIntelligence = typeof marketIntelligence.$inferInsert;

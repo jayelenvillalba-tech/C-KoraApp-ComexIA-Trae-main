@@ -6,6 +6,7 @@ export interface TradeTreaty {
   type: 'free_trade' | 'customs_union' | 'common_market' | 'bilateral';
   tariffReduction: number; // Percentage reduction (0-100)
   sectors?: string[]; // Specific sectors affected
+  notes?: string; // Optional notes (e.g. special regime details)
 }
 
 export interface CountryData {

@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
 interface PostFormProps {
   onClose: () => void;
@@ -32,6 +33,7 @@ export default function PostForm({ onClose, onSubmit }: PostFormProps) {
   const [isClassifying, setIsClassifying] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<any[]>([]);
   const [showAiSuggestions, setShowAiSuggestions] = useState(false);
+  const [isUploading, setUploading] = useState(false);
 
   const handleAIClassification = async () => {
     if (!formData.productName || formData.productName.length < 3) return;

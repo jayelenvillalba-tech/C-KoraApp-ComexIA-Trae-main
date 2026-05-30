@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
 /* ═══════════════════════════════════════════════════════
    CHE.COMEX DESIGN SYSTEM v3.0
    "Cyber-Trade Meridian"
@@ -168,7 +170,6 @@
 .radiance-red   { box-shadow: 0 0 30px rgba(255,180,171,.08); }
 
 /* ── ANTI-FLICKER: Prevent FOUT on Inter ── */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 html {
   font-family: 'Inter', sans-serif;

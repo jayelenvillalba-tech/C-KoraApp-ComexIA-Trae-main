@@ -14,6 +14,8 @@ import QuoteMessage from "./quote-message";
 import AudioCall from "./audio-call";
 import FileBubble from "./file-bubble";
 import PurchaseOrderDialog from "./purchase-order-dialog";
+import { useAblyChat } from "@/hooks/use-ably-chat";
+import { Badge } from "@/components/ui/badge";
 
 interface Message {
   id: string;
@@ -45,37 +47,24 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       
-      // Create a mock file message
-      const fileMessage: Message = {
-        id: `m-${Date.now()}`,
-        conversationId,
-        senderId: userId,
+      // Send file message via mutation
+      sendMessageMutation.mutate({
         content: JSON.stringify({
           name: file.name,
           size: `${(file.size / 1024).toFixed(1)} KB`,
           type: file.name.split('.').pop() || 'file'
         }),
-        createdAt: new Date().toISOString(),
-        read: false,
-        messageType: 'file'
-      };
-      
-      onSendMessage(fileMessage.content, 'file');
+        type: 'file'
+      });
     }
   };
 
   // PO Handler
   const handlePOCreate = (orderData: any) => {
-    const poMessage: Message = {
-      id: `m-${Date.now()}`,
-      conversationId,
-      senderId: userId,
+    sendMessageMutation.mutate({
       content: JSON.stringify(orderData),
-      createdAt: new Date().toISOString(),
-      read: false,
-      messageType: 'quote'
-    };
-    onSendMessage(poMessage.content, 'quote');
+      type: 'quote'
+    });
   };
   const [messageText, setMessageText] = useState("");
   const [showParticipants, setShowParticipants] = useState(false);
@@ -119,9 +108,25 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
       if (!response.ok) throw new Error('Failed to fetch messages');
       return response.json();
     },
-    refetchInterval: 5000, // Poll every 5 seconds
+    // Polling removed in favor of WebSockets (Ably)
     enabled: !!conversationId
   });
+  
+  // Real-time Chat Hook
+  const { connectionState, isPollingFallback, isOnline } = useAblyChat({
+    conversationId,
+    userId
+  });
+  
+  // If WebSocket fails, fallback to polling
+  useEffect(() => {
+    if (isPollingFallback) {
+      const interval = setInterval(() => {
+        queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [isPollingFallback, conversationId, queryClient]);
   
   // Get conversation details
   const { data: conversations = [] } = useQuery({
@@ -247,9 +252,17 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
                 <CheckCircle className="w-4 h-4 text-green-400 ml-2" />
               )}
             </div>
-            <p className="text-slate-400 text-sm">
-              {conversation?.otherCompany?.country || ''}
-            </p>
+            <div className="flex items-center space-x-2">
+              <p className="text-slate-400 text-sm">
+                {conversation?.otherCompany?.country || ''}
+              </p>
+              
+              {!conversationId.startsWith('demo-conv-') && (
+                <Badge variant={isOnline ? "default" : (isPollingFallback ? "secondary" : "destructive")} className="text-xs scale-75 origin-left">
+                  {isOnline ? 'Real-time' : (isPollingFallback ? 'Polling (Fallback)' : connectionState)}
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
         

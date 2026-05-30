@@ -59,8 +59,7 @@ export default function ExpansionDashboard() {
       return response.json();
     },
     onMutate: () => setCargandoFase1(true),
-    onSuccess: (data) => {
-      console.log('Fase 1 cargada exitosamente:', data);
+    onSuccess: (data) => {
       // Invalidar queries para refrescar datos
       queryClient.invalidateQueries({ queryKey: ['/api/expansion/estadisticas'] });
       queryClient.invalidateQueries({ queryKey: ['/api/expansion/progreso'] });

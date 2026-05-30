@@ -1,112 +1,76 @@
-# ComexIA - Desarrollo Local
+# Che.Comex | Plataforma B2B Inteligente
+
+Bienvenido al repositorio principal de **Che.Comex**, la plataforma de inteligencia comercial internacional, análisis de rutas y marketplace B2B para PyMEs exportadoras.
 
 ## 🚀 Inicio Rápido
 
-### Iniciar Servidores de Desarrollo
+### Prerrequisitos
+- Node.js 20+
+- npm (Node Package Manager)
+
+### Instalación
+```powershell
+npm install
+```
+
+### Iniciar en Desarrollo
+Para correr la plataforma en tu entorno local (incluye Backend + Frontend usando Vite):
 
 ```powershell
-.\start-dev.ps1
-```
-
-Este script iniciará automáticamente:
-- **Backend** en `http://localhost:3000`
-- **Frontend** en `http://localhost:5173`
-
-### Acceder a la Aplicación
-
-Abre tu navegador y visita: **http://localhost:5173**
-
-## 📋 Requisitos
-
-- Node.js 18+ instalado
-- npm instalado
-
-## 🗂️ Estructura del Proyecto
-
-```
-ComexIA-Trae-main/
-├── backend/           # Servidor Express (Puerto 3000)
-├── frontend/client/   # Aplicación React+Vite (Puerto 5173)
-├── database/          # Sistema de almacenamiento JSON
-├── shared/            # Schemas y tipos compartidos
-├── data.json          # Base de datos JSON (se crea automáticamente)
-└── start-dev.ps1      # Script de inicio
-```
-
-## 🔧 Comandos Manuales
-
-### Backend
-```powershell
-cd backend
-npm start
-```
-
-### Frontend
-```powershell
-cd frontend/client
 npm run dev
 ```
 
-### Build de Producción (Frontend)
+La aplicación estará disponible en: **http://localhost:5000** (Vite Server)
+
+### Iniciar en Producción (Build)
+Para compilar la aplicación y correrla con el backend Node.js integrado:
+
 ```powershell
-cd frontend/client
 npm run build
+npm run start
 ```
 
-## 📊 Base de Datos
+## 🗂️ Arquitectura del Proyecto
 
-El proyecto usa almacenamiento JSON (`data.json`) para evitar dependencias de compilación nativa.
+El proyecto sigue una arquitectura monolítica (Backend Express + Frontend React) optimizada para despliegues sencillos y alta performance.
 
-- **Ubicación**: `./data.json` (raíz del proyecto)
-- **Formato**: JSON con estructura de tablas
-- **Persistencia**: Automática al guardar cambios
+```
+ComexIA-Trae-main/
+├── backend/          # Servidor Express, Rutas y Lógica de Negocio
+├── database/         # Migraciones, Seeds y Utilidades de BD
+├── public/           # Archivos Estáticos (Modelos 3D, Texturas, etc.)
+├── src/              # Código fuente Frontend (React)
+│   ├── components/   # Componentes Reutilizables y de UI (Shadcn)
+│   ├── config/       # Configuraciones (Feature Flags)
+│   ├── context/      # Contextos Globales (User, GodMode, Marketplace)
+│   ├── hooks/        # Custom Hooks
+│   ├── lib/          # Utilidades (QueryClient, Tailwind Merge)
+│   └── pages/        # Vistas y Rutas de la Aplicación
+└── package.json      # Dependencias y Scripts
+```
 
-## 🌐 API Endpoints
+## 🛠️ Tecnologías Principales
 
-- `GET /api/health` - Estado del servidor
-- `GET /api/empresas` - Lista de empresas
+- **Frontend:** React 18, Vite, Wouter (Routing), TanStack Query
+- **Estilos:** TailwindCSS, Vanilla CSS (Tokens), Shadcn/UI
+- **3D & Visualización:** Three.js, React Three Fiber, Pigeon Maps
+- **Backend:** Node.js, Express, Better-SQLite3 (o PostgreSQL)
+- **Calidad de Código:** TypeScript, Error Boundaries Globales
 
-## 🎨 Tecnologías
+## ⚙️ Feature Flags
 
-### Frontend
-- React 18
-- Vite
-- TailwindCSS
-- Wouter (routing)
-- TanStack Query
-- Radix UI Components
-- Pigeon Maps
-
-### Backend
-- Express
-- TypeScript
-- JSON Storage
+Se pueden habilitar o deshabilitar funcionalidades experimentales modificando el archivo `src/config/features.ts`.
+- `ENABLE_3D_GLOBE`: (boolean) Controla la renderización del globo 3D.
+- `ENABLE_GOD_MODE_ORB`: (boolean) Activa el orbe de IA flotante.
 
 ## 🐛 Solución de Problemas
 
-### Puerto ya en uso
-Si ves errores de puerto ocupado, cierra las aplicaciones que usan los puertos 3000 o 5173.
+**Puerto en uso (5000 o 3000):**
+Asegúrate de no tener otro proceso de Node corriendo. Puedes matarlo usando el Administrador de Tareas o ejecutando en PowerShell:
+`Stop-Process -Id (Get-NetTCPConnection -LocalPort 5000).OwningProcess -Force`
 
-### Módulos no encontrados
-```powershell
-# En backend
-cd backend
-npm install
+**Errores no controlados:**
+La aplicación cuenta con un `ErrorBoundary` global. Si el sistema colapsa, te presentará una pantalla de error amigable. Revisa la consola de tu navegador o el terminal del servidor para ver los detalles técnicos (solo disponibles en `NODE_ENV='development'`).
 
-# En frontend
-cd frontend/client
-npm install
-```
-
-### Limpiar y reiniciar
-```powershell
-# Eliminar node_modules y reinstalar
-rm -r node_modules
-npm install
-```
-
-## 📝 Notas
-
-- El archivo `data.json` se crea automáticamente al iniciar el backend
-- Los cambios en el código se recargan automáticamente (hot reload)
-- Para producción, considera migrar a PostgreSQL o MySQL
+---
+© 2026 Che.Comex — ComexIA. Todos los derechos reservados.

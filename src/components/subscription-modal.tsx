@@ -21,24 +21,33 @@ export default function SubscriptionModal({ open, onOpenChange }: SubscriptionMo
   const handleSubscribe = async (planId: string) => {
     setLoading(planId);
     try {
-        const storedToken = localStorage.getItem('token');
+        const storedToken = localStorage.getItem('token') || localStorage.getItem('auth_token');
         if (!storedToken) {
             toast({ title: "Error", description: "Debes iniciar sesión", variant: "destructive" });
             return;
         }
 
-        const res = await fetch('/api/billing/checkout', {
+        const plansRes = await fetch('/api/payments/plans', {
+            headers: { 'Authorization': `Bearer ${storedToken}` }
+        });
+        const plansData = await plansRes.json();
+        const isLatam = plansData.paymentMethod === 'mercadopago';
+        const endpoint = isLatam ? '/api/payments/mp/preference' : '/api/payments/stripe/checkout';
+
+        const res = await fetch(endpoint, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${storedToken}`
             },
-            body: JSON.stringify({ planId })
+            body: JSON.stringify({ plan: planId })
         });
 
         const data = await res.json();
-        if (res.ok && data.checkoutUrl) {
-            window.location.href = data.checkoutUrl;
+        const checkoutUrl = data.url || data.initPoint;
+        
+        if (res.ok && checkoutUrl) {
+            window.location.href = checkoutUrl;
         } else {
              toast({ title: "Error", description: data.error || "Checkout failed", variant: "destructive" });
         }
@@ -51,32 +60,32 @@ export default function SubscriptionModal({ open, onOpenChange }: SubscriptionMo
 
   const plans = [
     {
-      id: 'pyme',
-      name: language === 'es' ? 'Plan Pyme' : 'SME Plan',
-      price: '$49',
+      id: 'pro',
+      name: language === 'es' ? 'Plan Pro PyME' : 'SME Pro Plan',
+      price: '$29',
       period: language === 'es' ? '/mes' : '/mo',
       description: language === 'es' ? 'Para pequeñas empresas en crecimiento' : 'For growing small businesses',
       features: [
-        language === 'es' ? 'Hasta 5 usuarios' : 'Up to 5 users',
-        language === 'es' ? 'Verificación de empresa básica' : 'Basic company verification',
-        language === 'es' ? 'Acceso a contactos limitado' : 'Limited contact access',
-        language === 'es' ? 'Búsquedas por HS Code ilimitadas' : 'Unlimited HS Code searches',
+        language === 'es' ? 'Búsquedas ilimitadas' : 'Unlimited searches',
+        language === 'es' ? 'Análisis de rutas completo' : 'Full route analysis',
+        language === 'es' ? 'Marketplace B2B' : 'B2B Marketplace',
+        language === 'es' ? 'Chat corporativo' : 'Corporate chat',
       ],
       icon: <Building2 className="w-6 h-6 text-blue-400" />,
       color: 'blue'
     },
     {
-      id: 'corporate',
-      name: language === 'es' ? 'Plan Corporativo' : 'Corporate Plan',
-      price: '$199',
+      id: 'enterprise',
+      name: language === 'es' ? 'Plan Enterprise' : 'Enterprise Plan',
+      price: '$99',
       period: language === 'es' ? '/mes' : '/mo',
       description: language === 'es' ? 'Solución completa para multinacionales' : 'Complete solution for multinationals',
       features: [
-        language === 'es' ? 'Usuarios ilimitados (+100)' : 'Unlimited users (+100)',
-        language === 'es' ? 'Verificación de empleados completa' : 'Full employee verification',
-        language === 'es' ? 'Acceso total a contactos directos' : 'Full access to direct contacts',
-        language === 'es' ? 'Marketplace B2B Premium' : 'Premium B2B Marketplace',
-        language === 'es' ? 'Soporte prioritario 24/7' : '24/7 Priority support',
+        language === 'es' ? 'Multi-usuario' : 'Multi-user',
+        language === 'es' ? 'API access' : 'API access',
+        language === 'es' ? 'Informes personalizados' : 'Custom reports',
+        language === 'es' ? 'Soporte prioritario' : 'Priority support',
+        language === 'es' ? 'Onboarding dedicado' : 'Dedicated onboarding',
       ],
       icon: <ShieldCheck className="w-6 h-6 text-yellow-400" />,
       color: 'yellow',

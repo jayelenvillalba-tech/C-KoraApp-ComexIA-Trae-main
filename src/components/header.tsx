@@ -1,14 +1,17 @@
-import { User, Home, Package, MessageCircle, LogOut, LayoutDashboard, Target, HelpCircle } from "lucide-react";
+import { useState } from "react";
+import { User, Home, Package, MessageCircle, LogOut, LayoutDashboard, Target, HelpCircle, Menu } from "lucide-react";
 import { useLanguage } from "@/hooks/use-language";
 import { useUser } from "@/context/user-context";
 import { useLocation } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/design-system/components";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export default function Header() {
   const { language, setLanguage, t } = useLanguage();
   const { user, logout } = useUser();
   const [location, navigate] = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const getNavClass = (path: string, currentLoc: string) => {
     const isActive = currentLoc === path || (path !== '/' && currentLoc.startsWith(path));
@@ -49,6 +52,13 @@ export default function Header() {
                   className={`h-full flex items-center px-4 font-body text-[var(--ds-text-sm)] font-medium cursor-pointer transition-colors ${getNavClass('/marketplace', location)}`}
                 >
                   {t('nav.marketplace') || 'MARKETPLACE'}
+                </a>
+                <a 
+                  onClick={() => navigate('/investors')}
+                  className={`h-full flex items-center px-4 font-body text-[var(--ds-text-sm)] font-medium cursor-pointer transition-colors ${getNavClass('/investors', location)}`}
+                  style={{ color: location === '/investors' ? '#00d4f0' : undefined }}
+                >
+                  INVERSORES
                 </a>
                 
                 {user && (
@@ -149,6 +159,108 @@ export default function Header() {
                 </div>
               </div>
             </nav>
+          )}
+
+          {/* Mobile Navigation Toggle */}
+          {location !== '/auth' && (
+            <div className="md:hidden flex items-center">
+              <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="sm" className="text-[var(--ds-text-primary)] px-2">
+                    <Menu className="h-6 w-6" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="bg-[rgba(2,8,16,0.95)] border-l-[var(--ds-border-subtle)] p-6 flex flex-col gap-6">
+                  <div className="flex items-center gap-3">
+                    <h1 className="font-display font-[900] text-[20px] text-[var(--ds-text-primary)] tracking-tight leading-none">
+                      CHE.<span className="text-[var(--ds-cyan)]">COMEX</span>
+                    </h1>
+                  </div>
+
+                  <div className="flex flex-col gap-4 mt-8">
+                    <a 
+                      onClick={() => { navigate('/'); setIsMobileMenuOpen(false); }}
+                      className={`text-[var(--ds-text-sm)] font-medium cursor-pointer pb-2 border-b border-[var(--ds-border-default)] ${location === '/' ? 'text-[var(--ds-cyan)]' : 'text-[var(--ds-text-primary)]'}`}
+                    >
+                      {t('nav.home') || 'INICIO'}
+                    </a>
+                    <a 
+                      onClick={() => { navigate('/marketplace'); setIsMobileMenuOpen(false); }}
+                      className={`text-[var(--ds-text-sm)] font-medium cursor-pointer pb-2 border-b border-[var(--ds-border-default)] ${location.startsWith('/marketplace') ? 'text-[var(--ds-cyan)]' : 'text-[var(--ds-text-primary)]'}`}
+                    >
+                      {t('nav.marketplace') || 'MARKETPLACE'}
+                    </a>
+                    
+                    {user && (
+                      <>
+                        <a 
+                          onClick={() => { navigate('/chat'); setIsMobileMenuOpen(false); }} 
+                          className={`text-[var(--ds-text-sm)] font-medium cursor-pointer pb-2 border-b border-[var(--ds-border-default)] ${location.startsWith('/chat') ? 'text-[var(--ds-cyan)]' : 'text-[var(--ds-text-primary)]'}`}
+                        >
+                          {t('nav.chats') || 'CHATS'}
+                        </a>
+                        <a 
+                          onClick={() => { navigate('/marketplace/dashboard'); setIsMobileMenuOpen(false); }} 
+                          className={`text-[var(--ds-text-sm)] font-medium cursor-pointer pb-2 border-b border-[var(--ds-border-default)] ${location === '/marketplace/dashboard' ? 'text-[var(--ds-cyan)]' : 'text-[var(--ds-text-primary)]'}`}
+                        >
+                          {t('nav.dashboard') || 'DASHBOARD'}
+                        </a>
+                        <a 
+                          onClick={() => { navigate('/profile'); setIsMobileMenuOpen(false); }} 
+                          className={`text-[var(--ds-text-sm)] font-medium cursor-pointer pb-2 border-b border-[var(--ds-border-default)] ${location === '/profile' ? 'text-[var(--ds-cyan)]' : 'text-[var(--ds-text-primary)]'}`}
+                        >
+                          MI PERFIL
+                        </a>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="mt-auto flex flex-col gap-4">
+                    {user ? (
+                      <Button
+                        variant="ghost"
+                        onClick={() => { logout(); setIsMobileMenuOpen(false); }}
+                        className="w-full justify-start text-[var(--ds-red)] hover:text-[var(--ds-red)] hover:bg-[var(--ds-bg-overlay)]"
+                      >
+                        <LogOut className="w-4 h-4 mr-2" />
+                        CERRAR SESIÓN
+                      </Button>
+                    ) : (
+                      <div className="flex flex-col gap-3">
+                        <Button 
+                          variant="ghost"
+                          onClick={() => { navigate('/auth'); setIsMobileMenuOpen(false); }}
+                          className="w-full bg-transparent border border-[rgba(255,255,255,0.16)] text-[var(--ds-text-primary)]"
+                        >
+                          {t('nav.login') || 'LOGIN'}
+                        </Button>
+                        <Button 
+                          onClick={() => { navigate('/auth?view=register'); setIsMobileMenuOpen(false); }}
+                          className="w-full bg-gradient-to-br from-[var(--ds-cyan)] to-[var(--ds-blue)] text-[var(--ds-bg-void)] font-bold border-none"
+                        >
+                          {t('nav.register') || 'REGISTER'}
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* Language Toggle Mobile */}
+                    <div className="flex items-center justify-center bg-[var(--ds-bg-overlay)] rounded-[var(--ds-radius-sm)] border border-[var(--ds-border-default)] p-1 mt-4">
+                      {['es', 'en'].map(l => (
+                        <button
+                          key={l}
+                          onClick={() => { setLanguage(l as any); setIsMobileMenuOpen(false); }}
+                          className={`flex-1 font-data text-xs uppercase px-4 py-2 rounded-[var(--ds-radius-sm)] transition-colors ${
+                            language === l ? 'bg-[var(--ds-cyan-dim)] text-[var(--ds-cyan)] font-bold' : 'text-[var(--ds-text-muted)] hover:text-[var(--ds-text-primary)]'
+                          }`}
+                        >
+                          {l}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
           )}
         </div>
       </div>

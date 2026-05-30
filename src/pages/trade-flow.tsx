@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useLocation } from "wouter";
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/hooks/use-language";
 import { ArrowLeft, Navigation, Users, TrendingUp, Globe, Download, Upload, Star, AlertTriangle, CheckCircle, XCircle, Info, ZoomIn, ZoomOut, RotateCcw, MapPin, Flag, Building2, Check } from "lucide-react";
@@ -91,6 +92,7 @@ interface Company {
 import SubscriptionModal from "@/components/subscription-modal";
 
 export default function TradeFlow() {
+  useDocumentTitle('Flujo de Comercio 3D');
   const [, navigate] = useLocation();
   const { language } = useLanguage();
   const [selectedProduct, setSelectedProduct] = useState<string>("");
@@ -121,20 +123,14 @@ export default function TradeFlow() {
     const type = urlParams.get('type') as 'import' | 'export';
     const code = urlParams.get('code');
     const country = urlParams.get('country');
-    const product = urlParams.get('product');
-    
-    console.log('=== Trade-flow Page Initialization ===');
-    console.log('Full URL:', window.location.href);
-    console.log('Search params:', window.location.search);
-    console.log('Parsed params:', { type, code, country, product });
+    const product = urlParams.get('product');
     
     // Validate parameters before setting state
     let hasValidParams = true;
     let errorMessages = [];
     
     if (type && ['import', 'export'].includes(type)) {
-      setOperation(type);
-      console.log('✓ Operation set:', type);
+      setOperation(type);
     } else {
       console.warn('❌ Invalid or missing operation type, defaulting to export');
       setOperation('export');
@@ -144,8 +140,7 @@ export default function TradeFlow() {
     
     if (code && code.trim().length > 0) {
       const trimmedCode = code.trim();
-      setSelectedProduct(trimmedCode);
-      console.log('✓ Product code set:', trimmedCode);
+      setSelectedProduct(trimmedCode);
     } else {
       console.warn('❌ Invalid or missing product code');
       hasValidParams = false;
@@ -154,8 +149,7 @@ export default function TradeFlow() {
     
     if (country && country !== 'all' && country.trim().length > 0) {
       const trimmedCountry = country.trim();
-      setOriginCountry(trimmedCountry);
-      console.log('✓ Origin country set:', trimmedCountry);
+      setOriginCountry(trimmedCountry);
     } else {
       console.warn('❌ Invalid or missing country code');
       hasValidParams = false;
@@ -166,8 +160,7 @@ export default function TradeFlow() {
       try {
         const decodedProduct = decodeURIComponent(product);
         if (decodedProduct.trim().length > 0) {
-          setProductName(decodedProduct.trim());
-          console.log('✓ Product name set:', decodedProduct.trim());
+          setProductName(decodedProduct.trim());
         }
       } catch (error) {
         console.warn('❌ Error decoding product name:', error);
@@ -187,8 +180,7 @@ export default function TradeFlow() {
       setNavigationErrorMessage(
         `Parámetros de navegación inválidos: ${errorMessages.join(', ')}`
       );
-    } else {
-      console.log('✓ All navigation parameters validated successfully');
+    } else {
       setHasNavigationError(false);
       setNavigationErrorMessage('');
     }
@@ -234,9 +226,7 @@ export default function TradeFlow() {
       
       if (originCountry && originCountry.trim().length > 0) {
         params.set('originCountry', originCountry.trim());
-      }
-      
-      console.log('Fetching recommendations with params:', params.toString());
+      }
       
       const response = await fetch(`/api/country-recommendations?${params}`);
       if (!response.ok) {
@@ -244,8 +234,7 @@ export default function TradeFlow() {
         throw new Error(`Failed to fetch recommendations: ${response.status} - ${errorText}`);
       }
       
-      const data = await response.json();
-      console.log('Recommendations received:', data);
+      const data = await response.json();
       return data;
     },
     retry: 3,
@@ -275,9 +264,7 @@ export default function TradeFlow() {
         country: selectedCountry.countryCode,
         type: operation === 'import' ? 'exporter' : 'importer',
         useGovernmentData: useGovernmentAPI ? 'true' : 'false'
-      });
-      
-      console.log('Fetching companies with params:', searchParams.toString());
+      });
       
       const response = await fetch(`/api/companies?${searchParams}`);
       if (!response.ok) {

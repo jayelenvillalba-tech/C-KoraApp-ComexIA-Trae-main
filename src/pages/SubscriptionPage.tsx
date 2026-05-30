@@ -9,6 +9,7 @@ function useUser() {
   return { user };
 }
 import { useLanguage } from '@/hooks/use-language';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -35,6 +36,7 @@ interface PlansData {
 }
 
 export default function SubscriptionPage() {
+  useDocumentTitle('Planes y Suscripción');
   const { user } = useUser();
   const { language } = useLanguage();
   const [plans, setPlans] = useState<PlansData | null>(null);

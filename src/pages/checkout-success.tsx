@@ -10,39 +10,41 @@ export default function CheckoutSuccessPage() {
     const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
 
     useEffect(() => {
-        const confirmSub = async () => {
-            const params = new URLSearchParams(window.location.search);
-            const sessionId = params.get('session_id');
-            const planId = params.get('plan');
+        const checkStatus = async (attempts = 0) => {
             const token = localStorage.getItem('token');
-
-            if (!sessionId || !planId || !token) {
+            if (!token) {
                 setStatus('error');
                 return;
             }
 
             try {
-                const res = await fetch('/api/billing/confirm', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ sessionId, planId })
+                const res = await fetch('/api/payments/status', {
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
 
                 if (res.ok) {
-                    setStatus('success');
+                    const data = await res.json();
+                    if (data.isActive) {
+                        setStatus('success');
+                        return;
+                    }
+                }
+                
+                if (attempts < 3) {
+                    setTimeout(() => checkStatus(attempts + 1), 2000);
                 } else {
                     setStatus('error');
                 }
             } catch (e) {
-                setStatus('error');
+                if (attempts < 3) {
+                    setTimeout(() => checkStatus(attempts + 1), 2000);
+                } else {
+                    setStatus('error');
+                }
             }
         };
 
-        // Artificial delay for "Processing Payment" feel
-        setTimeout(confirmSub, 2000);
+        checkStatus();
     }, []);
 
     return (

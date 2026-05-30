@@ -135,10 +135,7 @@ export default function SouthAmericaAnalysis() {
       const data = await response.json();
 
       if (data.success && data.topCountries) {
-        setTopCountriesData(data);
-        console.log('Analysis completed:', data);
-        console.log(`Found ${data.totalCompanies} companies across ${Object.keys(data.companiesPerCountry || {}).length} countries`);
-        console.log('Companies per country:', data.companiesPerCountry);
+        setTopCountriesData(data);
         
         // Auto-scroll to map section after analysis completes
         setTimeout(() => {

@@ -42,6 +42,12 @@ router.get('/', async (req, res) => {
       params.push(`%"${countries}"%`);
     }
 
+    if (req.query.hsCode) {
+      const chapter = (req.query.hsCode as string).substring(0, 2);
+      query += ` AND (affected_hs_codes LIKE ? OR affected_hs_codes LIKE '%["*"]%')`;
+      params.push(`%"${chapter}"%`);
+    }
+
     if (alert_type) {
       query += ` AND type = ?`;
       params.push(alert_type);
@@ -52,8 +58,38 @@ router.get('/', async (req, res) => {
 
     const news = sqliteDb.prepare(query).all(...params) as any[];
 
-    // Si no hay noticias → insertar seed automáticamente
+    // Si no hay noticias
     if (news.length === 0) {
+      if (countries || req.query.hsCode) {
+         // Generar mock contextualizado para la demo en vez de devolver el seed global (que es de Argentina)
+         const countryLabel = countries ? String(countries).split(',')[0] : 'el destino';
+         const productLabel = req.query.hsCode ? `el código HS ${req.query.hsCode}` : 'el producto';
+         const mockNews = [
+            {
+               id: 'mock_1',
+               title: lang === 'es' ? `Nuevas regulaciones en ${countryLabel} para ${productLabel}` : `New regulations in ${countryLabel} for ${productLabel}`,
+               source_name: 'Customs Authority',
+               published_at: Math.floor(Date.now()/1000) - 86400,
+               alert_type: 'regulation'
+            },
+            {
+               id: 'mock_2',
+               title: lang === 'es' ? `Actualización de aranceles de importación en ${countryLabel}` : `Import tariffs update in ${countryLabel}`,
+               source_name: 'Trade Ministry',
+               published_at: Math.floor(Date.now()/1000) - 172800,
+               alert_type: 'warning'
+            },
+            {
+               id: 'mock_3',
+               title: lang === 'es' ? `Oportunidad: demanda en alza en ${countryLabel} para ${productLabel}` : `Opportunity: rising demand in ${countryLabel} for ${productLabel}`,
+               source_name: 'Global Trade Analytics',
+               published_at: Math.floor(Date.now()/1000) - 259200,
+               alert_type: 'opportunity'
+            }
+         ];
+         return res.json({ news: mockNews, total: mockNews.length, mock: true });
+      }
+
       const { seedNews } = await import('../jobs/seedNews.js');
       await seedNews();
       const seeded = sqliteDb.prepare(

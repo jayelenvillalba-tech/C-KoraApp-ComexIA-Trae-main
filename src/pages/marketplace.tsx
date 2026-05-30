@@ -262,8 +262,7 @@ export default function Marketplace() {
 function NavItem({ icon, label, active = false, badge, onClick }: { icon: React.ReactNode; label: string; active?: boolean; badge?: number; onClick?: () => void }) {
   return (
     <button 
-      onClick={() => {
-        console.log(`Navigating to ${label}`);
+      onClick={() => {
         onClick?.();
       }}
       className={`hidden md:flex flex-col items-center gap-1 px-3 py-2 rounded transition-colors relative ${

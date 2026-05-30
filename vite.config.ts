@@ -22,11 +22,15 @@ export default defineConfig({
   },
   server: {
     port: 5174,
-    host: true, // Listen on all local IPs to prevent localhost IPv6 resolution errors
-    strictPort: false,      // Si 5174 está ocupado, busca el siguiente
+    host: '0.0.0.0',          // Acepta conexiones de localhost y 127.0.0.1
+    strictPort: false,
+    hmr: {
+      host: 'localhost',       // El browser siempre conecta el WS a localhost
+      port: 5174,
+    },
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:3001',  // IPv4 explícito — crítico en Windows
+        target: 'http://127.0.0.1:3001',
         changeOrigin: true,
         secure: false,
         ws: true,

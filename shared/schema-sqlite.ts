@@ -410,12 +410,20 @@ export const marketplacePosts = sqliteTable("marketplace_posts", {
 // Subscriptions
 export const subscriptions = sqliteTable("subscriptions", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-  companyId: text("company_id").notNull().references(() => companies.id),
-  planType: text("plan_type").notNull(), // 'pyme' | 'multinacional'
-  status: text("status").default("active"), // 'active' | 'cancelled' | 'expired'
-  maxEmployees: integer("max_employees").notNull(),
+  companyId: text("company_id").references(() => companies.id), // made optional as services only use user_id currently
+  userId: text("user_id").references(() => users.id),
+  planType: text("plan_type"), // legacy
+  plan: text("plan"), // 'demo' | 'pro' | 'enterprise' | 'partner_pro'
+  status: text("status").default("active"), // 'active' | 'cancelled' | 'expired' | 'past_due'
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  mpPaymentId: text("mp_payment_id"),
+  startedAt: integer("started_at"), // unix timestamp
+  currentPeriodEnd: integer("current_period_end"), // unix timestamp
+  // legacy columns:
+  maxEmployees: integer("max_employees").default(0),
   currentEmployees: integer("current_employees").default(0),
-  monthlyPrice: real("monthly_price").notNull(),
+  monthlyPrice: real("monthly_price").default(0),
   startDate: integer("start_date", { mode: "timestamp" }).$defaultFn(() => new Date()),
   endDate: integer("end_date", { mode: "timestamp" }),
   nextBillingDate: integer("next_billing_date", { mode: "timestamp" }),
@@ -604,6 +612,25 @@ export type InsertTradeBloc = z.infer<typeof insertTradeBlocSchema>;
 export type InsertTradeNews = z.infer<typeof insertTradeNewsSchema>;
 
 // Phase X: Feedback Hub (Quality Control)
+// ─── GodMode AI Memory ───────────────────────────────────────────────────────
+export const godmodeConversations = sqliteTable("godmode_conversations", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text("user_id").references(() => users.id),
+  sessionId: text("session_id").notNull(), // for anonymous users
+  title: text("title"),
+  contextSummary: text("context_summary"), // Persisted summary of the conversation
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
+
+export const godmodeMessages = sqliteTable("godmode_messages", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  conversationId: text("conversation_id").notNull().references(() => godmodeConversations.id),
+  role: text("role").notNull(), // 'user' | 'assistant' | 'system'
+  content: text("content").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
+
 export const feedbackReports = sqliteTable("feedback_reports", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   reportId: text("report_id").notNull().unique(), // e.g. REP-123456

@@ -130,7 +130,7 @@ export default function CompanyProfile() {
   const { language } = useLanguage();
   const { toast } = useToast();
   const [, navigate] = useLocation();
-  const [, params] = useRoute("/company/:id");
+  const [, params] = useRoute<{id: string}>("/company/:id");
   const companyId = params?.id;
 
   const [activeTab, setActiveTab] = useState<"about" | "videos" | "articles" | "documents">("about");

@@ -92,7 +92,8 @@ export class PostgresStorage implements IStorage {
       'telefono': ['8517', 'teléfono', 'phone', 'smartphone'],
       'computadora': ['8471', 'computer', 'laptop', 'ordenador'],
       'cafe': ['0901', 'coffee', 'café'],
-      'petroleo': ['2709', 'petroleum', 'oil']
+      'petroleo': ['2709', 'petroleum', 'oil'],
+      'trigo': ['wheat', 'trigo', '1001']
     };
 
     // Create expanded search terms including synonyms
@@ -242,6 +243,34 @@ export class PostgresStorage implements IStorage {
         units: ["KG", "TN"],
         notes: "Cereales para alimentación",
         notesEn: "Cereals for food"
+      });
+    }
+
+    if (searchTerms.some(term => ['trigo', 'wheat', '1001'].includes(term))) {
+      samplePartidas.push({
+        id: "sample-1001",
+        code: "1001",
+        description: "Trigo y morcajo (tranquillón)",
+        descriptionEn: "Wheat and meslin",
+        chapterCode: "10",
+        tariffRate: "0",
+        units: ["KG", "TN"],
+        notes: "Cereales básicos",
+        notesEn: "Basic cereals"
+      });
+    }
+
+    if (searchTerms.some(term => ['soja', 'soybean', 'soy', '1201'].includes(term))) {
+      samplePartidas.push({
+        id: "sample-1201",
+        code: "1201",
+        description: "Habas de soja, incluso quebrantadas",
+        descriptionEn: "Soya beans, whether or not broken",
+        chapterCode: "12",
+        tariffRate: "0",
+        units: ["KG", "TN"],
+        notes: "Semillas y frutos oleaginosos",
+        notesEn: "Oil seeds and oleaginous fruits"
       });
     }
 

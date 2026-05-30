@@ -39,24 +39,24 @@ export interface MarketplaceFilters {
 }
 
 const SECTORS = [
-  { id: 'Agriculture', icon: Wheat, label: { es: 'Agricultura', en: 'Agriculture' }, color: 'text-green-400' },
-  { id: 'Technology', icon: Cpu, label: { es: 'Tecnología', en: 'Technology' }, color: 'text-blue-400' },
-  { id: 'Transport', icon: Truck, label: { es: 'Transporte', en: 'Transport' }, color: 'text-yellow-400' },
-  { id: 'Manufacturing', icon: Factory, label: { es: 'Manufactura', en: 'Manufacturing' }, color: 'text-purple-400' },
-  { id: 'Services', icon: Briefcase, label: { es: 'Servicios', en: 'Services' }, color: 'text-cyan-400' }
+  { id: 'Agriculture', icon: Wheat, label: { es: 'Agricultura', en: 'Agriculture', pt: 'Agricultura', zh: 'Agriculture' }, color: 'text-green-400' },
+  { id: 'Technology', icon: Cpu, label: { es: 'Tecnología', en: 'Technology', pt: 'Tecnologia', zh: 'Technology' }, color: 'text-blue-400' },
+  { id: 'Transport', icon: Truck, label: { es: 'Transporte', en: 'Transport', pt: 'Transporte', zh: 'Transport' }, color: 'text-yellow-400' },
+  { id: 'Manufacturing', icon: Factory, label: { es: 'Manufactura', en: 'Manufacturing', pt: 'Manufatura', zh: 'Manufacturing' }, color: 'text-purple-400' },
+  { id: 'Services', icon: Briefcase, label: { es: 'Servicios', en: 'Services', pt: 'Serviços', zh: 'Services' }, color: 'text-cyan-400' }
 ];
 
 const AGRICULTURE_SUBCATEGORIES = [
-  { id: 'Soybeans', label: { es: 'Soja', en: 'Soybeans' } },
-  { id: 'Corn', label: { es: 'Maíz', en: 'Corn' } },
-  { id: 'Wheat', label: { es: 'Trigo', en: 'Wheat' } },
-  { id: 'Beef', label: { es: 'Carne Bovina', en: 'Beef' } }
+  { id: 'Soybeans', label: { es: 'Soja', en: 'Soybeans', pt: 'Soja', zh: 'Soybeans' } },
+  { id: 'Corn', label: { es: 'Maíz', en: 'Corn', pt: 'Milho', zh: 'Corn' } },
+  { id: 'Wheat', label: { es: 'Trigo', en: 'Wheat', pt: 'Trigo', zh: 'Wheat' } },
+  { id: 'Beef', label: { es: 'Carne Bovina', en: 'Beef', pt: 'Carne Bovina', zh: 'Beef' } }
 ];
 
 const TRANSPORT_SUBCATEGORIES = [
-  { id: 'Maritime', label: { es: 'Marítimo', en: 'Maritime' } },
-  { id: 'Air', label: { es: 'Aéreo', en: 'Air' } },
-  { id: 'Land', label: { es: 'Terrestre', en: 'Land' } }
+  { id: 'Maritime', label: { es: 'Marítimo', en: 'Maritime', pt: 'Marítimo', zh: 'Maritime' } },
+  { id: 'Air', label: { es: 'Aéreo', en: 'Air', pt: 'Aéreo', zh: 'Air' } },
+  { id: 'Land', label: { es: 'Terrestre', en: 'Land', pt: 'Terrestre', zh: 'Land' } }
 ];
 
 const INCOTERMS = ['FOB', 'CIF', 'EXW', 'DDP', 'FCA'];
@@ -197,7 +197,7 @@ export default function SmartSidebar({ onFilterChange, currentFilters }: SmartSi
                 >
                   <Icon className={`w-4 h-4 ${isSelected ? sector.color : 'text-gray-400'}`} />
                   <span className="text-sm flex-1 text-left">
-                    {sector.label[language]}
+                  {sector.label[language as keyof typeof sector.label] ?? sector.label.en}
                   </span>
                   {subcategories.length > 0 && isSelected && (
                     isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
@@ -217,7 +217,7 @@ export default function SmartSidebar({ onFilterChange, currentFilters }: SmartSi
                             : 'text-gray-400 hover:bg-white/5 hover:text-white'
                         }`}
                       >
-                        {sub.label[language]}
+                        {sub.label[language as keyof typeof sub.label] ?? sub.label.en}
                       </button>
                     ))}
                   </div>
@@ -260,7 +260,7 @@ export default function SmartSidebar({ onFilterChange, currentFilters }: SmartSi
               onFilterChange({ ...currentFilters, country: value, tradeBlock: undefined });
             }
           }}
-          language={language}
+          language={(language === 'es' || language === 'en') ? language : 'en'}
         />
       </div>
 

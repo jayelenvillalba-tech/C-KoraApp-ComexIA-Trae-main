@@ -3,17 +3,19 @@ import { db } from '../../database/db-sqlite.js';
 import { hsSubpartidas } from '../../shared/schema-sqlite.js';
 import { eq } from 'drizzle-orm';
 import { countries, getCountryTreaties, getTariffReduction } from '../../shared/countries-data.js';
+import { getFreightQuote, FreightQuoteRequest, TransportMode, UrgencyLevel, getPortByLocode } from '../services/freightCalculator.js';
+import { getExchangeRates } from '../services/exchangeRate.js';
 
 interface CostCalculationRequest {
   fobValue: number;
   weight: number;
   volume?: number;
-  destination: string;
-  origin: string;
-  transport: 'maritime' | 'air' | 'road';
+  destination: string; // locode (e.g., ARBUE)
+  origin: string; // locode (e.g., NLRTM)
+  transport: TransportMode;
   hsCode: string;
   incoterm: string;
-  urgency: 'standard' | 'express' | 'urgent';
+  urgency: UrgencyLevel;
 }
 
 interface CostBreakdown {
@@ -47,40 +49,6 @@ interface CostBreakdown {
     alternativeRoutes: number;
   };
 }
-
-// Freight rates per kg by transport type
-const FREIGHT_RATES = {
-  maritime: {
-    standard: 0.50,  // USD per kg
-    express: 0.75,
-    urgent: 1.00
-  },
-  air: {
-    standard: 3.50,
-    express: 5.00,
-    urgent: 7.50
-  },
-  road: {
-    standard: 1.20,
-    express: 1.80,
-    urgent: 2.50
-  }
-};
-
-// Distance multipliers by route (simplified)
-const DISTANCE_MULTIPLIERS: { [key: string]: number } = {
-  'santos-buenos-aires': 0.8,
-  'santos-sao-paulo': 0.5,
-  'santos-valparaiso': 1.2,
-  'santos-lima': 1.5,
-  'buenos-aires-sao-paulo': 0.9,
-  'buenos-aires-valparaiso': 1.0,
-  'buenos-aires-hamburg': 2.5,
-  'buenos-aires-los-angeles': 2.8,
-  'montevideo-buenos-aires': 0.6,
-  'valparaiso-lima': 0.9,
-  'default': 1.0
-};
 
 export async function calculateCosts(req: Request, res: Response) {
   try {
@@ -116,9 +84,19 @@ export async function calculateCosts(req: Request, res: Response) {
       });
     }
 
+    const originPort = getPortByLocode(origin);
+    const destPort = getPortByLocode(destination);
+
+    if (!originPort || !destPort) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid origin or destination LOCODE.`
+      });
+    }
+
     // Get destination country code
-    const destinationCountry = getCountryCodeFromPort(destination);
-    const originCountryCode = getCountryCodeFromPort(origin);
+    const destinationCountry = destPort.countryCode;
+    const originCountryCode = originPort.countryCode;
 
     // Calculate base tariff rate
     let baseTariffRate = hsCodeData.tariffRate || 10; // Default 10% if not specified
@@ -143,19 +121,23 @@ export async function calculateCosts(req: Request, res: Response) {
     // Apply tariff reduction
     const effectiveTariffRate = Math.max(0, baseTariffRate - tariffReduction);
 
-    // Calculate distance multiplier
-    const routeKey = `${origin}-${destination}`;
-    const distanceMultiplier = DISTANCE_MULTIPLIERS[routeKey] || DISTANCE_MULTIPLIERS['default'];
-
     // 1. FOB Value (base value)
     const fob = fobValue;
 
-    // 2. Freight (based on weight, transport type, urgency, and distance)
-    const baseFreightRate = FREIGHT_RATES[transport][urgency];
-    const freight = weight * baseFreightRate * distanceMultiplier;
+    // 2 & 3. Freight and Insurance via Freight Calculator Service
+    const freightReq: FreightQuoteRequest = {
+      originLocode: origin,
+      destinationLocode: destination,
+      transportMode: transport,
+      weightKg: weight,
+      volumeCbm: volume,
+      urgency,
+      cargoValue: fobValue
+    };
+    const freightQuote = await getFreightQuote(freightReq);
 
-    // 3. Insurance (0.5% of FOB + Freight)
-    const insurance = (fob + freight) * 0.005;
+    const freight = freightQuote.baseFreightUsd + freightQuote.surcharges.reduce((sum, s) => sum + s.amountUsd, 0);
+    const insurance = freightQuote.insuranceUsd;
 
     // 4. CIF Value (Cost, Insurance, Freight)
     const cif = fob + freight + insurance;
@@ -163,11 +145,12 @@ export async function calculateCosts(req: Request, res: Response) {
     // 5. Import Tariff (based on CIF and effective tariff rate)
     const tariff = cif * (effectiveTariffRate / 100);
 
-    // 6. VAT (21% on CIF + Tariff) - Argentina standard
-    const vat = (cif + tariff) * 0.21;
+    // 6. VAT (21% on CIF + Tariff) - Argentina standard (We can make this dynamic later based on country)
+    const vatRate = destinationCountry === 'AR' ? 0.21 : 0.19; // simplified logic
+    const vat = (cif + tariff) * vatRate;
 
-    // 7. Statistical Tax (3% on CIF)
-    const statistics = cif * 0.03;
+    // 7. Statistical Tax (3% on CIF) - mostly Argentina
+    const statistics = destinationCountry === 'AR' ? cif * 0.03 : 0;
 
     // 8. Customs Clearance (fixed fee + percentage)
     const clearance = 200 + (cif * 0.005);
@@ -214,7 +197,7 @@ export async function calculateCosts(req: Request, res: Response) {
 
     // Calculate additional savings opportunities
     const volumeDiscounts = weight > 1000 ? freight * 0.15 : 0; // 15% discount for >1 ton
-    const alternativeRoutes = freight * 0.10; // Estimated 10% savings with alternative route
+    const alternativeRoutes = freightQuote.alternatives && freightQuote.alternatives.length > 0 ? freightQuote.alternatives[0].savingsUsd : 0; 
 
     const breakdown: CostBreakdown = {
       fob,
@@ -248,20 +231,25 @@ export async function calculateCosts(req: Request, res: Response) {
       }
     };
 
+    // Get exchange rate for the response if the user wants it
+    const exchangeRates = await getExchangeRates();
+
     res.json({
       success: true,
       breakdown,
+      freightDetails: freightQuote,
       metadata: {
         hsCode,
         hsCodeDescription: hsCodeData.description,
-        origin,
-        destination,
+        originLocode: origin,
+        destinationLocode: destination,
         transport,
         urgency,
         baseTariffRate,
         effectiveTariffRate,
         tariffReduction,
-        treaties: destinationCountryData?.treaties || []
+        treaties: destinationCountryData?.treaties || [],
+        exchangeRates: exchangeRates.rates
       }
     });
 
@@ -273,21 +261,4 @@ export async function calculateCosts(req: Request, res: Response) {
       details: error.message
     });
   }
-}
-
-// Helper function to extract country code from port name
-function getCountryCodeFromPort(port: string): string {
-  const portCountryMap: { [key: string]: string } = {
-    'buenos-aires': 'AR',
-    'sao-paulo': 'BR',
-    'santos': 'BR',
-    'valparaiso': 'CL',
-    'lima': 'PE',
-    'montevideo': 'UY',
-    'hamburg': 'DE',
-    'los-angeles': 'US',
-    'rotterdam': 'NL'
-  };
-
-  return portCountryMap[port] || 'AR'; // Default to Argentina
 }

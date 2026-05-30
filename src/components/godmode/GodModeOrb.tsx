@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Bot, X, Send, Sparkles, AlertTriangle } from 'lucide-react';
 import { useGodMode } from '@/context/godmode-context';
 import { useTranslation } from 'react-i18next';
@@ -65,7 +65,7 @@ const ORB_CSS = `
 `;
 
 // ─── Thinking Spinner ─────────────────────────────────────────────────────────
-function ThinkingDots() {
+const ThinkingDots = React.memo(function ThinkingDots() {
   return (
     <div style={{ display: 'flex', gap: 'var(--ds-space-1)', alignItems: 'center', padding: 'var(--ds-space-2) var(--ds-space-3)' }}>
       {[0, 1, 2].map(i => (
@@ -76,18 +76,37 @@ function ThinkingDots() {
       ))}
     </div>
   );
-}
+});
 
 // ─── Main Orb Component ──────────────────────────────────────────────────────
-export default function GodModeOrb() {
+const GodModeOrb = React.memo(function GodModeOrb() {
   const { state, setOrbState } = useGodMode();
   const { t } = useTranslation();
 
-  const [messages, setMessages] = useState<Array<{ role: 'ai' | 'user'; content: string }>>([]);
+  const [messages, setMessages] = useState<Array<{ role: 'ai' | 'user'; content: string }>>(() => {
+    try {
+      const saved = localStorage.getItem('godmode_messages');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [sessionId] = useState(() => {
+    let id = localStorage.getItem('godmode_session_id');
+    if (!id) {
+      id = 'sess_' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('godmode_session_id', id);
+    }
+    return id;
+  });
   const [input, setInput] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    localStorage.setItem('godmode_messages', JSON.stringify(messages));
+  }, [messages]);
 
   const isOpen = state.orbState === 'open';
   const isAlert = state.orbState === 'alert';
@@ -141,6 +160,12 @@ export default function GodModeOrb() {
     setOrbState(isOpen ? 'idle' : 'open');
   };
 
+  const clearChat = () => {
+    setMessages([]);
+    localStorage.removeItem('godmode_messages');
+    localStorage.removeItem('godmode_session_id');
+  };
+
   const sendMessage = async (text: string = input) => {
     if (!text.trim() || isAiLoading) return;
     const userMsg = { role: 'user' as const, content: text };
@@ -163,7 +188,8 @@ export default function GodModeOrb() {
             targetCountry: state.viewingCountry,
             originCountry: 'Argentina',
             page: state.currentPage,
-          }
+          },
+          sessionId: sessionId
         })
       });
       const data = await res.json();
@@ -436,4 +462,6 @@ export default function GodModeOrb() {
       )}
     </>
   );
-}
+});
+
+export default GodModeOrb;

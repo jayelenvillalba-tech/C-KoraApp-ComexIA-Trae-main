@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import { OnboardingRequirement } from "../models/OnboardingRequirement";
+import { GodModeMemoryService } from "../services/godmode-memory";
 
 const router = Router();
 
@@ -109,13 +110,37 @@ async function callGroq(messages: any[], systemPrompt: string, maxTokens = 1200)
 // ─── POST /api/ai/chat — Chat principal ───────────────────────────────────────
 router.post("/chat", async (req: Request, res: Response) => {
   try {
-    const { messages, context } = req.body;
+    const { messages, context, sessionId } = req.body;
 
     if (!messages || !Array.isArray(messages)) {
       return res.status(400).json({ error: "Se requiere un array de mensajes" });
     }
 
+    if (!sessionId) {
+      return res.status(400).json({ error: "Se requiere sessionId para la memoria" });
+    }
+
+    // 1. Obtener o crear sesión en base de datos
+    // Podríamos usar req.user?.id si tuviéramos middleware de auth
+    const session = await GodModeMemoryService.getOrCreateSession(sessionId);
+    
+    // 2. Extraer el último mensaje del usuario
+    const lastUserMessage = messages[messages.length - 1];
+    if (lastUserMessage && lastUserMessage.role === 'user') {
+       await GodModeMemoryService.addMessage(session.id, 'user', lastUserMessage.content);
+    }
+
+    // 3. Recuperar historial reciente (últimos 8 mensajes) para mantener contexto
+    const history = await GodModeMemoryService.getHistory(session.id, 8);
+    const summary = await GodModeMemoryService.getSummary(session.id);
+
     let systemPrompt = COMEX_SYSTEM_PROMPT;
+    
+    // Inyectar resumen si existe
+    if (summary) {
+       systemPrompt += `\n\n## RESUMEN DE LA CONVERSACIÓN PREVIA\n${summary}`;
+    }
+
     if (context) {
       systemPrompt += `\n\n## CONTEXTO ACTUAL DEL USUARIO
 El usuario está analizando:
@@ -126,7 +151,21 @@ El usuario está analizando:
 Usá este contexto para dar respuestas más precisas y relevantes.`;
     }
 
-    const reply = await callGroq(messages, systemPrompt);
+    // Enviar a la IA (System + Historial combinado con el mensaje actual)
+    const reply = await callGroq([...history], systemPrompt);
+
+    // Guardar respuesta de la IA
+    await GodModeMemoryService.addMessage(session.id, 'assistant', reply);
+
+    // Opcional: Si el historial crece mucho, actualizar el summary de forma asíncrona
+    if (history.length >= 6) {
+       callGroq([{ role: "user", content: "Resumí en un párrafo los puntos clave de nuestra conversación hasta ahora sobre comercio exterior. Ignorá saludos." }], systemPrompt, 200)
+         .then(newSummary => {
+            if (newSummary && newSummary.length > 20) {
+               GodModeMemoryService.updateSummary(session.id, newSummary);
+            }
+         }).catch(e => console.error("Error actualizando summary:", e));
+    }
 
     res.json({
       role: "assistant",

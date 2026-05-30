@@ -42,25 +42,46 @@ router.get('/profile', authenticateToken, (req: any, res: any) => {
   }
 });
 
-// PATCH /api/user/profile — Updates the current user's profile
+// PATCH /api/user/profile — Updates the current user's profile and linked company
 router.patch('/profile', authenticateToken, (req: any, res: any) => {
   try {
     if (!sqliteDb) return res.status(503).json({ error: 'DB not ready' });
     const userId = req.user.userId || req.user.id;
-    const { name, email, phone, location } = req.body;
+    const { name, email, phone, location, role, country, industry, taxId, riskScore } = req.body;
 
-    // Build dynamic update
-    const fields: string[] = [];
-    const values: any[] = [];
-    if (name !== undefined)     { fields.push('name = ?');     values.push(name); }
-    if (email !== undefined)    { fields.push('email = ?');    values.push(email); }
-    if (phone !== undefined)    { fields.push('phone = ?');    values.push(phone); }
-    if (location !== undefined) { fields.push('location = ?'); values.push(location); }
+    const user = sqliteDb.prepare('SELECT company_id FROM users WHERE id = ?').get(userId) as any;
+    if (!user) return res.status(404).json({ error: 'User not found' });
 
-    if (fields.length === 0) return res.status(400).json({ error: 'No hay campos para actualizar' });
+    const companyId = user.company_id;
 
-    values.push(userId);
-    sqliteDb.prepare(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`).run(...values);
+    // Build dynamic update for user
+    const userFields: string[] = [];
+    const userValues: any[] = [];
+    if (name !== undefined)     { userFields.push('name = ?');     userValues.push(name); }
+    if (email !== undefined)    { userFields.push('email = ?');    userValues.push(email); }
+    if (phone !== undefined)    { userFields.push('phone = ?');    userValues.push(phone); }
+    if (location !== undefined) { userFields.push('location = ?'); userValues.push(location); }
+    if (role !== undefined)     { userFields.push('role = ?');     userValues.push(role); }
+
+    if (userFields.length > 0) {
+      userValues.push(userId);
+      sqliteDb.prepare(`UPDATE users SET ${userFields.join(', ')} WHERE id = ?`).run(...userValues);
+    }
+
+    // Build dynamic update for company
+    if (companyId) {
+      const companyFields: string[] = [];
+      const companyValues: any[] = [];
+      if (country !== undefined)   { companyFields.push('country = ?');      companyValues.push(country); }
+      if (industry !== undefined)  { companyFields.push('business_type = ?'); companyValues.push(industry); }
+      if (taxId !== undefined)     { companyFields.push('tax_id = ?');       companyValues.push(taxId); }
+      if (riskScore !== undefined) { companyFields.push('risk_score = ?');   companyValues.push(riskScore); }
+
+      if (companyFields.length > 0) {
+        companyValues.push(companyId);
+        sqliteDb.prepare(`UPDATE companies SET ${companyFields.join(', ')} WHERE id = ?`).run(...companyValues);
+      }
+    }
 
     const updated = sqliteDb.prepare('SELECT id, name, email, role, company, phone, location FROM users WHERE id = ?').get(userId) as any;
     res.json({ success: true, user: updated });

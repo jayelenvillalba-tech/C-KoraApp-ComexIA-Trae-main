@@ -1,13 +1,23 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Card, Button, Input, Badge, DataLabel, SectionHeader } from '@/design-system/components';
-import MarketplacePage from './MarketplacePage';
-import OnboardingPage from './onboarding';
-import NewsPage from './news';
-import ChatPage from './ChatPage';
-import IncotermsPage from './IncotermsPage';
-import VendorDashboardPage from './VendorDashboardPage';
-import CommandCenterPage from './admin/CommandCenterPage';
-import AnalyticsPage from './admin/AnalyticsPage';
+
+// Lazy-load pages so they don't interfere with App.tsx's dynamic chunk splits
+const MarketplacePage = React.lazy(() => import('./MarketplacePage'));
+const OnboardingPage = React.lazy(() => import('./onboarding'));
+const NewsPage = React.lazy(() => import('./news'));
+const ChatPage = React.lazy(() => import('./ChatPage'));
+const IncotermsPage = React.lazy(() => import('./IncotermsPage'));
+const VendorDashboardPage = React.lazy(() => import('./VendorDashboardPage'));
+const CommandCenterPage = React.lazy(() => import('./admin/CommandCenterPage'));
+const AnalyticsPage = React.lazy(() => import('./admin/AnalyticsPage'));
+
+const PreviewBox = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={<div style={{ padding: 20, color: 'var(--ds-text-muted)' }}>Loading preview...</div>}>
+    <div style={{ pointerEvents: 'none', height: '800px', overflow: 'hidden', position: 'relative' }}>
+      {children}
+    </div>
+  </Suspense>
+);
 
 const CSS = `
   .ds-section {
@@ -87,7 +97,7 @@ export default function DesignSystemPage() {
             <Input label="Email Address" placeholder="Ej: info@empresa.com" />
             <div style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>
               <Badge variant="verified" text="Verified" />
-              <Badge variant="alert" text="Alert" />
+              <Badge variant="blocked" text="Alert" />
               <Badge variant="buy" text="Buy" />
               <Badge variant="sell" text="Sell" />
             </div>
@@ -102,65 +112,49 @@ export default function DesignSystemPage() {
       {/* 02 - Marketplace */}
       <section id="ds-marketplace" className="ds-section">
         <div className="ds-label">02 - Marketplace</div>
-        <div style={{ pointerEvents: 'none', height: '800px', overflow: 'hidden', position: 'relative' }}>
-          <MarketplacePage />
-        </div>
+        <PreviewBox><MarketplacePage /></PreviewBox>
       </section>
 
       {/* 03 - Onboarding */}
       <section id="ds-onboarding" className="ds-section">
         <div className="ds-label">03 - Onboarding</div>
-        <div style={{ pointerEvents: 'none', height: '800px', overflow: 'hidden', position: 'relative' }}>
-          <OnboardingPage />
-        </div>
+        <PreviewBox><OnboardingPage /></PreviewBox>
       </section>
 
       {/* 04 - World Trade Pulse */}
       <section id="ds-news" className="ds-section">
         <div className="ds-label">04 - World Trade Pulse</div>
-        <div style={{ pointerEvents: 'none', height: '800px', overflow: 'hidden', position: 'relative' }}>
-          <NewsPage />
-        </div>
+        <PreviewBox><NewsPage /></PreviewBox>
       </section>
 
       {/* 05 - Chat Colaborativo */}
       <section id="ds-chat" className="ds-section">
         <div className="ds-label">05 - Chat Colaborativo</div>
-        <div style={{ pointerEvents: 'none', height: '800px', overflow: 'hidden', position: 'relative' }}>
-          <ChatPage />
-        </div>
+        <PreviewBox><ChatPage /></PreviewBox>
       </section>
 
       {/* 06 - Incoterms Simulator */}
       <section id="ds-incoterms" className="ds-section">
          <div className="ds-label">06 - Incoterms Simulator</div>
-         <div style={{ pointerEvents: 'none', height: '800px', overflow: 'hidden', position: 'relative' }}>
-          <IncotermsPage />
-        </div>
+         <PreviewBox><IncotermsPage /></PreviewBox>
       </section>
 
       {/* 07 - Vendor Dashboard */}
       <section id="ds-vendor" className="ds-section">
         <div className="ds-label">07 - Vendor Dashboard</div>
-        <div style={{ pointerEvents: 'none', height: '800px', overflow: 'hidden', position: 'relative' }}>
-          <VendorDashboardPage />
-        </div>
+        <PreviewBox><VendorDashboardPage /></PreviewBox>
       </section>
 
       {/* 08 - Admin Command Center */}
       <section id="ds-admin-command" className="ds-section">
         <div className="ds-label">08 - Admin Command Center</div>
-        <div style={{ pointerEvents: 'none', height: '800px', overflow: 'hidden', position: 'relative' }}>
-          <CommandCenterPage />
-        </div>
+        <PreviewBox><CommandCenterPage /></PreviewBox>
       </section>
 
       {/* 09 - Admin Analytics */}
       <section id="ds-admin-analytics" className="ds-section">
         <div className="ds-label">09 - Admin Analytics</div>
-        <div style={{ pointerEvents: 'none', height: '800px', overflow: 'hidden', position: 'relative' }}>
-          <AnalyticsPage />
-        </div>
+        <PreviewBox><AnalyticsPage /></PreviewBox>
       </section>
 
     </div>

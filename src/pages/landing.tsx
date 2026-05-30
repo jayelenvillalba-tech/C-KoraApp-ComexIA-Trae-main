@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import PremiumGlobe3D from '@/components/premium-globe-3d';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { FeatureCard } from '@/components/feature-card';
@@ -15,6 +15,8 @@ import { motion } from 'framer-motion';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import Header from '@/components/header';
+
+const PremiumGlobe3D = React.lazy(() => import('@/components/premium-globe-3d'));
 
 const ALERT_TYPE_STYLE: Record<string, { label: string; color: string }> = {
   warning: { label: 'WARNING', color: 'text-orange-400' },
@@ -144,15 +146,16 @@ export default function Home() {
     });
   }, []);
 
-  const handleProductSelected = (product: any, country: string, operation: string, productName: string) => {
-    const code = product.primaryCode || product.hs6 || product.code || '';
-    navigate(`/analysis?code=${code}&country=${country}&operation=${operation}&product=${encodeURIComponent(productName)}`);
+  // Navigation is now handled inside HsCodeSearch via TradeContext.
+  // These callbacks are kept for backward compatibility but are no longer the primary nav path.
+  const handleProductSelected = (_product: any, _country: string, _operation: string, _productName: string) => {
+    // No-op: HsCodeSearch.handleProductSelect already called trade.setTradeContext and navigate()
   };
 
-  const handlePartidaSelected = (partida: any, country: string, operation: string, productName: string) => {
-    const code = partida.primaryCode || partida.hs6 || partida.code || '';
-    navigate(`/analysis?code=${code}&country=${country}&operation=${operation}&product=${encodeURIComponent(productName)}`);
+  const handlePartidaSelected = (_partida: any, _country: string, _operation: string, _productName: string) => {
+    // No-op: handled inside HsCodeSearch
   };
+
 
   const quickAccesItems = [
     { icon: <ShieldAlert className="w-5 h-5 text-red-400" />, label: 'Sanciones', path: '/alerts', color: 'bg-red-500/10 border-red-500/20' },

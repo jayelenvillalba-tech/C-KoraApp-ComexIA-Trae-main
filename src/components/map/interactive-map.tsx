@@ -11,6 +11,7 @@ interface InteractiveMapProps {
   recommended?: any[];
   cheComex?: any[];
   language?: string;
+  originCountry?: string;
 }
 
 export default function InteractiveMap({ 
@@ -20,7 +21,8 @@ export default function InteractiveMap({
   topBuyers = [],
   recommended = [],
   cheComex = [],
-  language = 'es'
+  language = 'es',
+  originCountry = 'AR'
 }: InteractiveMapProps) {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -174,8 +176,8 @@ export default function InteractiveMap({
     }
 
     // 5. [NEW] FLOW LINES (Animated Routes)
-    // Draw lines from Origin (e.g., AR) to Top Buyers
-    const originCoords = [-38.4161, -63.6167]; // Argentina coordinates (hardcoded for now as origin is usually AR)
+    // Draw lines from Origin to Top Buyers
+    const originCoords = getCountryCoords(originCountry) || [-38.4161, -63.6167];
     
     // Only draw flow lines if displaying Top Buyers or Recommendations
     if ((selectedLayer === 'macro' || selectedLayer === 'all') && topBuyers.length > 0) {
@@ -195,7 +197,7 @@ export default function InteractiveMap({
                 }).addTo(map);
 
                 // Add simple tooltip on hover
-                flowLine.bindTooltip(`Trade Flow: AR -> ${buyer.countryCode}`, {
+                flowLine.bindTooltip(`Trade Flow: ${originCountry} -> ${buyer.countryCode}`, {
                     sticky: true,
                     direction: 'center',
                     className: 'bg-slate-900 text-cyan-400 border border-cyan-500/50'
@@ -257,6 +259,11 @@ function getCountryCoords(code: string): [number, number] | null {
         'AR': [-34.6037, -58.3816],
         'BR': [-14.2350, -51.9253],
         'US': [37.0902, -95.7129],
+        'CO': [4.5709, -74.2973],
+        'UY': [-32.5228, -55.7658],
+        'PY': [-23.4425, -58.4438],
+        'CL': [-35.6751, -71.5430],
+        'MX': [23.6345, -102.5528],
         'CN': [35.8617, 104.1954],
         'DE': [51.1657, 10.4515],
         'ES': [40.4637, -3.7492],

@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from 'wouter';
+import { useTrade } from '@/context/trade-context';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { useLanguage } from '@/hooks/use-language';
-import { useUser } from "@/context/user-context"; // Added useUser
+import { useUser } from "@/context/user-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // Added Avatar
 import { ChevronLeft, ChevronRight, Ship, TrendingUp, AlertCircle, Globe, MapPin, Sparkles, Bot, FileText } from 'lucide-react';
 import TradeCalculator from '@/components/TradeCalculator';
@@ -179,19 +181,34 @@ function TariffImpactBlock({ originCode, destinationCode, hsCode, language }: {
 
 export default function Analysis() {
   const { language, setLanguage } = useLanguage();
-  const { user } = useUser(); // Get user state
+  useDocumentTitle('Análisis de Mercado');
+  const { user } = useUser();
   const [location, setLocation] = useLocation();
-  const navigate = setLocation; // [FIX] Alias setLocation to navigate for auth buttons
+  const navigate = setLocation;
+  const trade = useTrade();
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'mercado'|'oportunidades'|'documentos'|'detalle'>('mercado');
   const [showCalculator, setShowCalculator] = useState(false);
   
-  // ── BLOQUE A: Real geolocation — navigator GPS → IP fallback ──────────────
+  // ── Hydrate TradeContext from URL on mount (supports deep-linking / bookmarks) ──
+  useEffect(() => {
+    trade.syncFromUrl(window.location.search);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── Derive values from TradeContext (Single Source of Truth) ──
+  // URL params are used ONLY for initial hydration above; all reads go through context.
+  const rawParams = new URLSearchParams(window.location.search);
+  const code        = trade.hsCode        || rawParams.get('code')        || '';
+  const country     = trade.originCountry || rawParams.get('country')     || 'AR';
+  const operation   = trade.operationType || rawParams.get('operation')   || 'export';
+  const product     = trade.productName   || rawParams.get('productName') || '';
+
+  // ── Geolocation (kept for port suggestions, not for origin logic) ──
   const [userGeoLocation, setUserGeoLocation] = useState<{
     lat: number; lon: number; countryCode: string; countryName: string;
     city: string; nearestPorts: any[]; source: string;
   } | null>(() => {
-    // Restore from session cache if available
     try {
       const cached = sessionStorage.getItem('userGeoLocation');
       return cached ? JSON.parse(cached) : null;
@@ -199,51 +216,36 @@ export default function Analysis() {
   });
 
   useEffect(() => {
-    if (userGeoLocation) return; // Already detected this session
-
+    if (userGeoLocation) return;
     const fetchByIP = async (lat?: number, lon?: number) => {
       try {
         const url = lat !== undefined && lon !== undefined
-          ? `/api/geo/locate?lat=${lat}&lon=${lon}`
-          : '/api/geo/locate';
+          ? `/api/geo/locate?lat=${lat}&lon=${lon}` : '/api/geo/locate';
         const res = await fetch(url);
         const data = await res.json();
         setUserGeoLocation(data);
         sessionStorage.setItem('userGeoLocation', JSON.stringify(data));
-      } catch { /* silent — UI will show '--' */ }
+      } catch { /* silent */ }
     };
-
     if (typeof navigator !== 'undefined' && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => fetchByIP(pos.coords.latitude, pos.coords.longitude),
-        () => fetchByIP(), // Denied — fallback to IP
-        { timeout: 5000, maximumAge: 3600000 }
+        () => fetchByIP(), { timeout: 5000, maximumAge: 3600000 }
       );
-    } else {
-      fetchByIP();
-    }
+    } else { fetchByIP(); }
   }, []);
-
-  // Get query parameters
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get('code') || '';
-  const country = params.get('country') || (userGeoLocation?.countryCode || 'AR');
-  const operation = params.get('operation') || 'export';
-  const product = params.get('product') || '';
 
   // [FIX] Fetch real requirements data
   // 1. First: Fetch dynamic recommendations to get country data
   const { data: recommendationsData } = useQuery<any>({
     queryKey: ['country-recommendations', code, country],
-    queryFn: async () => {
-      console.log(`[DEBUG] Fetching recommendations for code: ${code}, origin: ${country}`);
+    queryFn: async () => {
       const res = await fetch(`/api/market-analysis/recommendations?code=${code}&origin=${country}`);
       if (!res.ok) {
         console.error('[DEBUG] Recs fetch error:', res.status, res.statusText);
         return null;
       }
-      const json = await res.json();
-      console.log('[DEBUG] Recs data received:', json?.recommended?.length || 0, 'items');
+      const json = await res.json();
       return json;
     },
     enabled: !!code
@@ -288,10 +290,7 @@ export default function Analysis() {
 
   // DEBUG: Log the raw data to understand structure
   useEffect(() => {
-    if (recommendationsData) {
-      console.log('[DEBUG] recommendationsData:', recommendationsData);
-      console.log('[DEBUG] treatyRecommendations:', recommendationsData.treatyRecommendations);
-      console.log('[DEBUG] recommendedCountries length:', recommendedCountries.length);
+    if (recommendationsData) {
     }
   }, [recommendationsData]);
 
@@ -310,11 +309,14 @@ export default function Analysis() {
       { rank: 3, country: 'Indonesia', countryCode: 'ID', activeOrders: 5, coordinates: [-0.7893, 113.9213] }
     ];
   const { data: mapNews } = useQuery<any>({
-    queryKey: ['map-news', selectedCountry || country],
+    queryKey: ['map-news', selectedCountry || country, code],
     queryFn: async () => {
-      const url = selectedCountry
-        ? `/api/news?limit=5&lang=${language}&countries=${selectedCountry}&period=30`
-        : `/api/news?limit=5&lang=${language}&period=30`;
+      const baseUrl = `/api/news?limit=5&lang=${language}&period=30`;
+      const queryParams = [];
+      if (selectedCountry) queryParams.push(`countries=${selectedCountry}`);
+      if (code) queryParams.push(`hsCode=${code}`);
+      
+      const url = queryParams.length > 0 ? `${baseUrl}&${queryParams.join('&')}` : baseUrl;
       const res = await fetch(url);
       return res.json();
     },
@@ -353,14 +355,12 @@ export default function Analysis() {
     return key ? map[key] : 'US';
   };
 
-  const targetCode = findCountryCode(selectedCountry);
-  console.log('[DEBUG] Selected:', selectedCountry, 'Derived Code:', targetCode);
+  const targetCode = findCountryCode(selectedCountry);
 
   // 4. Fetch real requirements data using the derived targetCode
   const { data: requirements, isLoading: reqLoading, error: reqError } = useQuery<any>({
     queryKey: ["/api/country-requirements", targetCode, code], // Use code in key
-    queryFn: async () => {
-      console.log('[DEBUG ANALYSIS] Fetching reqs for:', targetCode, code, selectedCountry);
+    queryFn: async () => {
       
       const response = await fetch(`/api/country-requirements/${targetCode}/${code}`);
       if (!response.ok) {
@@ -368,21 +368,13 @@ export default function Analysis() {
          console.warn('Primary docs endpoint failed, trying fallback...');
          return null; 
       }
-      const json = await response.json();
-      console.log('[DEBUG] Requirements loaded:', json?.length || 0, 'docs');
+      const json = await response.json();
       return json;
     },
     enabled: !!selectedCountry && !!code,
     staleTime: 0, // Always fetch fresh data
     refetchOnMount: true // Refetch when component mounts
-  });
-
-  console.log('[DEBUG] Requirements state:', { 
-    loading: reqLoading, 
-    hasData: !!requirements, 
-    error: reqError,
-    enabled: !!selectedCountry && !!code 
-  });
+  });
 
   const opportunityPins: any[] = []; // Empty - only show real data
 
@@ -413,18 +405,13 @@ export default function Analysis() {
     }
 
     if (lat2 !== null && lon2 !== null) {
-      // Origin: use real user geolocation (GPS or IP-based)
-      const lat1 = userGeoLocation?.lat ?? null;
-      const lon1 = userGeoLocation?.lon ?? null;
-
-      if (lat1 === null || lon1 === null) {
-        return 'Detectando ubicación...';
-      }
+      // Origin: use the selected origin country coordinates
+      const originCoords = STATIC_COUNTRY_COORDS[country] || (userGeoLocation?.lat && userGeoLocation?.lon ? [userGeoLocation.lat, userGeoLocation.lon] : [-34.6037, -58.3816]);
+      const lat1 = originCoords[0];
+      const lon1 = originCoords[1];
 
       const dist = getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2);
-      const originCity = userGeoLocation?.city || userGeoLocation?.countryName || '';
-      const suffix = originCity ? ` (desde ${originCity})` : '';
-      return `~${dist.toLocaleString('es-AR')} km${suffix}`;
+      return `~${dist.toLocaleString('es-AR')} km`;
     }
     
     return '---';
@@ -533,6 +520,7 @@ export default function Analysis() {
                     topBuyers={topBuyers}
                     recommended={recommendedCountries}
                     cheComex={cheComexDerived}
+                    originCountry={country}
                 />
 
                 {/* Map Overlay Stats */}
@@ -601,7 +589,7 @@ export default function Analysis() {
                      {product || 'Mercado Global'}
                   </div>
                   <div className="flex gap-1.5 flex-wrap">
-                     <span className="font-data text-[9px] font-medium px-2 py-0.5 rounded-[2px] border border-[#203548] text-[#4a7090] bg-[#03080f]">🇦🇷 Origen: AR</span>
+                     <span className="font-data text-[9px] font-medium px-2 py-0.5 rounded-[2px] border border-[#203548] text-[#4a7090] bg-[#03080f]">{country === 'AR' ? '🇦🇷' : country === 'CO' ? '🇨🇴' : '🌍'} Origen: {country}</span>
                      <span className="font-data text-[9px] font-medium px-2 py-0.5 rounded-[2px] border border-[var(--ds-green)30] text-[#00b85e] bg-[var(--ds-green)10]">↑ {operation === 'export' ? 'EXPORTAR' : 'IMPORTAR'}</span>
                      <span className="font-data text-[9px] font-medium px-2 py-0.5 rounded-[2px] border border-[#00a8c830] text-[#00a8c8] bg-[var(--ds-cyan)10]">HS {code || 'N/A'}</span>
                   </div>
@@ -615,8 +603,14 @@ export default function Analysis() {
                      <div className="font-data text-[9px] font-bold uppercase tracking-[1.2px] text-[#4a7090] flex items-center gap-1.5">
                         <div className="w-[5px] h-[5px] rounded-full bg-[var(--ds-cyan)]"></div>
                         {language === 'es' ? 'Top Compradores' : 'Top Buyers'}
+                        {marketAnalysis?.analysis?.source === 'un_comtrade_realtime' && (
+                           <span className="ml-2 px-1.5 py-[2px] bg-[var(--ds-green)15] text-[var(--ds-green)] border border-[var(--ds-green)30] rounded-[2px] text-[8px] flex items-center gap-1">
+                              <span className="w-1 h-1 rounded-full bg-[var(--ds-green)] animate-pulse"></span>
+                              DATOS REALES (UN COMTRADE)
+                           </span>
+                        )}
                      </div>
-                     <span className="font-data text-[9px] text-[#2a4a68] bg-[#111f2e] px-1.5 py-[1px] border border-[var(--ds-border-default)]">2024</span>
+                     <span className="font-data text-[9px] text-[#2a4a68] bg-[#111f2e] px-1.5 py-[1px] border border-[var(--ds-border-default)]">2023</span>
                   </div>
                   
                   {topBuyers.length > 0 ? (
@@ -820,33 +814,12 @@ export default function Analysis() {
                            <Ship className="w-6 h-6 text-[#2a4a68]" />
                         </div>
                         <div className="mt-3 flex items-center justify-between text-[11px] font-body text-[#8aafcc] pt-3 border-t border-[var(--ds-border-default)]">
-                           <span>Origen: <strong>Argentina (BUE)</strong></span>
+                           <span>Origen: <strong>{country === 'AR' ? 'Argentina (BUE)' : country === 'CO' ? 'Colombia (BOG)' : country}</strong></span>
                            <span>Est. maritimo: <strong>{distanceDisplay !== '---' ? `${Math.max(1, Math.round(parseInt(distanceDisplay.replace(/[^0-9]/g, '') || '9000') / 600))} dias` : '-'}</strong></span>
                         </div>
                      </div>
 
-                     {/* Incoterms Smart Analysis */}
-                     <IncotermsSmartAnalysis
-                       origin={country || 'AR'}
-                       destination={targetCode || 'BR'}
-                       hsCode={code || '1001'}
-                       productName={product || 'Producto'}
-                     />
-
-                     {/* Landed Cost Panel integration */}
-                     {(() => {
-                        const buyerData = topBuyers.find((b: any) => b.country === selectedCountry || b.countryName === selectedCountry);
-                        if (buyerData && buyerData.details) {
-                           return (
-                              <LandedCostPanel
-                                 country={selectedCountry}
-                                 basePrice={buyerData.avgValue || 20000}
-                                 landedCost={buyerData.details.landedCost}
-                              />
-                           );
-                        }
-                        return null;
-                     })()}
+                     {/* (Incoterms y Landed Cost fueron removidos de aquí para usar solo el Modal Trade Calculator unificado) */}
 
                      {/* Retenciones/Aranceles - from live API /api/agreements/tariff */}
                      <TariffImpactBlock
@@ -870,6 +843,7 @@ export default function Analysis() {
           defaultDestination={selectedCountry === 'China' ? 'CN' : selectedCountry === 'Brasil' ? 'BR' : selectedCountry === 'Chile' ? 'CL' : 'BR'}
           defaultProduct={product || code}
           defaultHsCode={code || '1001.99.00'}
+          originCountry={country}
           onClose={() => setShowCalculator(false)}
         />
       )}

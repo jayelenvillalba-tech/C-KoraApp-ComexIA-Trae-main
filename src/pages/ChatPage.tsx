@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useParams } from 'wouter';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useUser } from '@/context/user-context';
 import Header from '@/components/header';
 import ChatSidebar from '@/components/chat/chat-sidebar';
@@ -102,6 +103,7 @@ function PriceProposalCard({ meta, ownMessage, onAccept, onReject }: { meta: any
 }
 
 export default function ChatPage() {
+  useDocumentTitle('Chat Seguro B2B');
   const { user } = useUser();
   const params = useParams<{ id?: string }>();
   const activeDealId = params?.id || null;

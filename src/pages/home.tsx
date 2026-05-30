@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useLocation } from 'wouter';
 import {
   BarChart3, Ship, FileText, Users, ChevronRight, Shield,
   Bell, Search, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2,
   Map, MessageSquare, Zap, Box, Globe, Anchor,
 } from 'lucide-react';
-import PremiumGlobe3D from '@/components/premium-globe-3d';
+
+const PremiumGlobe3D = React.lazy(() => import('@/components/premium-globe-3d'));
 
 // ─── Ticker data (static mock — replaceable with real API) ────────────────────
 const TICKER_ITEMS = [
@@ -66,10 +67,10 @@ function Topbar({ score, onScoreClick }: { score: number; onScoreClick: () => vo
   const navItems = [
     { label: 'Dashboard', path: '/', icon: <Box className="w-3.5 h-3.5" />, active: true },
     { label: 'Análisis', path: '/analysis', icon: <BarChart3 className="w-3.5 h-3.5" /> },
-    { label: 'HS Code', path: '/analysis', icon: <Search className="w-3.5 h-3.5" /> },
-    { label: 'Marketplace', path: '/marketplace', icon: <Users className="w-3.5 h-3.5" />, badge: 3 },
-    { label: 'Incoterms', path: '/analysis?tab=calculator', icon: <Anchor className="w-3.5 h-3.5" /> },
-    { label: 'Chat', path: '/chat', icon: <MessageSquare className="w-3.5 h-3.5" /> },
+    { label: 'HS Code', path: '/analysis', icon: <Search className="w-3.5 h-3.5" />, className: 'tour-step-search' },
+    { label: 'Marketplace', path: '/marketplace', icon: <Users className="w-3.5 h-3.5" />, badge: 3, className: 'tour-step-marketplace' },
+    { label: 'Incoterms', path: '/analysis?tab=calculator', icon: <Anchor className="w-3.5 h-3.5" />, className: 'tour-step-calculator' },
+    { label: 'Chat', path: '/chat', icon: <MessageSquare className="w-3.5 h-3.5" />, className: 'tour-step-godmode' },
   ];
 
   return (
@@ -88,7 +89,7 @@ function Topbar({ score, onScoreClick }: { score: number; onScoreClick: () => vo
               item.active
                 ? 'bg-[var(--ds-cyan)]/10 text-[var(--ds-cyan)]'
                 : 'text-[#3d6e92] hover:bg-[#071525] hover:text-[#c4dcf4]'
-            }`}
+            } ${item.className || ''}`}
           >
             {item.icon}
             {item.label}
@@ -538,7 +539,9 @@ export default function Home() {
         <div className="absolute inset-0" style={{
           background: `radial-gradient(ellipse 50% 35% at 15% 15%,rgba(0,212,240,.055) 0%,transparent 70%),radial-gradient(ellipse 30% 50% at 85% 75%,rgba(26,138,255,.04) 0%,transparent 70%)`,
         }} />
-        <PremiumGlobe3D className="w-full h-full opacity-25 mix-blend-screen" />
+        <Suspense fallback={<div className="absolute inset-0 w-full h-full bg-transparent" />}>
+          <PremiumGlobe3D className="w-full h-full opacity-25 mix-blend-screen" />
+        </Suspense>
       </div>
 
       {/* Topbar */}

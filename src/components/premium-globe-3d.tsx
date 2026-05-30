@@ -5,7 +5,7 @@ interface PremiumGlobe3DProps {
   className?: string;
 }
 
-export default function PremiumGlobe3D({ className = '' }: PremiumGlobe3DProps) {
+const PremiumGlobe3D = React.memo(function PremiumGlobe3D({ className = '' }: PremiumGlobe3DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
 
@@ -255,4 +255,6 @@ export default function PremiumGlobe3D({ className = '' }: PremiumGlobe3DProps) 
       style={{ minHeight: '400px' }}
     />
   );
-}
+});
+
+export default PremiumGlobe3D;

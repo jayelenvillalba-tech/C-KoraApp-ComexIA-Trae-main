@@ -1,28 +1,44 @@
 import { useState, useRef, useEffect } from 'react';
 import { Bot, X, Eye, Send, FileText, DollarSign, Ship, Sparkles } from 'lucide-react';
 import { useGodMode } from '@/context/godmode-context';
+import { useTrade } from '@/context/trade-context';
 
 export default function GodModeAI() {
   const { state } = useGodMode();
+  const trade = useTrade();
   
-  // Backwards compatibility for the UI mapping
+  // TradeContext is the Single Source of Truth – fall back to GodMode state for legacy compat
   const context = {
-    product: state.viewingProduct,
-    country: state.viewingCountry,
-    operation: state.operationType
+    product: trade.productName || state.viewingProduct,
+    country: trade.originCountry || state.viewingCountry,
+    operation: trade.operationType || state.operationType,
+    hsCode: trade.hsCode || state.viewingHsCode,
   };
 
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Array<{role: 'ai' | 'user', content: React.ReactNode}>>([
-    {
-      role: 'ai',
-      content: (
-        <>
-          Hola. Estoy viendo que analizás <strong>{context?.product || 'este producto'}</strong> hacia <strong>{context?.country || 'este destino'}</strong>. ¿Querés que evaluemos juntos si conviene entrar por <span className="text-green-400 font-data text-[10px] font-bold">MERCOSUR (0%)</span> o esperar el acuerdo con la UE para posicionarte en Europa?
-        </>
-      )
+  
+  const [messages, setMessages] = useState<Array<{role: 'ai' | 'user', content: React.ReactNode}>>(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('demo') === 'true') {
+      return [
+        { role: 'user', content: '¿Qué arancel pago por exportar Soja a China?' },
+        { role: 'ai', content: 'Para exportar Soja (NCM 1201.90) a China pagás un derecho de exportación (retenciones) en Argentina del 33%. China aplica un arancel de importación del 3% bajo el trato NMF.' },
+        { role: 'user', content: '¿Y si busco un proveedor de componentes electrónicos?' },
+        { role: 'ai', content: 'Te sugiero revisar el Marketplace. Hay proveedores verificados como "ElectroTech Solutions" que ofrecen componentes (NCM 8542.31) desde China bajo FOB y CIF.' }
+      ];
     }
-  ]);
+    return [
+      {
+        role: 'ai',
+        content: (
+          <>
+            Hola. Estoy viendo que analizás <strong>{context?.product || 'este producto'}</strong> hacia <strong>{context?.country || 'este destino'}</strong>. ¿Querés que evaluemos juntos si conviene entrar por <span className="text-green-400 font-data text-[10px] font-bold">MERCOSUR (0%)</span> o esperar el acuerdo con la UE para posicionarte en Europa?
+          </>
+        )
+      }
+    ];
+  });
+  
   const [inputValue, setInputValue] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -31,7 +47,16 @@ export default function GodModeAI() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const [sessionId, setSessionId] = useState<string>('');
+
   useEffect(() => {
+    // Generar sessionId único para la memoria persistente del chat
+    let id = sessionStorage.getItem('godmode_session_id');
+    if (!id) {
+      id = 'sess_' + Math.random().toString(36).substring(2, 15);
+      sessionStorage.setItem('godmode_session_id', id);
+    }
+    setSessionId(id);
     scrollToBottom();
   }, [messages, isOpen]);
 
@@ -48,12 +73,15 @@ export default function GodModeAI() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          sessionId: sessionId || 'default_session',
           messages: newMessages.map(m => ({ role: m.role, content: typeof m.content === 'string' ? m.content : 'Consulta' })),
           context: {
-             hsCode: state.viewingHsCode,
-             productName: state.viewingProduct,
-             targetCountry: state.viewingCountry,
-             originCountry: 'Argentina', // Hardcoded base origin for now
+             hsCode: context.hsCode,
+             productName: context.product,
+             targetCountry: context.country,
+             // Use TradeContext for origin – no more hardcoded 'Argentina'
+             originCountry: trade.originCountry || state.viewingCountry || 'AR',
+             operation: trade.operationType || state.operationType,
              page: state.currentPage
           }
         })
@@ -67,16 +95,17 @@ export default function GodModeAI() {
 
   // Watch for proactive triggers from the global context engine
   useEffect(() => {
-    if (state.proactiveTrigger) {
-      setIsOpen(true);
-      // Only process if it's the latest message (avoid duplicate injects on re-render)
-      setMessages(prev => {
-        const lastMsg = prev[prev.length - 1];
-        if (typeof lastMsg.content === 'string' && lastMsg.content === state.proactiveTrigger!.message) return prev;
-        return [...prev, { role: 'ai', content: state.proactiveTrigger!.message }];
-      });
-    }
-  }, [state.proactiveTrigger]);
+    if (!state.proactiveMessage) return;
+    setIsOpen(true);
+    // Only inject if this message hasn't been shown yet (avoid duplicate injects on re-render)
+    const msg = state.proactiveMessage.alertTitle
+      || (state.proactiveMessage.type === 'score_block' ? `Compatibilidad: ${state.proactiveMessage.compatibility}%` : 'Alerta de ruta detectada');
+    setMessages(prev => {
+      const lastMsg = prev[prev.length - 1];
+      if (typeof lastMsg.content === 'string' && lastMsg.content === msg) return prev;
+      return [...prev, { role: 'ai', content: msg }];
+    });
+  }, [state.proactiveMessage]);
 
   return (
     <>

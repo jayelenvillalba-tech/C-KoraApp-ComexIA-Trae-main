@@ -4,7 +4,7 @@ import ChatWindow from "@/components/chat/chat-window";
 import ChatSidebar from "@/components/chat/chat-sidebar";
 
 export default function ChatConversationPage() {
-  const [matched, params] = useRoute("/chat/:id");
+  const [matched, params] = useRoute<{id: string}>("/chat/:id");
   const conversationId = matched && params ? params.id : "";
   
   return (

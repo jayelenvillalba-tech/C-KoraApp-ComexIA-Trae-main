@@ -5,7 +5,7 @@ import rateLimit from 'express-rate-limit';
 // Login / Register — protege contra fuerza bruta
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,  // 15 minutos
-  max: 5,                      // 5 intentos por IP
+  max: 100,                      // Increase to 100 for testing
   message: {
     error: 'too_many_attempts',
     message: 'Demasiados intentos. Intentá de nuevo en 15 minutos.',
@@ -13,7 +13,6 @@ export const authLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skipSuccessfulRequests: true,  // solo cuenta intentos fallidos
 });
 
 // API general — protege contra scraping

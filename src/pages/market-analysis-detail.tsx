@@ -4,7 +4,7 @@ import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, TrendingUp, Globe, Calendar } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
-import HistoricalChart from '@/components/market-analysis/historical-chart';
+import { HistoricalChart } from '@/components/market-analysis/historical-chart';
 import ConfidenceBadge from '@/components/market-analysis/confidence-badge';
 
 export default function MarketAnalysisDetail() {
@@ -52,7 +52,7 @@ export default function MarketAnalysisDetail() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate(-1)}
+              onClick={() => window.history.back()}
               className="text-gray-400 hover:text-cyan-400"
             >
               <ChevronLeft className="w-4 h-4 mr-1" />
@@ -126,9 +126,6 @@ export default function MarketAnalysisDetail() {
             {!historicalLoading && chartData.length > 0 && (
               <HistoricalChart
                 data={chartData}
-                trend={marketData.marketSize.trend}
-                growthRate={marketData.marketSize.growthRate}
-                productName={productName || hsCode}
               />
             )}
 

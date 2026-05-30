@@ -156,6 +156,13 @@ const createTables = [
       updated_at INTEGER DEFAULT (strftime('%s','now'))
     )`,
 
+    // FREIGHT CACHE (Searates API — 6h TTL)
+    `CREATE TABLE IF NOT EXISTS freight_cache (
+      cache_key TEXT PRIMARY KEY,
+      result TEXT NOT NULL,
+      updated_at INTEGER DEFAULT (strftime('%s','now'))
+    )`,
+
     // PORTS (UN/LOCODE static seed)
     `CREATE TABLE IF NOT EXISTS ports (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

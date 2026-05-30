@@ -226,9 +226,9 @@ export default function WorldMap4D({ className = '' }: WorldMap4DProps) {
         ctx.restore(); // Restaurar transformaciones si las hubiera
 
         // 6. HUBS (Ciudades) - Brillantes encima de todo
-        hubs.forEach(h => {
-            const x = h.x * w;
-            const y = h.y * h;
+        hubs.forEach(hub => {
+            const x = hub.x * w;
+            const y = hub.y * h;
             
             // Outer Pulse
             const r = 5 + Math.sin(time * 4) * 3;
@@ -250,10 +250,10 @@ export default function WorldMap4D({ className = '' }: WorldMap4DProps) {
             ctx.shadowBlur = 0;
             
             // Labels (Opcional: solo si el mouse está cerca? Por ahora mostremos los principales)
-            if(['New York', 'London', 'Tokyo'].includes(h.name)) {
+            if(['New York', 'London', 'Tokyo'].includes(hub.name)) {
                 ctx.fillStyle = 'rgba(255,255,255,0.7)';
                 ctx.font = '10px sans-serif';
-                ctx.fillText(h.name.toUpperCase(), x + 10, y + 3);
+                ctx.fillText(hub.name.toUpperCase(), x + 10, y + 3);
             }
         });
 

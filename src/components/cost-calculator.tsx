@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Calculator, ArrowRight, Info, Download, Ship, DollarSign, Shield, Share2, MessageCircle } from "lucide-react";
+import { Calculator, ArrowRight, Info, Download, Ship, DollarSign, Shield, Share2, MessageCircle, Package, Plane, PieChart as PieChartIcon, AlertCircle, AlertTriangle, Truck, TrendingUp, CheckCircle } from "lucide-react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
@@ -10,9 +10,10 @@ import { useLanguage } from "@/hooks/use-language";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { exportCostAnalysisPDF } from "@/lib/pdf-export";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from "recharts";
 import { CONTINENTAL_COORDINATES } from "@shared/continental-coordinates";
 import { RegulatoryDocsViewer } from "@/components/regulatory-docs-viewer";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface CostBreakdown {
   fob: number;
@@ -23,7 +24,6 @@ interface CostBreakdown {
   vat: number;
   statistics: number;
   clearance: number;
-  // Enhanced cost breakdown
   portHandling: number;
   documentation: number;
   inspection: number;
@@ -34,14 +34,12 @@ interface CostBreakdown {
   contingency: number;
   total: number;
   perUnit: number;
-  // Cost analysis
   costAnalysis: {
     logisticsCosts: number;
     taxesAndDuties: number;
     regulatoryCosts: number;
     serviceFees: number;
   };
-  // Savings opportunities
   savingsOpportunities?: {
     tradeAgreementSavings: number;
     volumeDiscounts: number;
@@ -49,8 +47,14 @@ interface CostBreakdown {
   };
 }
 
+interface CostCalculationResponse {
+  success: boolean;
+  breakdown: CostBreakdown;
+  freightDetails: any; // Using any for simplicity in UI, we can type it later
+  metadata: any;
+}
+
 export default function CostCalculator() {
-  // const { language } = useLanguage(); // Not currently used
   const [fobValue, setFobValue] = useState("");
   const [weight, setWeight] = useState("");
   const [volume, setVolume] = useState("");
@@ -68,6 +72,10 @@ export default function CostCalculator() {
       return response.json();
     },
   });
+
+  const responseData = calculateMutation.data as CostCalculationResponse | undefined;
+  const breakdown = responseData?.breakdown;
+  const freightDetails = responseData?.freightDetails;
 
   const handleCalculate = () => {
     if (!fobValue || !weight || !destination || !origin) return;
@@ -94,18 +102,28 @@ export default function CostCalculator() {
     }).format(amount);
   };
 
-  const breakdown = calculateMutation.data as CostBreakdown | undefined;
+  const destinations = [
+    { value: "NLRTM", label: "Rotterdam (Holanda)" },
+    { value: "DEHAM", label: "Hamburgo (Alemania)" },
+    { value: "CNSHA", label: "Shanghai (China)" },
+    { value: "USLAX", label: "Los Angeles (USA)" },
+    { value: "USNYC", label: "New York (USA)" },
+    { value: "SGSIN", label: "Singapur" },
+    { value: "BRSNT", label: "Santos (Brasil)" },
+    { value: "ARBUE", label: "Buenos Aires (Argentina)" },
+    { value: "CLVAL", label: "Valparaíso (Chile)" },
+  ].sort((a, b) => a.label.localeCompare(b.label));
 
-  const destinations = CONTINENTAL_COORDINATES.map(c => ({
-    value: c.countryCode,
-    label: c.countryName,
-    country: c.countryCode
-  })).sort((a, b) => a.label.localeCompare(b.label));
-
-  const origins = CONTINENTAL_COORDINATES.filter(c => ['AR', 'BR', 'UY', 'PY', 'CL', 'PE', 'CO'].includes(c.countryCode)).map(c => ({
-    value: c.countryCode,
-    label: c.countryName
-  }));
+  const origins = [
+    { value: "ARBUE", label: "Buenos Aires (Argentina)" },
+    { value: "ARROS", label: "Rosario (Argentina)" },
+    { value: "BRSNT", label: "Santos (Brasil)" },
+    { value: "UYMVD", label: "Montevideo (Uruguay)" },
+    { value: "CLVAL", label: "Valparaíso (Chile)" },
+    { value: "PECLL", label: "Callao (Perú)" },
+    { value: "CNSHA", label: "Shanghai (China)" },
+    { value: "USNYC", label: "New York (USA)" },
+  ].sort((a, b) => a.label.localeCompare(b.label));
 
   const hsProducts = [
     { value: "0901", label: "Café (0901)" },
@@ -155,23 +173,33 @@ export default function CostCalculator() {
                   Información del Producto
                 </h4>
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Producto (Código HS)
-                    </label>
-                    <Select value={hsCode} onValueChange={setHsCode}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar producto" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {hsProducts.map((product) => (
-                          <SelectItem key={product.value} value={product.value}>
-                            {product.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <TooltipProvider>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm font-medium text-gray-700">Producto (Código HS)</label>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="w-4 h-4 text-blue-500 cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-gray-900 border border-gray-700 text-white">
+                            <p>Código del Sistema Armonizado para determinar aranceles.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <Select value={hsCode} onValueChange={setHsCode}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar producto" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {hsProducts.map((product) => (
+                            <SelectItem key={product.value} value={product.value}>
+                              {product.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </TooltipProvider>
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -185,23 +213,35 @@ export default function CostCalculator() {
                         onChange={(e) => setFobValue(e.target.value)}
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Términos
-                      </label>
-                      <Select value={incoterm} onValueChange={setIncoterm}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {incoterms.map((term) => (
-                            <SelectItem key={term.value} value={term.value}>
-                              {term.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <TooltipProvider>
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <label className="text-sm font-medium text-gray-700">
+                            Términos (Incoterm)
+                          </label>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="w-4 h-4 text-blue-500 cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent className="bg-gray-900 border border-gray-700 text-white">
+                              <p>Define quién asume riesgo y pago de flete.</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                        <Select value={incoterm} onValueChange={setIncoterm}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {incoterms.map((term) => (
+                              <SelectItem key={term.value} value={term.value}>
+                                {term.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </TooltipProvider>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
@@ -412,13 +452,13 @@ export default function CostCalculator() {
                             
                             const quoteData = {
                               productName: product?.label || `HS ${hsCode}`,
-                              totalCost: breakdown.totalCost,
+                              totalCost: breakdown.total,
                               currency: "USD",
                               incoterm: "FOB", // Simplified
                               breakdown: {
                                 fob: parseFloat(fobValue),
                                 freight: breakdown.costAnalysis?.logisticsCosts || 0,
-                                taxes: breakdown.costAnalysis?.taxCosts || 0
+                                taxes: breakdown.costAnalysis?.taxesAndDuties || 0
                               }
                             };
                             
@@ -571,7 +611,7 @@ export default function CostCalculator() {
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
-                      <Tooltip 
+                      <RechartsTooltip 
                         formatter={(value: number) => formatCurrency(value)}
                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                       />
@@ -585,24 +625,43 @@ export default function CostCalculator() {
               <div className="bg-white p-6 rounded-lg border border-gray-200">
                 <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
                   <AlertCircle className="mr-2 w-5 h-5 text-yellow-600" />
-                  Análisis de Riesgos
+                  Análisis de Riesgos y Flete
                 </h4>
+                
+                {freightDetails?.riskZones?.length > 0 && (
+                  <div className="mb-4 space-y-2">
+                    {freightDetails.riskZones.map((zone: any, idx: number) => (
+                      <div key={idx} className={`p-3 rounded-md flex items-start gap-2 ${zone.severity === 'high' ? 'bg-red-50 text-red-900 border border-red-200' : 'bg-yellow-50 text-yellow-900 border border-yellow-200'}`}>
+                        <AlertTriangle className={`w-5 h-5 shrink-0 ${zone.severity === 'high' ? 'text-red-600' : 'text-yellow-600'}`} />
+                        <div>
+                          <p className="font-medium text-sm">{zone.name} (Surcharge: {zone.surchargePercent}%)</p>
+                          <p className="text-xs opacity-90 mt-1">{zone.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Volatilidad de Precios:</span>
-                    <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-sm">Media</span>
+                    <span className="text-gray-600">Fuente Flete:</span>
+                    <span className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded text-sm font-medium">
+                      {freightDetails?.source === 'searates' ? 'API Searates Real' : 'Calculado Dinámico'}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Riesgo Cambiario:</span>
-                    <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">Bajo</span>
+                    <span className="text-gray-600">Distancia Estimada:</span>
+                    <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded text-sm">{freightDetails?.distanceKm?.toLocaleString()} km</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Tiempo de Tránsito:</span>
+                    <span className={`px-2 py-1 rounded text-sm ${freightDetails?.transitDays > 30 ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
+                      ~{freightDetails?.transitDays} días
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-gray-600">Complejidad Aduanera:</span>
                     <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">Estándar</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Tiempo de Tránsito:</span>
-                    <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">Predecible</span>
                   </div>
                 </div>
               </div>

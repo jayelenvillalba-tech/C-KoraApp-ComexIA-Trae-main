@@ -26,9 +26,7 @@ export default function MarketResearch() {
   const { t } = useLanguage();
   const [hsCode, setHsCode] = useState("0901"); // Default to coffee
   const [selectedCountry, setSelectedCountry] = useState<CountryOpportunity | null>(null);
-  const [viewMode, setViewMode] = useState<"ranking" | "details">("ranking");
-
-  console.log('[DEBUG MARKET RESEARCH] State:', { hsCode, selectedCountry });
+  const [viewMode, setViewMode] = useState<"ranking" | "details">("ranking");
 
   const { data: opportunities = [] } = useQuery<CountryOpportunity[]>({
     queryKey: ["/api/country-opportunities", hsCode],
@@ -106,10 +104,7 @@ export default function MarketResearch() {
     }
   };
 
-  const handleCountrySelect = (opportunity: CountryOpportunity) => {
-    console.log('ðŸŒ PaÃ­s seleccionado:', opportunity);
-    console.log('ðŸ“‹ CÃ³digo paÃ­s:', opportunity.countryCode);
-    console.log('ðŸ“¦ HS Code actual:', hsCode);
+  const handleCountrySelect = (opportunity: CountryOpportunity) => {
     setSelectedCountry(opportunity);
     setViewMode("details");
   };

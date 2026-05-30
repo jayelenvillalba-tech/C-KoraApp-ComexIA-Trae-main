@@ -23,12 +23,7 @@ export default function AuthGuardModal({
   const [, navigate] = useLocation();
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = async () => {
-    setIsLoading(true);
-    await login();
-    setIsLoading(false);
-    onOpenChange(false);
-  };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
