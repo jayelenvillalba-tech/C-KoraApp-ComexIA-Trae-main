@@ -116,7 +116,7 @@ export function createDealsRouter() {
   router.get('/user/:userId', (req, res) => {
     try {
       const { userId } = req.params;
-      const deals = db.prepare(`
+      let deals = db.prepare(`
         SELECT d.*, dp.name as participant_name, dp.role as participant_role,
                (SELECT content FROM chat_messages WHERE deal_id = d.id ORDER BY created_at DESC LIMIT 1) as last_message,
                (SELECT created_at FROM chat_messages WHERE deal_id = d.id ORDER BY created_at DESC LIMIT 1) as last_message_at
@@ -124,6 +124,47 @@ export function createDealsRouter() {
         JOIN deal_participants dp ON dp.deal_id = d.id AND dp.user_id = ?
         ORDER BY d.updated_at DESC
       `).all(userId);
+
+      // --- MOCK INJECTION PARA DEMO SAN LORENZO ---
+      if (deals.length === 0) {
+        // Deal 1: Soja (San Lorenzo -> China)
+        const d1 = `deal-${randomUUID().slice(0, 8)}`;
+        db.prepare('INSERT INTO deals (id, initiator_id, vendor_id, product, hs_code, origin, destination, incoterm, quantity, unit, price_usd, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+          .run(d1, userId, 'vendor-mock-1', 'Soja Orgánica Premium', '120190', 'AR (San Lorenzo)', 'CN', 'FOB', 10000, 'tn', 480, 'negotiation');
+        db.prepare('INSERT INTO deal_participants (deal_id, user_id, role, name) VALUES (?, ?, ?, ?)').run(d1, userId, 'exporter', 'Usuario Demo');
+        db.prepare('INSERT INTO chat_messages (id, deal_id, sender_id, sender_name, sender_role, content, message_type) VALUES (?, ?, ?, ?, ?, ?, ?)')
+          .run(`msg-${randomUUID().slice(0,8)}`, d1, 'vendor-mock-1', 'Chen Wei (Comprador)', 'buyer', 'Hola, estamos muy interesados en su carga desde San Lorenzo. ¿Tienen capacidad para despachar 10,000 tn este mes?', 'text');
+        
+        // Deal 2: Aceite (San Lorenzo -> Brasil)
+        const d2 = `deal-${randomUUID().slice(0, 8)}`;
+        db.prepare('INSERT INTO deals (id, initiator_id, vendor_id, product, hs_code, origin, destination, incoterm, quantity, unit, price_usd, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+          .run(d2, userId, 'vendor-mock-2', 'Aceite de Girasol Alto Oleico', '151219', 'AR (Rosario)', 'BR', 'CIF', 500, 'tn', 1100, 'contact');
+        db.prepare('INSERT INTO deal_participants (deal_id, user_id, role, name) VALUES (?, ?, ?, ?)').run(d2, userId, 'exporter', 'Usuario Demo');
+        db.prepare('INSERT INTO chat_messages (id, deal_id, sender_id, sender_name, sender_role, content, message_type) VALUES (?, ?, ?, ?, ?, ?, ?)')
+          .run(`msg-${randomUUID().slice(0,8)}`, d2, 'vendor-mock-2', 'Roberto Carlos', 'buyer', 'Precisamos de azeite de girassol urgentemente para o mercado paulista. Qual o prazo de entrega?', 'text');
+
+        // Deal 3: Maquinaria (Alemania -> Argentina)
+        const d3 = `deal-${randomUUID().slice(0, 8)}`;
+        db.prepare('INSERT INTO deals (id, initiator_id, vendor_id, product, hs_code, origin, destination, incoterm, quantity, unit, price_usd, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+          .run(d3, userId, 'vendor-mock-3', 'Maquinaria Agrícola', '843280', 'DE', 'AR', 'DAP', 5, 'unidades', 120000, 'docs');
+        db.prepare('INSERT INTO deal_participants (deal_id, user_id, role, name) VALUES (?, ?, ?, ?)').run(d3, userId, 'importer', 'Usuario Demo');
+        db.prepare('INSERT INTO chat_messages (id, deal_id, sender_id, sender_name, sender_role, content, message_type) VALUES (?, ?, ?, ?, ?, ?, ?)')
+          .run(`msg-${randomUUID().slice(0,8)}`, d3, 'vendor-mock-3', 'Klaus Müller', 'seller', 'Guten Tag. Adjunto los certificados de origen necesarios para el ingreso a Argentina. Por favor confirme recepción.', 'text');
+        db.prepare('INSERT INTO chat_messages (id, deal_id, sender_id, sender_name, sender_role, content, message_type) VALUES (?, ?, ?, ?, ?, ?, ?)')
+          .run(`msg-${randomUUID().slice(0,8)}`, d3, 'vendor-mock-3', 'Klaus Müller', 'seller', 'Documentos adjuntos.', 'text');
+
+        // Re-fetch after mock injection
+        deals = db.prepare(`
+          SELECT d.*, dp.name as participant_name, dp.role as participant_role,
+                 (SELECT content FROM chat_messages WHERE deal_id = d.id ORDER BY created_at DESC LIMIT 1) as last_message,
+                 (SELECT created_at FROM chat_messages WHERE deal_id = d.id ORDER BY created_at DESC LIMIT 1) as last_message_at
+          FROM deals d
+          JOIN deal_participants dp ON dp.deal_id = d.id AND dp.user_id = ?
+          ORDER BY d.updated_at DESC
+        `).all(userId);
+      }
+      // ---------------------------------------------
+
       return res.json({ success: true, data: deals });
     } catch (err: any) {
       return res.status(500).json({ error: err.message });

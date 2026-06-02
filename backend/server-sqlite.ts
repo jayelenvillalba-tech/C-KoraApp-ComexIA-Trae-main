@@ -916,32 +916,33 @@ app.post('/api/ai/chat', async (req, res) => {
     const origin = context?.originCountry || "origen";
     const destination = context?.targetCountry || "destino";
 
-    // 1. TARIFFS / TAXES
-    if (userQuery.includes('arancel') || userQuery.includes('impuesto') || userQuery.includes('tratado') || userQuery.includes('tariff')) {
-       // Mock lookup - in real app would query DB
-       const hasTreaty = (destination === 'China' && origin === 'Argentina') || (destination === 'Brasil');
-       
-       if (hasTreaty) {
-           responseContent = `Para exportar ${product} a ${destination}, existe un acuerdo comercial favorable. \n\nEsto podría otorgarte una preferencia arancelaria significativa, reduciendo el arancel base (NMF) posiblemente al 0%. Te recomiendo verificar el Certificado de Origen específico.`;
-       } else {
-           responseContent = `Actualmente no detecto tratados de libre comercio directos entre ${origin} y ${destination} para este producto. Es probable que aplique el arancel de Nación Más Favorecida (NMF) según la OMC (aprox 5-10%).`;
-       }
+    // 1. HS CODE / CLASIFICACIÓN
+    if (userQuery.includes('hs code') || userQuery.includes('clasificación') || userQuery.includes('arancelaria') || userQuery.includes('nomenclatura')) {
+       responseContent = `El producto **${product}** suele clasificarse bajo la partida arancelaria **1201.90** (si es soja) o **1512.19** (si es aceite). \n\nEs fundamental validar esta clasificación con tu despachante, ya que determina los impuestos y barreras de entrada en ${destination}.`;
     }
-    // 2. LOGISTICS / TRANSPORT
-    else if (userQuery.includes('logística') || userQuery.includes('transporte') || userQuery.includes('flete') || userQuery.includes('barco') || userQuery.includes('tiempo')) {
-       responseContent = `Para la ruta ${origin} - ${destination}, la opción logística más recomendada es la **Vía Marítima**.\n\n- **Tiempo de tránsito estimado:** 35-45 días.\n- **Costo aproximado:** USD 85-95 por tonelada.\n- **Incoterm sugerido:** CIF (Cost, Insurance and Freight) para mayor seguridad.`;
+    // 2. TRATADOS / ACUERDOS
+    else if (userQuery.includes('arancel') || userQuery.includes('impuesto') || userQuery.includes('tratado') || userQuery.includes('mercosur') || userQuery.includes('acuerdo')) {
+       responseContent = `Para exportar a ${destination} desde ${origin}, los tratados comerciales son clave. \n\nSi el destino es Mercosur, el arancel intrazona es **0%**. Para otros destinos, es probable que aplique el arancel de Nación Más Favorecida (NMF) de la OMC, que puede rondar el **5-10%**. Te recomiendo gestionar el Certificado de Origen para aprovechar cualquier preferencia arancelaria.`;
     }
-    // 3. REGULATIONS / REQUISITOS
-    else if (userQuery.includes('requisito') || userQuery.includes('documento') || userQuery.includes('regla') || userQuery.includes('permiso')) {
-       responseContent = `El mercado de ${destination} es exigente con ${product}. \n\n**Documentos clave:**\n1. Factura Comercial Internacional.\n2. Packing List.\n3. Certificado de Origen.\n4. Certificados Fitosanitarios/Sanitarios (crítico).\n\nAsegúrate de cumplir con el etiquetado en el idioma local.`;
+    // 3. LOGÍSTICA / TRANSPORTE
+    else if (userQuery.includes('logística') || userQuery.includes('transporte') || userQuery.includes('flete') || userQuery.includes('tiempo')) {
+       responseContent = `Para la ruta ${origin} ➔ ${destination}, la opción más viable es la **Vía Marítima (LCL/FCL)**.\n\n- **Tiempo de tránsito estimado:** 35-45 días.\n- **Costo de flete:** USD 1,200 - 1,500 por contenedor de 20ft.\n- **Incoterm sugerido:** FOB o CIF.`;
     }
-    // 4. MARKET / PRICE
-    else if (userQuery.includes('precio') || userQuery.includes('mercado') || userQuery.includes('valor')) {
-       responseContent = `El mercado de ${destination} muestra una demanda activa. Los precios promedio de importación oscilan entre $450 y $520 USD por tonelada, con tendencia al alza.`;
+    // 4. DOCUMENTOS Y REQUISITOS
+    else if (userQuery.includes('requisito') || userQuery.includes('documento') || userQuery.includes('aduana')) {
+       responseContent = `El mercado de ${destination} exige documentación estricta para ${product}: \n\n1. **Factura Comercial y Packing List**.\n2. **Certificado de Origen**.\n3. **Certificado Fitosanitario (SENASA)**.\n4. **Documento de Transporte (BL)**.\n\nAsegúrate de que todo coincida exactamente con las cartas de crédito.`;
     }
-    // Default
+    // 5. COSTOS LANDED / RENTABILIDAD
+    else if (userQuery.includes('costo') || userQuery.includes('landed') || userQuery.includes('rentabilidad') || userQuery.includes('precio')) {
+       responseContent = `El **Landed Cost** (costo puesto en destino) incluye: Valor FCA/FOB + Flete + Seguro + Aranceles + Impuestos internos en ${destination}.\n\nPara ${product}, estima sumar un **15-20% adicional** sobre el valor FOB. Los precios de venta promedio en destino rondan los **$480 - $550 USD/tonelada**.`;
+    }
+    // 6. CERTIFICACIONES Y CALIDAD
+    else if (userQuery.includes('certificación') || userQuery.includes('orgánico') || userQuery.includes('iso') || userQuery.includes('calidad')) {
+       responseContent = `Para maximizar el precio de venta en ${destination}, contar con certificaciones como **ISO 9001**, **BPM** (Buenas Prácticas de Manufactura) o certificación **Orgánica** es diferencial.\n\nLos compradores europeos y asiáticos exigen trazabilidad completa de los productos agroindustriales.`;
+    }
+    // Default / Genérico
     else {
-       responseContent = `Soy Che.Comex, tu especialista en comercio exterior. Puedo asistirte en:\n\n1. **Aranceles y Tratados**\n2. **Logística y Rutas**\n3. **Requisitos de Ingreso**\n\n¿Qué aspecto te gustaría analizar para ${product}?`;
+       responseContent = `Soy tu **Inteligencia Artificial de Che.Comex**. Estoy optimizado para resolver tus dudas operativas.\n\nPuedes preguntarme sobre:\n- **Códigos Arancelarios (HS Codes)**\n- **Tratados y Aranceles**\n- **Costos y Landed Cost**\n- **Documentos y Certificaciones**\n- **Logística**\n\n¿En qué te puedo ayudar para tu carga de ${product}?`;
     }
 
     res.json({ 

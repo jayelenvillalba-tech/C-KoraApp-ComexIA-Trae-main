@@ -45,20 +45,13 @@ export default function Header() {
                   onClick={() => navigate('/')}
                   className={`h-full flex items-center px-4 font-body text-[var(--ds-text-sm)] font-medium cursor-pointer transition-colors ${getNavClass('/', location)}`}
                 >
-                  {t('nav.home') || 'INICIO'}
+                  {t('nav.home') || 'ANÁLISIS'}
                 </a>
                 <a 
                   onClick={() => navigate('/marketplace')}
                   className={`h-full flex items-center px-4 font-body text-[var(--ds-text-sm)] font-medium cursor-pointer transition-colors ${getNavClass('/marketplace', location)}`}
                 >
                   {t('nav.marketplace') || 'MARKETPLACE'}
-                </a>
-                <a 
-                  onClick={() => navigate('/investors')}
-                  className={`h-full flex items-center px-4 font-body text-[var(--ds-text-sm)] font-medium cursor-pointer transition-colors ${getNavClass('/investors', location)}`}
-                  style={{ color: location === '/investors' ? '#00d4f0' : undefined }}
-                >
-                  INVERSORES
                 </a>
                 
                 {user && (
@@ -67,13 +60,7 @@ export default function Header() {
                       onClick={() => navigate('/chat')} 
                       className={`h-full flex items-center px-4 font-body text-[var(--ds-text-sm)] font-medium cursor-pointer transition-colors ${getNavClass('/chat', location)}`}
                     >
-                      {t('nav.chats') || 'CHATS'}
-                    </a>
-                    <a 
-                      onClick={() => navigate('/marketplace/dashboard')} 
-                      className={`h-full flex items-center px-4 font-body text-[var(--ds-text-sm)] font-medium cursor-pointer transition-colors ${getNavClass('/marketplace/dashboard', location)}`}
-                    >
-                      {t('nav.dashboard') || 'DASHBOARD'}
+                      {t('nav.chats') || 'MIS OPERACIONES'}
                     </a>
                   </>
                 )}
@@ -182,7 +169,7 @@ export default function Header() {
                       onClick={() => { navigate('/'); setIsMobileMenuOpen(false); }}
                       className={`text-[var(--ds-text-sm)] font-medium cursor-pointer pb-2 border-b border-[var(--ds-border-default)] ${location === '/' ? 'text-[var(--ds-cyan)]' : 'text-[var(--ds-text-primary)]'}`}
                     >
-                      {t('nav.home') || 'INICIO'}
+                      {t('nav.home') || 'ANÁLISIS'}
                     </a>
                     <a 
                       onClick={() => { navigate('/marketplace'); setIsMobileMenuOpen(false); }}
@@ -197,13 +184,7 @@ export default function Header() {
                           onClick={() => { navigate('/chat'); setIsMobileMenuOpen(false); }} 
                           className={`text-[var(--ds-text-sm)] font-medium cursor-pointer pb-2 border-b border-[var(--ds-border-default)] ${location.startsWith('/chat') ? 'text-[var(--ds-cyan)]' : 'text-[var(--ds-text-primary)]'}`}
                         >
-                          {t('nav.chats') || 'CHATS'}
-                        </a>
-                        <a 
-                          onClick={() => { navigate('/marketplace/dashboard'); setIsMobileMenuOpen(false); }} 
-                          className={`text-[var(--ds-text-sm)] font-medium cursor-pointer pb-2 border-b border-[var(--ds-border-default)] ${location === '/marketplace/dashboard' ? 'text-[var(--ds-cyan)]' : 'text-[var(--ds-text-primary)]'}`}
-                        >
-                          {t('nav.dashboard') || 'DASHBOARD'}
+                          {t('nav.chats') || 'MIS OPERACIONES'}
                         </a>
                         <a 
                           onClick={() => { navigate('/profile'); setIsMobileMenuOpen(false); }} 

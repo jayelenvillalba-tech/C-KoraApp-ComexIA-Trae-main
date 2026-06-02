@@ -48,7 +48,6 @@ const VendorDashboardPage = React.lazy(() => import("@/pages/VendorDashboardPage
 const Marketplace = React.lazy(() => import("@/pages/marketplace"));
 const ChatConversationPage = React.lazy(() => import("@/pages/chat-conversation"));
 const CompanyProfile = React.lazy(() => import("@/pages/company-profile"));
-const InvestorPage = React.lazy(() => import("@/pages/InvestorPage"));
 
 import AuthGuard from "@/guards/AuthGuard";
 import AdminGuard from "@/guards/AdminGuard";
@@ -123,8 +122,6 @@ function Router() {
         {/* Design System Reference Page - Only for Figma export & Dev */}
         {import.meta.env.DEV && <Route path="/design-system" component={DesignSystemPage} />}
         
-        {/* Investor Mode */}
-        <Route path="/investors" component={InvestorPage} />
         <Route component={NotFound} />
       </Switch>
     </React.Suspense>
